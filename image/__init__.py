@@ -6,6 +6,7 @@ from decimal import Decimal
 
 class image:
 	def __init__(self, infile, **kwargs):
+		assert infile.endswith('.mhd')
 		for key in ('pps', 'nprim', 'type'):
 			if key in kwargs:
 				setattr(self, key, kwargs[key])
@@ -196,12 +197,6 @@ class image:
 		ax = tuple([i for (i,j) in zip(range(len(crush)),crush) if j==1])
 		out = np.add.reduce(outdata, axis=ax)
 
-		# if self.type == 'yield':
-		# 	out = np.add.reduce(outdata, axis=ax)
-		# else:
-		# 	out = np.mean(outdata, ax)*pgbins
-		# #print 'shape',outdata.shape,'index',ax,'len', len(out)
-		# print self.type,out
 		return out
 
 
@@ -311,6 +306,10 @@ class image:
 		self.imdata = np.reshape(self.imdata,shape) # puterback
 
 
+	def todosemask(self,outpostfix='.dosemask'):
+		np.where(self.imdata>0, 1, 0)
+
+
 	def toeff(self):
 		runtime = self.nprim/self.pps
 		if self.type == 'var' or self.type == 'relvar' or self.type == 'relunc' or  self.type == 'unc':
@@ -398,7 +397,8 @@ class image:
 
 
 	def getmean(self):
-		return np.mean(self.imdata.nonzero())
+		#return np.mean(self.imdata)
+		return np.mean(self.imdata[self.imdata.nonzero()])
 
 
 	def filter_bone(self):
@@ -477,6 +477,12 @@ class image:
 		assert self.type == 'var'
 		with np.errstate(divide='ignore', invalid='ignore'):
 			self.imdata = np.true_divide(self.imdata,N)
+
+
+	def unctovar(self):
+		assert self.type == 'unc'
+		self.imdata = np.square(self.imdata)
+		self.type == 'var'
 
 
 	def clip_range(self,mini,maxi):

@@ -26,5 +26,5 @@ for filename in filesin:
 	plt.ylabel('Yield')
 	#plt.ylabel('PG energy')
 	#plt.legend(loc=4,prop={'size':6})
-	plt.legend(prop={'size':10})
-	plt.savefig(fileout)
+	plt.legend(prop={'size':10},bbox_to_anchor=(1.2, 1.),frameon=False)
+	plt.savefig(fileout, bbox_inches='tight')

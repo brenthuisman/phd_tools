@@ -1,4 +1,3 @@
-from rootplot import *
 from tle import *
 from texify import *
 
@@ -8,9 +7,9 @@ from scipy.optimize import curve_fit
 from scipy.optimize import fsolve
 
 #colors = "rgbmyck"*20
-#colors = ['#3778bf','#feb308','#7b0323','#7bb274','#a8a495','#825f87']*20
+colors = ['#3778bf','#feb308','#7b0323','#7bb274','#a8a495','#825f87']*20
 #colors = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0','#f0027f','#bf5b17','#666666']*20
-colors = ['#C40233','#FFD300','#009F6B','#0087BD','#000000']*20
+#colors = ['#C40233','#FFD300','#009F6B','#0087BD','#000000']*20
 
 
 #nice little function to have static vars within a function (which is not in a class)

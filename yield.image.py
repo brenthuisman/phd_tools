@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-import numpy,sys
+import sys,image
 
-filename = sys.argv[-1]
-data = numpy.fromfile(filename, dtype='<f4')
+infile = sys.argv[-1]
+img = image.image(infile)
+#data = numpy.fromfile(filename, dtype='<f4')
 
-print sum(data)
+print img.imdata.sum()

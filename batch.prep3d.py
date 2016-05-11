@@ -4,7 +4,7 @@ This tool is a general purpose tool for batch processing of image-output.
 Given a set of input images, it will output a mean and variance image, so a mean and variance per voxel.
 In addition, it outputs an inverse variance image, in case you want to compute the efficiency.
 '''
-import sys,subprocess,glob2 as glod,image
+import sys,subprocess,glob2 as glob,image
 
 if len(sys.argv) is not 2:
 	print "No input file names given, assume analog.mhd"

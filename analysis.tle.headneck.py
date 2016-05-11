@@ -148,8 +148,8 @@ ctim = patient.getslice('z',21)
 # ctim[ctim == 0] = np.nan
 f, (tl,tr) = plt.subplots(nrows=1, ncols=2, sharex=True, sharey=True)
 # tleeff[1e6]['var'].saveas('speedup.mhd')
-tl.imshow(speedim,interpolation='nearest',origin='lower',norm = mpl.colors.LogNorm(),cmap="hot",clim=[500,5000])
-pica=tr.imshow(speedim,interpolation='nearest',origin='lower',norm = mpl.colors.LogNorm(),cmap="hot",clim=[500,5000])
+tl.imshow(speedim,interpolation='nearest',origin='lower',norm = mpl.colors.LogNorm(),cmap="hot",clim=[1e2,1e4])
+pica=tr.imshow(speedim,interpolation='nearest',origin='lower',norm = mpl.colors.LogNorm(),cmap="hot",clim=[1e2,1e4])
 tr.imshow(ctim,interpolation='nearest', origin='lower',cmap="gray",alpha=0.5)
 tl.set_ylim([5,75])
 tr.set_ylim([5,75])
@@ -163,10 +163,11 @@ tl.set_title(r'Gain vpgTLE $10^6$'+'\n w.r.t. Reference')
 tr.set_title('CT Image')
 plot.texax(tl)
 plot.texax(tr)
-f.colorbar(pica)
+f.colorbar(pica)#, ticks=[1e2, 1e3, 1e4])
 
 # f.colorbar(tl,shrink=.92)
 f.savefig('slice1.pdf', bbox_inches='tight')
+f.savefig('slice1.png', bbox_inches='tight',dpi=300)
 plt.close('all')
 
 

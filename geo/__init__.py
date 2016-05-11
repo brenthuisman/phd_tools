@@ -1,4 +1,4 @@
-import ROOT as r,math
+import math
 
 def rotator(heading, attitude, bank):
 	#Converts from euler angles to matrix angles (or something like that, I'm not even sure.)
