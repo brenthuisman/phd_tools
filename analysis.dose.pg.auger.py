@@ -173,52 +173,109 @@ for fp in sources:
 # 		value['dose-unc'],value['dose+unc'] = plot.geterrorbands(value['doseunc'],value['dose'])
 
 ##data is now in order. lets plot!
-def fit(ax1,x,y):
-	#first, smooth that bitch out
-	ysm=pd.rolling_mean(y,30,center=True)
-	y=np.nan_to_num(ysm)
-	#take max
-	maxind = np.argmax(y)
-	#go towards end and find 50% thrshold
-	nextind=maxind+1
-	while y[nextind] > 0.5*y[maxind]:
-		nextind+=1
-	# go 30 bins left and right and fit within
-	hm_left=nextind-100
-	hm_right=nextind+100
-	xbp=x[hm_left:hm_right]
-	ybp=y[hm_left:hm_right]
-	tck,u = interpolate.splprep( [xbp,ybp] ,k=5 )#cubic spline
-	xnew,ynew = interpolate.splev(  np.linspace( 0, 1, 200 ), tck,der = 0)
-	ax1.plot( xbp,ybp,'' , xnew ,ynew )	
-	#take mean value in tail-window as minimum
-	floor=np.mean(y[hm_right:])
-	#take max val in BP window as max
-	top=np.max(ybp)
-	falloffval_50pc=(top-floor)*.5
-	nextind=maxind+1
-	while y[nextind] > falloffval_50pc:
-		nextind+=1
-	print x[nextind]
+def plot_smooth(ax1,dataset,label=''):
+	def fit(ax1,x,y):
+		#first, smooth that bitch out
+		ysm=pd.rolling_mean(y,30,center=True)
+		y=np.nan_to_num(ysm)
+		#take max
+		maxind = np.argmax(y)
+		#go towards end and find 50% thrshold
+		nextind=maxind+1
+		while y[nextind] > 0.5*y[maxind]:
+			nextind+=1
+		# go 30 bins left and right and fit within
+		hm_left=nextind-100
+		hm_right=nextind+100
+		xbp=x[hm_left:hm_right]
+		ybp=y[hm_left:hm_right]
+		tck,u = interpolate.splprep( [xbp,ybp] ,k=5 )#cubic spline
+		xnew,ynew = interpolate.splev(  np.linspace( 0, 1, 200 ), tck,der = 0)
+		ax1.plot( xbp,ybp,'' , xnew ,ynew )	
+		#take mean value in tail-window as minimum
+		floor=np.mean(y[hm_right:])
+		#take max val in BP window as max
+		top=np.max(ybp)
+		falloffval_50pc=(top-floor)*.5
+		nextind=len(ynew)-1
+		while ynew[nextind] < falloffval_50pc:
+			nextind-=1
+		print xnew[nextind]
 
-
-def plotwunc(ax1,dataset,label=''):
 	global color_index
 	colors=plot.colors
-	x_axis = np.linspace(0,300,150)#300mm,2mm voxels
-	x_axis_au = np.linspace(0-7.96*2,300-7.96*2,500)#300mm,2mm voxels
+	x_axis = np.linspace(0,300,150)#300mm,2mm voxels, shift already compensated for
+	##remove shift with new data!!!!
+	x_axis_au = np.linspace(0+7.96,250+7.96,500)#250mm in 500 bins!!!!
 
 	color_index+=1
 	scalepg=np.max(dataset['dose'])/np.max(dataset['pg'])
 	scaleau=np.max(dataset['dose'])/np.max(dataset['auger'])
 	scalepp=np.max(dataset['dose'])/np.max(dataset['pgprod'])
-	ax1.step(x_axis,dataset['pg']*scalepg, label='pg,scaled,'+label, color=colors[color_index], lw=0.5)
+	#ax1.step(x_axis,dataset['pg']*scalepg, label='pg,scaled,'+label, color=colors[color_index], lw=0.5)
 	color_index+=1
-	#ax1.step(x_axis,dataset['dose'], label='dose,'+label, color=colors[color_index],lw=0.5)
+	ax1.step(x_axis,dataset['dose'], label='dose,'+label, color=colors[color_index],lw=0.5)
 	color_index+=1
 
 	ax1.step(x_axis_au,dataset['auger']*scaleau, label='auger,'+label, color=colors[color_index],lw=0.5)
 
+	fit(ax1,x_axis_au,dataset['auger']*scaleau)
+	#fit(ax1,x_axis_au,dataset['auger']*scaleau)
+	#ax1.step(x_axis_au,dataset['pgprod']*scalepp, label='pgprod,'+label, color=colors[color_index],lw=0.5)
+	#ax1.step(x_axis,dataset['dose-edep'], label='dose-edep,'+label, color=colors[color_index],lw=0.5)
+	#plot.fill_between_steps(ax1,x_axis,dataset['dose-unc'],dataset['dose+unc'],alpha=0.25,color=colors[color_index], lw=0.01)
+	
+
+
+def plot_rebin(ax1,dataset,label=''):
+	def fit(ax1,x,y):
+		#take max
+		maxind = np.argmax(y)
+		#go towards end and find 50% thrshold
+		nextind=maxind+1
+		while y[nextind] > 0.5*y[maxind]:
+			nextind+=1
+		# go x bins left and right and fit within
+		hm_left=nextind-5
+		hm_right=nextind+5
+		xbp=x[hm_left:hm_right]
+		ybp=y[hm_left:hm_right]
+		tck,u = interpolate.splprep( [xbp,ybp] ,k=2 )#cubic spline
+		xnew,ynew = interpolate.splev(  np.linspace( 0, 1, 200 ), tck,der = 0)
+		ax1.plot( xbp,ybp,'' , xnew ,ynew )	
+		#take mean value in tail-window as minimum
+		floor=np.mean(y[hm_right:])
+		#take max val in BP window as max
+		top=np.max(ybp)
+		falloffval_50pc=(top-floor)*.5
+		nextind=len(ynew)-1
+		while ynew[nextind] < falloffval_50pc:
+			nextind-=1
+		print xnew[nextind]
+
+	global color_index
+	colors=plot.colors
+	x_axis = np.linspace(0,300,150)#300mm,2mm voxels, shift already compensated for
+	##remove shift with new data!!!!
+	x_axis_au = np.linspace(0+7.96,250+7.96,25)#250mm in 25 new bins!!!!
+
+	color_index+=1
+	scalepg=np.max(dataset['dose'])/np.max(dataset['pg'])
+	scaleau=np.max(dataset['dose'])/np.max(dataset['auger'])
+	scalepp=np.max(dataset['dose'])/np.max(dataset['pgprod'])
+	#ax1.step(x_axis,dataset['pg']*scalepg, label='pg,scaled,'+label, color=colors[color_index], lw=0.5)
+	color_index+=1
+	ax1.step(x_axis,dataset['dose'], label='dose,'+label, color=colors[color_index],lw=0.5)
+	color_index+=1
+
+	augerdata=[] #rebin to 1 bin / 10mm
+	for i in range(len(dataset['auger']))[::20]:
+		augerdata.append(sum(dataset['auger'][i:i+20]))
+	scaleau=np.max(dataset['dose'])/np.max(augerdata)
+	augerdata=np.array(augerdata)*scaleau
+	ax1.step(x_axis_au,augerdata, label='auger,'+label, color=colors[color_index],lw=0.5)
+
+	fit(ax1,x_axis_au,augerdata)
 	#fit(ax1,x_axis_au,dataset['auger']*scaleau)
 	#ax1.step(x_axis_au,dataset['pgprod']*scalepp, label='pgprod,'+label, color=colors[color_index],lw=0.5)
 	#ax1.step(x_axis,dataset['dose-edep'], label='dose-edep,'+label, color=colors[color_index],lw=0.5)
@@ -230,8 +287,10 @@ for key, value in data_singleton.iteritems():
 	color_index=0
 	f, plo = plt.subplots(nrows=1, ncols=1, sharex=False, sharey=True)
 
-	plotwunc(plo,value['orig'],'orig')
-	plotwunc(plo,value['replan'],'replan')
+	plot_smooth(plo,value['orig'],'orig')
+	plot_smooth(plo,value['replan'],'replan')
+	# plot_rebin(plo,value['orig'],'orig')
+	# plot_rebin(plo,value['replan'],'replan')
 	#ax1.autoscale(axis='x',tight=True)
 	plot.texax(plo)
 
