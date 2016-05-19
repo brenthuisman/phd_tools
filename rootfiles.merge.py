@@ -15,10 +15,13 @@ if len(sys.argv) is not 2:
 else:
 	#njobs = int(sys.argv[-2])
 	indir = '.'
-	outfile = 'merged'+str(sys.argv[-1])
+	outfile = 'merged'+str(sys.argv[-1]) #overwritten later
 	infile = '*'+str(sys.argv[-1])
 
-sources = glob.glob(indir+"/**/"+infile)#,recursive=True
+sources = glob.glob(indir+"/*/**/"+infile) #it must be in a subdir, not root
+
+#sources = sources[:2]
+
 # if len(sources)>3:
 # 	sources=sources[90:100]
 #print sources
@@ -43,19 +46,20 @@ if len(sources) == 1:
 	sys.exit()
 
 nr = len(sources)
+outfile = str(nr)+'merged'+str(sys.argv[-1])
 print nr, "files found:", sources[:3], '...', sources[-3:]
 
-sources2 = []
-for i in sources:
-	if r.TFile(i,"READ"):
-		sources2.append(i)
-	else:
-		print i, "was found to be unreadable, remove folder!"
-nr = len(sources2)
-print nr, "files found:", sources2[:3], '...', sources2[-3:]
+# sources2 = []
+# for i in sources:
+# 	if r.TFile(i,"READ"):
+# 		sources2.append(i)
+# 	else:
+# 		print i, "was found to be unreadable, remove folder!"
+# nr = len(sources2)
+# print nr, "files found:", sources2[:3], '...', sources2[-3:]
 
 cmdforclitk = ""
-for rootfile in sources2:
+for rootfile in sources:
 	cmdforclitk=cmdforclitk+" -i "+rootfile.strip()
 
 print "Starting merge..."
