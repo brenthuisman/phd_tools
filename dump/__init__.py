@@ -1,4 +1,4 @@
-import ROOT as r,pickle
+import ROOT as r,pickle,numpy as np
 
 def dump(rootfiles,field,bins,lowrange,highrange):
 	#get nr primaries
@@ -66,3 +66,18 @@ def savedump(rootfiles,field,bins,lowrange,highrange,outname):
 	#print dumpdata
 	with open(outname,'w') as thefile:
 		pickle.dump(dumpdata, thefile)
+
+
+def thist2np(infile,dt='<f4'):
+	tfile=r.TFile(infile,"READ")
+	retval={}
+	for item in tfile.GetListOfKeys():
+		outname=item.ReadObj().GetName()
+		outdata=[]
+		for i in range(item.ReadObj().GetNbinsX()):
+			#print hnew.GetBinCenter(i), hnew.GetBinContent(i)
+			outdata.append(float(item.ReadObj().GetBinContent(i+1)))
+		#outdata=np.array(outdata, dtype=dt)
+		#outdata.tofile(outname+'.raw')
+		retval[outname]=outdata
+	return retval

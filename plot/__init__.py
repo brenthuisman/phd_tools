@@ -1,10 +1,11 @@
-from tle import *
+#from tle import *
 from texify import *
 
 import matplotlib.pyplot as plt,numpy as np
 from math import floor, log10, sqrt
 from scipy.optimize import curve_fit
 from scipy.optimize import fsolve
+from scipy.stats import norm
 
 #colors = "rgbmyck"*20
 colors = ['#3778bf','#feb308','#7b0323','#7bb274','#a8a495','#825f87']*20
@@ -91,6 +92,27 @@ def fill_between_steps(ax, x, y1, y2=0, step_where='pre', **kwargs):
 
     # now to the plotting part:
     return ax.fill_between(xx, yy1, y2=yy2, **kwargs)
+
+
+def addrandomnoise(indata):
+    return [np.random.normal(x, x/500.) if x>0. else x for x in indata]
+
+
+def sampledata(indata,scale=0.1):
+    #actually, cant that only be done on integer data?
+    probs = np.divide(indata,indata.sum())
+    print probs
+    sampl = np.histogram(np.random.choice(range(len(indata)),1e7,p=probs),bins=len(indata))[0]
+    return np.divide(sampl.astype(indata.dtype),sampl.max())*indata.max()*scale
+
+
+def profile(arr,angle=25,center=[0,0]):
+    extract = []
+    for i in range(100):
+        j = int(center[0] + (center[1] - i) * np.tan(ang * np.pi /180))
+        if j<=99 and j>=0:
+            extract.append(arr[i,j])
+    return extract
 
 
 def geterrorbands(uncert,sig):
