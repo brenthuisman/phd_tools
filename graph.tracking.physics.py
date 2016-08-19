@@ -31,6 +31,6 @@ ax1.set_yscale('log')
 #ax1.set_ylim([5e3,5e8])
 plot.texax(ax1)
 f.savefig('physicstracking.pdf', bbox_inches='tight')
-#f.savefig('physicstracking.png', bbox_inches='tight',dpi=300)
+f.savefig('physicstracking.png', bbox_inches='tight',dpi=300)
 plt.close('all')
 
