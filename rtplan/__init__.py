@@ -1,4 +1,4 @@
-import time,ROOT as r,math,tableio
+#import time,ROOT as r,tableio
 
 class rtplan:
 	def __init__(self,filename,nbprotons=4e10):
@@ -151,6 +151,7 @@ class rtplan:
 		
 	
 		sourcefile.close()
+		self.nrfields=self.metadata[-1][0]
 		self.autolayerhistrange()
 		self.autospothistrange()
 
@@ -182,110 +183,160 @@ class rtplan:
 		#high+=1
 		self.spothistrange=[low,high]
 
-	def getlayerhistos(self, nrbins=100, layerhistrange=None):
+	def getlayerdata(self, layerhistrange=None):
 		if layerhistrange is not None:
 			self.layerhistrange = layerhistrange
-		#make more readable
-		nrFields = self.metadata[-1][0]
 
-		#array of TH1Fs
+		#array of data
 		histos=[]
 		
 		# Create some histograms
-		for i in range(nrFields):
-			title = 'Treatment Plan Energy Structure for Field no'+str(i+1)
-			histos.append(r.TH1D( title, title, nrbins, self.layerhistrange[0], self.layerhistrange[1] ))
+		for i in range(self.nrfields):
+			#title = 'Treatment Plan Energy Structure for Field no'+str(i+1)
+			#histos.append(r.TH1D( title, title, nrbins, self.layerhistrange[0], self.layerhistrange[1] ))
+			xv=[]
+			yv=[]
 			for cp in self.layers:
 				if cp[0] == i+1:
-					histos[-1].Fill(cp[1],cp[2])
-			histos[-1].SetTitle(title+";Energy [MeV]"+";Nb. protons")
+					#histos[-1].Fill(cp[1],cp[2])
+					xv.append(cp[1])
+					yv.append(cp[2])
+			#histos[-1].SetTitle(title+";Energy [MeV]"+";Nb. protons")
+			histos.append([xv,yv])
 		
 		return histos
 
-	def getspothistos(self, nrbins=100, spothistrange=None):
+	def getspotdata(self, spothistrange=None):
 		if spothistrange is not None:
 			self.spothistrange = spothistrange
-		#make more readable
-		nrFields = self.metadata[-1][0]
 
-		#array of TH1Fs
+		#array of data, not really a histo
 		histos=[]
 		
 		# Create some histograms
-		for i in range(nrFields):
-			title = 'Treatment Plan Spot Structure for Field no'+str(i+1)
-			histos.append(r.TH2F( title, title, nrbins, self.layerhistrange[0], self.layerhistrange[1], nrbins, self.spothistrange[0], self.spothistrange[1] ))
+		for i in range(self.nrfields):
+			xv=[]
+			yv=[]
+			#title = 'Treatment Plan Spot Structure for Field no'+str(i+1)
+			#histos.append(r.TH2F( title, title, nrbins, self.layerhistrange[0], self.layerhistrange[1], nrbins, self.spothistrange[0], self.spothistrange[1] ))
 			for spot in self.spots:
 				if spot[0] == i+1:
-					histos[-1].Fill(spot[1],spot[-1])
-			histos[-1].SetMarkerStyle(3)
-			histos[-1].SetTitle(title+";Energy [MeV]"+";Nb. protons")
+					#histos[-1].Fill(spot[1],spot[-1])
+					xv.append(spot[1])
+					yv.append(spot[-1])
+					
+			#histos[-1].SetMarkerStyle(3)
+			#histos[-1].SetTitle(title+";Energy [MeV]"+";Nb. protons")
+			histos.append([xv,yv])
 		
 		return histos
 
-	def setrangetable(self,filename,density=1,headersize=8):
-		self.rangetable = tableio.read(filename,headersize)
-		for item in self.rangetable:
-			item[1]/=float(density)
-		#since the density of water is 1, no need to correct right now. for pmma, its different.
 
-	def getrangehistos(self, filename, nrbins=200):
-		self.setrangetable(filename)
 
-		# makes it  more readable
-		nrFields = self.metadata[-1][0]
+	#def getlayerhistos(self, nrbins=100, layerhistrange=None):
+		#if layerhistrange is not None:
+			#self.layerhistrange = layerhistrange
+		##make more readable
+		#nrFields = self.metadata[-1][0]
 
-		# Create some histograms
-		histos=[]
-		for i in range(nrFields):
-			title = 'Treatment Plan Proton Range in Field no'+str(i+1)
-			histos.append(r.TH1D( title, title, nrbins, self.layerhistrange[0], self.layerhistrange[1] ))
-			for cp in self.layers:
-				if cp[0] == i+1:
-					#cp[1] holds an energy, which we must convert to range using the rangetable set.
-					#for(j = 0; j < tbl_data.size(); j++){
-					depth=0
-					for j,jtem in enumerate(self.rangetable):
-						if cp[1]<jtem[0]:
-							#Superfastfitting: ((x - x-)/(x- - x+))=((y - y-)/(y- - y+)) ; solve for y
-							depth = ((cp[1] - self.rangetable[j-1][0])/(self.rangetable[j-1][0] - self.rangetable[j][0]))*(self.rangetable[j-1][1]-self.rangetable[j][1])+self.rangetable[j-1][1]
-							#print cp[1], self.rangetable[j-1][0], jtem[0], depth
-							break
-					#dont forget to convert cm to mm
-					histos[i].Fill((depth)*10,cp[2])
+		##array of TH1Fs
+		#histos=[]
 		
-		return histos
+		## Create some histograms
+		#for i in range(nrFields):
+			#title = 'Treatment Plan Energy Structure for Field no'+str(i+1)
+			#histos.append(r.TH1D( title, title, nrbins, self.layerhistrange[0], self.layerhistrange[1] ))
+			#for cp in self.layers:
+				#if cp[0] == i+1:
+					#histos[-1].Fill(cp[1],cp[2])
+			#histos[-1].SetTitle(title+";Energy [MeV]"+";Nb. protons")
+		
+		#return histos
+
+	#def getspothistos(self, nrbins=100, spothistrange=None):
+		#if spothistrange is not None:
+			#self.spothistrange = spothistrange
+		##make more readable
+		#nrFields = self.metadata[-1][0]
+
+		##array of TH1Fs
+		#histos=[]
+		
+		## Create some histograms
+		#for i in range(nrFields):
+			#title = 'Treatment Plan Spot Structure for Field no'+str(i+1)
+			#histos.append(r.TH2F( title, title, nrbins, self.layerhistrange[0], self.layerhistrange[1], nrbins, self.spothistrange[0], self.spothistrange[1] ))
+			#for spot in self.spots:
+				#if spot[0] == i+1:
+					#histos[-1].Fill(spot[1],spot[-1])
+			#histos[-1].SetMarkerStyle(3)
+			#histos[-1].SetTitle(title+";Energy [MeV]"+";Nb. protons")
+		
+		#return histos
+
+	#def setrangetable(self,filename,density=1,headersize=8):
+		#self.rangetable = tableio.read(filename,headersize)
+		#for item in self.rangetable:
+			#item[1]/=float(density)
+		##since the density of water is 1, no need to correct right now. for pmma, its different.
+
+	#def getrangehistos(self, filename, nrbins=200):
+		#self.setrangetable(filename)
+
+		## makes it  more readable
+		#nrFields = self.metadata[-1][0]
+
+		## Create some histograms
+		#histos=[]
+		#for i in range(nrFields):
+			#title = 'Treatment Plan Proton Range in Field no'+str(i+1)
+			#histos.append(r.TH1D( title, title, nrbins, self.layerhistrange[0], self.layerhistrange[1] ))
+			#for cp in self.layers:
+				#if cp[0] == i+1:
+					##cp[1] holds an energy, which we must convert to range using the rangetable set.
+					##for(j = 0; j < tbl_data.size(); j++){
+					#depth=0
+					#for j,jtem in enumerate(self.rangetable):
+						#if cp[1]<jtem[0]:
+							##Superfastfitting: ((x - x-)/(x- - x+))=((y - y-)/(y- - y+)) ; solve for y
+							#depth = ((cp[1] - self.rangetable[j-1][0])/(self.rangetable[j-1][0] - self.rangetable[j][0]))*(self.rangetable[j-1][1]-self.rangetable[j][1])+self.rangetable[j-1][1]
+							##print cp[1], self.rangetable[j-1][0], jtem[0], depth
+							#break
+					##dont forget to convert cm to mm
+					#histos[i].Fill((depth)*10,cp[2])
+		
+		#return histos
 
 		
-	def savelayerhistos(self,nrbins=100,fileformat=".pdf"):
-		#functions should eventually move to root_graphing
-		histos = self.getlayerhistos(nrbins)
-		for i,histo in enumerate(histos):
-			title = 'Treatment Plan Energy Structure for Field no'+str(i+1)
-			canv = r.TCanvas( title, title )
-			histos[i].Draw()
-			#See http://root.cern.ch/root/html/TPad.html#TPad:SaveAs for possible output formats.
-			canv.SaveAs(fileformat)
+	#def savelayerhistos(self,nrbins=100,fileformat=".pdf"):
+		##functions should eventually move to root_graphing
+		#histos = self.getlayerhistos(nrbins)
+		#for i,histo in enumerate(histos):
+			#title = 'Treatment Plan Energy Structure for Field no'+str(i+1)
+			#canv = r.TCanvas( title, title )
+			#histos[i].Draw()
+			##See http://root.cern.ch/root/html/TPad.html#TPad:SaveAs for possible output formats.
+			#canv.SaveAs(fileformat)
 
-	def savespothistos(self,nrbins=100,fileformat=".pdf"):
-		#functions should eventually move to root_graphing
-		histos = self.getspothistos(nrbins)
-		for i,histo in enumerate(histos):
-			title = 'Treatment Plan Spot Structure for Field no'+str(i+1)
-			canv = r.TCanvas( title, title )
-			canv.SetLogy()
-			histos[i].Draw()
-			#See http://root.cern.ch/root/html/TPad.html#TPad:SaveAs for possible output formats.
-			canv.SaveAs(fileformat)
+	#def savespothistos(self,nrbins=100,fileformat=".pdf"):
+		##functions should eventually move to root_graphing
+		#histos = self.getspothistos(nrbins)
+		#for i,histo in enumerate(histos):
+			#title = 'Treatment Plan Spot Structure for Field no'+str(i+1)
+			#canv = r.TCanvas( title, title )
+			#canv.SetLogy()
+			#histos[i].Draw()
+			##See http://root.cern.ch/root/html/TPad.html#TPad:SaveAs for possible output formats.
+			#canv.SaveAs(fileformat)
 
-	def showlayerhistos(self,nrbins=100,delay=20):
-		#functions should eventually move to root_graphing
-		histos = self.getlayerhistos(nrbins)
-		canv=[]
-		for i,histo in enumerate(histos):
-			title = 'Treatment Plan Energy Structure for Field no'+str(i+1)
-			canv.append(r.TCanvas( title, title ))
-			histos[i].Draw()
+	#def showlayerhistos(self,nrbins=100,delay=20):
+		##functions should eventually move to root_graphing
+		#histos = self.getlayerhistos(nrbins)
+		#canv=[]
+		#for i,histo in enumerate(histos):
+			#title = 'Treatment Plan Energy Structure for Field no'+str(i+1)
+			#canv.append(r.TCanvas( title, title ))
+			#histos[i].Draw()
 	
-		time.sleep(delay)
+		#time.sleep(delay)
 

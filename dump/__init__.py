@@ -81,3 +81,17 @@ def thist2np(infile,dt='<f4'):
 		#outdata.tofile(outname+'.raw')
 		retval[outname]=outdata
 	return retval
+
+
+def thist2np_xy(infile):
+	tfile=r.TFile(infile,"READ")
+	retval={}
+	for item in tfile.GetListOfKeys():
+		outname=item.ReadObj().GetName()
+		outdata_x=[]
+		outdata_y=[]
+		for i in range(item.ReadObj().GetNbinsX()):
+			outdata_x.append(float(item.ReadObj().GetXaxis().GetBinCenter(i+1)))
+			outdata_y.append(float(item.ReadObj().GetBinContent(i+1)))
+		retval[outname]=[outdata_x,outdata_y]
+	return retval

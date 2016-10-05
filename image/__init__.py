@@ -310,6 +310,24 @@ class image:
 		np.where(self.imdata>0, 1, 0)
 
 
+	def tolowpass(self,threshold):
+		self.imdata[self.imdata<threshold] = 0
+
+
+	def tohighpass(self,threshold):
+		self.imdata[self.imdata>threshold] = 0
+
+
+	def savelowpass(self,threshold,outpostfix='.lowpass'):
+		self.tolowpass(threshold)
+		return self.saveas(outpostfix)
+
+
+	def savehighpass(self,threshold,outpostfix='.highpass'):
+		self.tohighpass(threshold)
+		return self.saveas(outpostfix)
+
+
 	def toeff(self):
 		runtime = self.nprim/self.pps
 		if self.type == 'var' or self.type == 'relvar' or self.type == 'relunc' or  self.type == 'unc':
