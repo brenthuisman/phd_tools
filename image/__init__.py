@@ -45,7 +45,11 @@ class image:
 				if 'MET_UCHAR' in newline[1]:
 					self.datatype = '<u1'	
 				if 'MET_SHORT' in newline[1]:
-					self.datatype = '<i2'			
+					self.datatype = '<i2'
+				if 'MET_INT' in newline[1]:
+					self.datatype = '<i4'
+				if 'MET_LONG' in newline[1]:
+					self.datatype = '<i8'
 			if 'NDims' in newline[0]:
 				self.header['NDims'] = int(newline[1])
 			if 'TransformMatrix' in newline[0]:
@@ -118,6 +122,36 @@ class image:
 		print "Image crushed. Shape:",self.imdata.shape
 
 
+	def __crush_argmax(self,crush):
+        #crush, but doesnt project (=sum) but takes the max voxel-value)
+		if self.crushed is True:
+			print "Can't crush twice."
+			return
+		# argmax does not support tuple axes so check that we only crush 1 dimension
+		if not crush.count(1) == 1:
+			print "Can't crush_argmax on more than 1 dimension."
+			return
+		#if len(self.header['DimSize']) is 3 and len(crush) is 4:
+			#print "Assuming a valid 3D image is requested to be crushed, removing z-index..."
+			#crush.pop()
+		if len(self.header['DimSize']) is not len(crush):
+			print "Please supply proper dimensions."
+			return
+
+		crush=crush[::-1]
+		self.imdata = self.imdata.reshape(self.imdata.shape[::-1])
+		
+		ax = [i for (i,j) in zip(range(len(crush)),crush) if j==1]
+		
+		# argmax does not support tuple axes and casts to LONG.
+		self.imdata = self.imdata.argmax(axis=ax[0])
+		
+		self.crushed = True
+		
+		self.imdata = self.imdata.reshape(self.imdata.shape[::-1])
+		print "Image crush_argmax'ed. Shape:",self.imdata.shape
+
+
 	def __crush_header(self,outpostfix,crush):
 		self.header['NDims'] = crush.count(0)
 		self.header['DimSize'] = [i for (i,j) in zip(self.header['DimSize'],crush) if j==0]
@@ -164,6 +198,13 @@ class image:
 		if '/' in outraw:
 			self.header['ElementDataFile'] = outraw.split('/')[-1]
 		newheadfile = self.infile[:-4] + outpostfix + '.mhd'
+		
+		# VV doesnt support long, so we convert to int
+		if self.imdata.dtype == np.int64:
+			self.imdata = self.imdata.astype(np.int32, copy=False)
+			self.datatype = '<i4'
+			self.header['ElementType'] = 'MET_INT'
+		
 		#tofile is Row-major ('C' order), so that's why it happens to go correctly w.r.t. the HZYX order.
 		self.imdata.tofile(outraw)
 		print "New raw file:",outraw
@@ -179,6 +220,13 @@ class image:
 		assert crush.count(0) is 2 or 3
 		self.__crush(crush)
 		self.__crush_header(outpostfix,crush)
+
+
+	def save_crush_argmax(self,outpostfix,crush):
+		assert crush.count(0) is 2 or 3
+		self.__crush_argmax(crush)
+		self.__crush_header(outpostfix,crush)
+		return self.saveas(outpostfix)
 
 
 	def saveprojection(self,outpostfix,crush):
