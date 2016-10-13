@@ -145,9 +145,9 @@ class image:
 		
 		# argmax does not support tuple axes and casts to LONG.
 		self.imdata = self.imdata.argmax(axis=ax[0])
+		self.header['ElementType'] = 'MET_LONG'
 		
 		self.crushed = True
-		
 		self.imdata = self.imdata.reshape(self.imdata.shape[::-1])
 		print "Image crush_argmax'ed. Shape:",self.imdata.shape
 
@@ -308,7 +308,16 @@ class image:
 		print "New mhd file:",outname
 		return image(outname)
 
-		
+
+	def applymask_clitk(self,postfix,maskfile):
+		inname = self.infile
+		outname = self.infile[:-4]+str(postfix)+'.mhd'
+		subprocess.call(['clitkSetBackground','-i',inname,'-m',maskfile,'-o',outname])
+		#os.popen("clitkSetBackground -i "+inname+" -m "+maskfile+" -o "+outname)
+		print "New mhd file:",outname
+		return image(outname)
+
+
 	def applymask(self,*maskimages):
 		for msk in maskimages:
 			#reshape first to inverted axis order.
@@ -356,6 +365,16 @@ class image:
 
 	def todosemask(self,outpostfix='.dosemask'):
 		np.where(self.imdata>0, 1, 0)
+
+
+	def tomask_atthreshold(self,threshold):
+		self.imdata[self.imdata<threshold] = 0
+		self.imdata[self.imdata>=threshold] = 1
+
+
+	def savemask_atthreshold(self,threshold,outpostfix='.masked'):
+		self.tomask_atthreshold(threshold)
+		return self.saveas(outpostfix)
 
 
 	def tolowpass(self,threshold):

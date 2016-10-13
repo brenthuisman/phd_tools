@@ -1,7 +1,15 @@
-#import time,ROOT as r,tableio
-
 class rtplan:
-	def __init__(self,filename,nbprotons=4e10):
+	def __init__(self,filename, **kwargs):
+		#defaults
+		self.nprims=4e10
+		self.edep=True
+		self.MSW_to_protons=True
+		
+		for key in ('nprims', 'edep', 'MSW_to_protons'):
+			if key in kwargs:
+				setattr(self, key, kwargs[key])
+		
+		self.TotalMetersetWeight = 0.
 		self.layers = []
 		self.spots = []
 		self.metadata = []
@@ -125,7 +133,8 @@ class rtplan:
 					capture_Energy_first = 0
 
 			if capture_TotalMetersetWeight == 1:
-				MSWfactor = nbprotons/float(newline)
+				#it appears the sums never are really quite correct, so we'll set later if and when converted to nb_prots
+				self.TotalMetersetWeight = float(newline)
 				capture_TotalMetersetWeight = 0
 		
 			if capture_NbOfScannedSpots == 1:
@@ -136,17 +145,17 @@ class rtplan:
 					continue
 				if Energy == 0:
 					#End of the field, here NbOfScannedSpots = int(newline) = 0, so dont overwrite.
-					self.layers.append([FieldID,Energy_last,(CumulativeMetersetWeight-previous_CumulativeMetersetWeight)*MSWfactor,NbOfScannedSpots])
-					self.metadata.append([FieldID,(ControlPointIndex)/2+1,Energy_first,Energy_last,CumulativeMetersetWeight*MSWfactor,GantryAngle])
+					self.layers.append([FieldID,Energy_last,(CumulativeMetersetWeight-previous_CumulativeMetersetWeight),NbOfScannedSpots])
+					self.metadata.append([FieldID,(ControlPointIndex)/2+1,Energy_first,Energy_last,CumulativeMetersetWeight,GantryAngle])
 				else:
 					NbOfScannedSpots = int(newline)
-					self.layers.append([FieldID,Energy,(CumulativeMetersetWeight-previous_CumulativeMetersetWeight)*MSWfactor,NbOfScannedSpots])
+					self.layers.append([FieldID,Energy,(CumulativeMetersetWeight-previous_CumulativeMetersetWeight),NbOfScannedSpots])
 					
 			if capture_Spots == 1:
 				#Only capture spots for first of pairs of CMWs
 				if CumulativeMetersetWeight == previous_CumulativeMetersetWeight:
 					#Spots.append(float(newline.split(' ')[-1]))
-					self.spots.append([FieldID,Energy,float(newline.split(' ')[0]),float(newline.split(' ')[1]),float(newline.split(' ')[2])*MSWfactor])
+					self.spots.append([FieldID,Energy,float(newline.split(' ')[0]),float(newline.split(' ')[1]),float(newline.split(' ')[2])])
 				#Because Spots are multiline, we stop it when handling lines starting with '#', see top of function.
 		
 	
@@ -154,6 +163,8 @@ class rtplan:
 		self.nrfields=self.metadata[-1][0]
 		self.autolayerhistrange()
 		self.autospothistrange()
+		if self.MSW_to_protons == True:
+			self.msw_to_prot()
 
 
 	def autolayerhistrange(self):
@@ -170,6 +181,7 @@ class rtplan:
 		high+=1
 		self.layerhistrange=[low,high]
 
+
 	def autospothistrange(self):
 		#find high and low points for histograms
 		#TODO can I do without this? can the edges for a TH1D be changed afterwards?
@@ -183,6 +195,7 @@ class rtplan:
 		#high+=1
 		self.spothistrange=[low,high]
 
+
 	def getlayerdata(self, layerhistrange=None):
 		if layerhistrange is not None:
 			self.layerhistrange = layerhistrange
@@ -192,19 +205,16 @@ class rtplan:
 		
 		# Create some histograms
 		for i in range(self.nrfields):
-			#title = 'Treatment Plan Energy Structure for Field no'+str(i+1)
-			#histos.append(r.TH1D( title, title, nrbins, self.layerhistrange[0], self.layerhistrange[1] ))
 			xv=[]
 			yv=[]
 			for cp in self.layers:
 				if cp[0] == i+1:
-					#histos[-1].Fill(cp[1],cp[2])
-					xv.append(cp[1])
-					yv.append(cp[2])
-			#histos[-1].SetTitle(title+";Energy [MeV]"+";Nb. protons")
+					xv.append(cp[1]) #energy
+					yv.append(cp[2]) #nbprots
 			histos.append([xv,yv])
 		
 		return histos
+
 
 	def getspotdata(self, spothistrange=None):
 		if spothistrange is not None:
@@ -217,126 +227,92 @@ class rtplan:
 		for i in range(self.nrfields):
 			xv=[]
 			yv=[]
-			#title = 'Treatment Plan Spot Structure for Field no'+str(i+1)
-			#histos.append(r.TH2F( title, title, nrbins, self.layerhistrange[0], self.layerhistrange[1], nrbins, self.spothistrange[0], self.spothistrange[1] ))
 			for spot in self.spots:
 				if spot[0] == i+1:
-					#histos[-1].Fill(spot[1],spot[-1])
-					xv.append(spot[1])
-					yv.append(spot[-1])
-					
-			#histos[-1].SetMarkerStyle(3)
-			#histos[-1].SetTitle(title+";Energy [MeV]"+";Nb. protons")
+					xv.append(spot[1]) #energy
+					yv.append(spot[-1]) #nbprots
 			histos.append([xv,yv])
 		
 		return histos
 
 
-
-	#def getlayerhistos(self, nrbins=100, layerhistrange=None):
-		#if layerhistrange is not None:
-			#self.layerhistrange = layerhistrange
-		##make more readable
-		#nrFields = self.metadata[-1][0]
-
-		##array of TH1Fs
-		#histos=[]
-		
-		## Create some histograms
-		#for i in range(nrFields):
-			#title = 'Treatment Plan Energy Structure for Field no'+str(i+1)
-			#histos.append(r.TH1D( title, title, nrbins, self.layerhistrange[0], self.layerhistrange[1] ))
-			#for cp in self.layers:
-				#if cp[0] == i+1:
-					#histos[-1].Fill(cp[1],cp[2])
-			#histos[-1].SetTitle(title+";Energy [MeV]"+";Nb. protons")
-		
-		#return histos
-
-	#def getspothistos(self, nrbins=100, spothistrange=None):
-		#if spothistrange is not None:
-			#self.spothistrange = spothistrange
-		##make more readable
-		#nrFields = self.metadata[-1][0]
-
-		##array of TH1Fs
-		#histos=[]
-		
-		## Create some histograms
-		#for i in range(nrFields):
-			#title = 'Treatment Plan Spot Structure for Field no'+str(i+1)
-			#histos.append(r.TH2F( title, title, nrbins, self.layerhistrange[0], self.layerhistrange[1], nrbins, self.spothistrange[0], self.spothistrange[1] ))
-			#for spot in self.spots:
-				#if spot[0] == i+1:
-					#histos[-1].Fill(spot[1],spot[-1])
-			#histos[-1].SetMarkerStyle(3)
-			#histos[-1].SetTitle(title+";Energy [MeV]"+";Nb. protons")
-		
-		#return histos
-
-	#def setrangetable(self,filename,density=1,headersize=8):
-		#self.rangetable = tableio.read(filename,headersize)
-		#for item in self.rangetable:
-			#item[1]/=float(density)
-		##since the density of water is 1, no need to correct right now. for pmma, its different.
-
-	#def getrangehistos(self, filename, nrbins=200):
-		#self.setrangetable(filename)
-
-		## makes it  more readable
-		#nrFields = self.metadata[-1][0]
-
-		## Create some histograms
-		#histos=[]
-		#for i in range(nrFields):
-			#title = 'Treatment Plan Proton Range in Field no'+str(i+1)
-			#histos.append(r.TH1D( title, title, nrbins, self.layerhistrange[0], self.layerhistrange[1] ))
-			#for cp in self.layers:
-				#if cp[0] == i+1:
-					##cp[1] holds an energy, which we must convert to range using the rangetable set.
-					##for(j = 0; j < tbl_data.size(); j++){
-					#depth=0
-					#for j,jtem in enumerate(self.rangetable):
-						#if cp[1]<jtem[0]:
-							##Superfastfitting: ((x - x-)/(x- - x+))=((y - y-)/(y- - y+)) ; solve for y
-							#depth = ((cp[1] - self.rangetable[j-1][0])/(self.rangetable[j-1][0] - self.rangetable[j][0]))*(self.rangetable[j-1][1]-self.rangetable[j][1])+self.rangetable[j-1][1]
-							##print cp[1], self.rangetable[j-1][0], jtem[0], depth
-							#break
-					##dont forget to convert cm to mm
-					#histos[i].Fill((depth)*10,cp[2])
-		
-		#return histos
-
-		
-	#def savelayerhistos(self,nrbins=100,fileformat=".pdf"):
-		##functions should eventually move to root_graphing
-		#histos = self.getlayerhistos(nrbins)
-		#for i,histo in enumerate(histos):
-			#title = 'Treatment Plan Energy Structure for Field no'+str(i+1)
-			#canv = r.TCanvas( title, title )
-			#histos[i].Draw()
-			##See http://root.cern.ch/root/html/TPad.html#TPad:SaveAs for possible output formats.
-			#canv.SaveAs(fileformat)
-
-	#def savespothistos(self,nrbins=100,fileformat=".pdf"):
-		##functions should eventually move to root_graphing
-		#histos = self.getspothistos(nrbins)
-		#for i,histo in enumerate(histos):
-			#title = 'Treatment Plan Spot Structure for Field no'+str(i+1)
-			#canv = r.TCanvas( title, title )
-			#canv.SetLogy()
-			#histos[i].Draw()
-			##See http://root.cern.ch/root/html/TPad.html#TPad:SaveAs for possible output formats.
-			#canv.SaveAs(fileformat)
-
-	#def showlayerhistos(self,nrbins=100,delay=20):
-		##functions should eventually move to root_graphing
-		#histos = self.getlayerhistos(nrbins)
-		#canv=[]
-		#for i,histo in enumerate(histos):
-			#title = 'Treatment Plan Energy Structure for Field no'+str(i+1)
-			#canv.append(r.TCanvas( title, title ))
-			#histos[i].Draw()
+	def ConvertMuToProtons(self,weight,energy):
+		#straight from GateSourceTPSPencilBeam, seems to introduce small energy-dep on #prots/MU
+		K=37.60933
+		SP=9.6139E-09 * energy**4 - 7.0508E-06 * energy**3 + 2.0028E-03 * energy**2 - 2.7615E-01 * energy**1 + 2.0082E+01 * energy**0
+		PTP=1.
+		Gain=3./(K*SP*PTP*1.602176E-10)
+		return weight*Gain
 	
-		#time.sleep(delay)
 
+	def msw_to_prot(self):
+		#to verify that TPSes don't compute the correct MSW sums, we record laysum, spotsum. IN SPOT WE TRUST
+		spotsum = 0.
+		laysum = [0.]*self.nrfields
+		for i,field in enumerate(self.metadata):
+			laysum[i] = field[4]
+		for spot in self.spots:
+			spotsum += spot[4]
+		
+		#print sum(laysum),self.TotalMetersetWeight,spotsum
+		
+		#since its not linear, we must twopass
+		if self.edep == True:
+			spotsum = 0.
+			#first pass: update MSWs
+			#laysum = [0.]*self.nrfields #we recompute based on new weights
+			for layer in self.layers:
+				E = layer[1]
+				MSW = layer[2]
+				layer[2] = self.ConvertMuToProtons(MSW, E)
+				laysum[layer[0]-1] += layer[2]
+			for spot in self.spots:
+				E = spot[1]
+				MSW = spot[4]
+				spot[4] = self.ConvertMuToProtons(MSW, E)
+				spotsum += spot[4]
+			for i,field in enumerate(self.metadata):
+				field[4] = laysum[i]
+			self.TotalMetersetWeight = sum(laysum)
+		
+		#print sum(laysum),self.TotalMetersetWeight,spotsum
+		
+		#convert MSW to nprims. linear.
+		#MSWfactor = self.nprims/self.TotalMetersetWeight #so this gives a slightly wrong number of protons.
+		MSWfactor = self.nprims/spotsum
+		laysum = [0.]*self.nrfields #we recompute
+		spotsum = 0.
+		for layer in self.layers:
+			layer[2] *= MSWfactor
+			laysum[layer[0]-1] += layer[2]
+		for spot in self.spots:
+			spot[4] *= MSWfactor
+			spotsum += spot[4]
+		for field in self.metadata:
+			field[4] *= MSWfactor
+		self.TotalMetersetWeight *= MSWfactor
+		
+		#print sum(laysum),self.TotalMetersetWeight,spotsum
+		
+		#if you had enabled the print statements, you saw that sum(spots) is not sum(layers) is not TotalMetersetWeight.
+		#so lets recalc layers and TotalMetersetWeight based on spot weights.
+		for layer in self.layers:
+			layer[2] = 0.
+		for field in self.metadata:
+			field[4] = 0.
+		laysum = [0.]*self.nrfields
+		for spot in self.spots:
+			fieldid = spot[0]
+			E = spot[1]
+			spotWeight = spot[4]
+			for layer in self.layers:
+				if layer[0] == fieldid and layer[1] == E:
+					layer[2] += spotWeight
+					laysum[layer[0]-1] += spotWeight
+		for i,field in enumerate(self.metadata):
+			field[4] = laysum[i]
+		self.TotalMetersetWeight = sum(laysum)
+		
+		#print sum(laysum),self.TotalMetersetWeight,spotsum
+		
+		print "Conversion to correct numbers of protons complete."

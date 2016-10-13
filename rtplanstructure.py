@@ -24,7 +24,7 @@ if rtplan.nrfields > 1:
             first=False
         #ax.set_xlabel('$E$ [MeV]')
         plot.texax(ax)
-        ax.set_title('Field nr. '+str(fieldnr+1))
+        ax.set_title('Field nr. '+str(fieldnr+1)+"\n"+str(len(spot[0]))+" spots")
         
     first = True
     for layer,ax in zip(layerdata,plotke[-1][1]): #1 is tweede rij
@@ -37,10 +37,11 @@ if rtplan.nrfields > 1:
             ax.set_ylabel('Layers [nr. protons]')
             first=False
         ax.set_xlabel('$E$ [MeV]')
+        ax.set_title(str(len(layer[0]))+" energy layers")
         plot.texax(ax)
         
 else:
-    plotke = plt.subplots(nrows=2, ncols=1, sharex=False, sharey='row')
+    plotke = plt.subplots(nrows=2, ncols=1, sharex='col', sharey='row')
 
     ax = plotke[-1][0] #0 is eerste kolom
     spot=spotdata[0]
@@ -53,7 +54,7 @@ else:
     ax.semilogy()
     ax.set_ylabel('Spots [nr. protons]')
     plot.texax(ax)
-    ax.set_title('Single Field')
+    ax.set_title('Single Field'+"\n"+str(len(spot[0]))+" spots")
     
     ax = plotke[-1][1]
     layer=layerdata[0]
@@ -65,6 +66,7 @@ else:
     ax.semilogy()
     ax.set_ylabel('Layers [nr. protons]')
     ax.set_xlabel('$E$ [MeV]')
+    ax.set_title(str(len(layer[0]))+" energy layers")
     plot.texax(ax)
     
 
