@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 import sys,rtplan,matplotlib.pyplot as plt,plot,math
+from tableio import write
 
 rtplan = rtplan.rtplan(sys.argv[-1])
-#rtplan.savelayerhistos()
-#rtplan.savespothistos()
+
+#write(rtplan.spots,'spots.txt')
 
 spotdata=rtplan.getspotdata()
 layerdata=rtplan.getlayerdata()
