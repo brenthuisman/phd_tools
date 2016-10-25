@@ -10,7 +10,6 @@ for spot in rtplan.spots:
 		newspots.append(spot)
 #write(newspots,'spots.txt')
 
-
 outpostfix = ".3d"
 crush = [0,0,0,1]
 
@@ -21,7 +20,7 @@ mask = image.image("mask/absdiff.dose.fullplan.10000.skinmask.mhd")
 mask.tomask_atthreshold(0.7) # cutoff in grey
 
 print np.count_nonzero(mask.imdata)
-mask.insert_block('x','-',100-35)
+mask.insert_block('x','-',100-35) #remove a noisy area not contributing to a few-mm shift
 print np.count_nonzero(mask.imdata)
 maskfname = mask.saveas('.thres.x')
 
@@ -44,4 +43,4 @@ print lay_hist#.keys()
 for spotid in spt_hist.keys():
 	if spotid == 0.:
 		continue
-	print newspots[int(spotid)]
+	print newspots[int(spotid)] #klopt!

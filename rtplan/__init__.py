@@ -254,7 +254,7 @@ class rtplan:
 		for spot in self.spots:
 			spotsum += spot[4]
 		
-		#print sum(laysum),self.TotalMetersetWeight,spotsum
+		print sum(laysum),self.TotalMetersetWeight,spotsum
 		
 		#since its not linear, we must twopass
 		if self.edep == True:
@@ -275,7 +275,7 @@ class rtplan:
 				field[4] = laysum[i]
 			self.TotalMetersetWeight = sum(laysum)
 		
-		#print sum(laysum),self.TotalMetersetWeight,spotsum
+		print sum(laysum),self.TotalMetersetWeight,spotsum
 		
 		#convert MSW to nprims. linear.
 		#MSWfactor = self.nprims/self.TotalMetersetWeight #so this gives a slightly wrong number of protons.
@@ -292,7 +292,7 @@ class rtplan:
 			field[4] *= MSWfactor
 		self.TotalMetersetWeight *= MSWfactor
 		
-		#print sum(laysum),self.TotalMetersetWeight,spotsum
+		print sum(laysum),self.TotalMetersetWeight,spotsum
 		
 		#if you had enabled the print statements, you saw that sum(spots) is not sum(layers) is not TotalMetersetWeight.
 		#so lets recalc layers and TotalMetersetWeight based on spot weights.
@@ -313,6 +313,6 @@ class rtplan:
 			field[4] = laysum[i]
 		self.TotalMetersetWeight = sum(laysum)
 		
-		#print sum(laysum),self.TotalMetersetWeight,spotsum
+		print sum(laysum),self.TotalMetersetWeight,spotsum
 		
 		print "Conversion to correct numbers of protons complete."
