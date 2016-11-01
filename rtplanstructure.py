@@ -2,7 +2,10 @@
 import sys,rtplan,matplotlib.pyplot as plt,plot,math
 from tableio import write
 
-rtplan = rtplan.rtplan(sys.argv[-1])
+if sys.argv[-1] == 'nomu':
+	rtplan = rtplan.rtplan(sys.argv[-1],MSW_to_protons=True)
+else:
+	rtplan = rtplan.rtplan(sys.argv[-1])
 
 #write(rtplan.spots,'spots.txt')
 
