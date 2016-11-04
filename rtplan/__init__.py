@@ -5,7 +5,7 @@ class rtplan:
 		self.edep=True
 		self.MSW_to_protons=True
 		
-		for key in ('nprims', 'edep', 'MSW_to_protons'):
+		for key in ('nprims', 'edep', 'MSW_to_protons', 'killzero'):
 			if key in kwargs:
 				setattr(self, key, kwargs[key])
 		
@@ -15,6 +15,8 @@ class rtplan:
 		self.metadata = []
 		self.layerhistrange = []
 		self.rangetable = []
+		self.nrfields = 0
+		self.fieldids = []
 		
 		sourcefile = open(filename,'r')
 	
@@ -76,6 +78,8 @@ class rtplan:
 			
 				if newline == 'FieldID':
 					#new field ==  new dataset
+					# fieldID doesnt have to be incremental!
+					self.nrfields += 1
 					capture_FieldID = 1
 					continue
 			
@@ -116,6 +120,7 @@ class rtplan:
 			if capture_FieldID == 1:
 				#Field in rtplan starts at 1.
 				FieldID = int(newline)
+				self.fieldids.append(FieldID)
 				capture_FieldID = 0
 		
 			if capture_Energy == 1:
@@ -154,13 +159,15 @@ class rtplan:
 			if capture_Spots == 1:
 				#Only capture spots for first of pairs of CMWs
 				if CumulativeMetersetWeight == previous_CumulativeMetersetWeight:
-					#Spots.append(float(newline.split(' ')[-1]))
-					self.spots.append([FieldID,Energy,float(newline.split(' ')[0]),float(newline.split(' ')[1]),float(newline.split(' ')[2])])
+					x,y,weight = newline.split(' ')
+					if self.killzero and float(weight) == 0:
+						continue
+					self.spots.append([FieldID,Energy,float(x),float(y),float(weight)])
 				#Because Spots are multiline, we stop it when handling lines starting with '#', see top of function.
 		
 	
 		sourcefile.close()
-		self.nrfields=self.metadata[-1][0]
+		#self.nrfields=self.metadata[-1][0]
 		self.autolayerhistrange()
 		self.autospothistrange()
 		if self.MSW_to_protons == True:
@@ -205,10 +212,11 @@ class rtplan:
 		
 		# Create some histograms
 		for i in range(self.nrfields):
+			curfieldid = self.fieldids[i]
 			xv=[]
 			yv=[]
 			for cp in self.layers:
-				if cp[0] == i+1:
+				if cp[0] == curfieldid:
 					xv.append(cp[1]) #energy
 					yv.append(cp[2]) #nbprots
 			histos.append([xv,yv])
@@ -224,11 +232,13 @@ class rtplan:
 		histos=[]
 		
 		# Create some histograms
+
 		for i in range(self.nrfields):
+			curfieldid = self.fieldids[i]
 			xv=[]
 			yv=[]
 			for spot in self.spots:
-				if spot[0] == i+1:
+				if spot[0] == curfieldid:
 					xv.append(spot[1]) #energy
 					yv.append(spot[-1]) #nbprots
 			histos.append([xv,yv])

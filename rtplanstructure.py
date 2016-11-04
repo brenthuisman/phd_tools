@@ -1,11 +1,14 @@
 #!/usr/bin/env python
-import sys,rtplan,matplotlib.pyplot as plt,plot,math
+import sys,rtplan,matplotlib.pyplot as plt,plot,math,numpy as np
 from tableio import write
 
+fname = ''
 if sys.argv[-1] == 'nomu':
-	rtplan = rtplan.rtplan(sys.argv[-1],MSW_to_protons=True)
+	fname = sys.argv[-2]
+	rtplan = rtplan.rtplan(fname,MSW_to_protons=False, killzero=True)
 else:
-	rtplan = rtplan.rtplan(sys.argv[-1])
+	fname = sys.argv[-1]
+	rtplan = rtplan.rtplan(fname, killzero=True)
 
 #write(rtplan.spots,'spots.txt')
 
@@ -18,10 +21,11 @@ if rtplan.nrfields > 1:
 
     first = True
     for fieldnr,(spot,ax) in enumerate(zip(spotdata,plotke[-1][0])): #0 is eerste rij
-        ax.scatter(spot[0],spot[1],marker='x',alpha=0.1,c='black')
+        ax.scatter(spot[0],spot[1],marker='x',alpha=0.1,c='black',clip_on=False)
         
         ax.set_xlim(min(spot[0]),max(spot[0]))
         ax.set_ylim(min(spot[1]),max(spot[1]))
+        
         ax.semilogy()
         if first:
             ax.set_ylabel('Spots [nr. protons]')
@@ -32,10 +36,11 @@ if rtplan.nrfields > 1:
         
     first = True
     for layer,ax in zip(layerdata,plotke[-1][1]): #1 is tweede rij
-        ax.hist(layer[0],bins=len(layer[0])*10,weights=layer[1],bottom=min(layer[1])/10.,histtype='bar',color='black')
+        ax.hist(layer[0],bins=len(layer[0])*10,weights=layer[1],bottom=min(layer[1])/100.,histtype='bar',color='black')
         
         ax.set_xlim(min(layer[0]),max(layer[0]))
         ax.set_ylim(10.**int(math.log10(min(layer[1]))),max(layer[1]))
+        #print 10.**int(math.log10(min(layer[1])))
         ax.semilogy()
         if first:
             ax.set_ylabel('Layers [nr. protons]')
@@ -50,7 +55,7 @@ else:
     ax = plotke[-1][0] #0 is eerste kolom
     spot=spotdata[0]
     
-    ax.scatter(spot[0],spot[1],marker='x',alpha=0.1,c='black')
+    ax.scatter(spot[0],spot[1],marker='x',alpha=0.1,c='black',clip_on=False)
     
     ax.set_xlim(min(spot[0]),max(spot[0]))
     ax.set_ylim(min(spot[1]),max(spot[1]))
@@ -74,5 +79,5 @@ else:
     plot.texax(ax)
     
 
-plotke[0].savefig(sys.argv[-1][:-3]+'plot.pdf', bbox_inches='tight')
+plotke[0].savefig(fname[:-3]+'plot.pdf', bbox_inches='tight')
 plt.close('all')
