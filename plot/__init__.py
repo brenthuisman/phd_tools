@@ -1,11 +1,7 @@
-#from tle import *
 from texify import *
 
-import matplotlib.pyplot as plt,numpy as np
-from math import floor, log10, sqrt
-from scipy.optimize import curve_fit
-from scipy.optimize import fsolve
-from scipy.stats import norm
+import numpy as np
+from math import floor, log10
 
 #colors = "rgbmyck"*20
 colors = ['#3778bf','#feb308','#7b0323','#7bb274','#a8a495','#825f87']*20
@@ -95,6 +91,7 @@ def fill_between_steps(ax, x, y1, y2=0, step_where='pre', **kwargs):
 
 
 def addrandomnoise(indata):
+	## should be replaced with iba/ipnl funcs
     return [np.random.normal(x, x/500.) if x>0. else x for x in indata]
 
 
@@ -106,15 +103,6 @@ def sampledata(indata,scale=0.1):
     return np.divide(sampl.astype(indata.dtype),sampl.max())*indata.max()*scale
 
 
-def profile(arr,angle=25,center=[0,0]):
-    extract = []
-    for i in range(100):
-        j = int(center[0] + (center[1] - i) * np.tan(ang * np.pi /180))
-        if j<=99 and j>=0:
-            extract.append(arr[i,j])
-    return extract
-
-
 def geterrorbands(uncert,sig):
 	#returned as percentages
 	minus = [(yields-unc) for unc,yields in zip(uncert, sig)]
@@ -122,11 +110,11 @@ def geterrorbands(uncert,sig):
 	return minus,plus 
 
 
-def getmuvar(somelist):
-	mu = sum(somelist)/float(len(somelist))
-	diff = [(mu-x)**2 for x in somelist]
-	var = sum(diff)/(len(somelist)+1)
-	return (mu,var)
+def getloghist(data,nrbin=50):
+	binn = np.logspace(np.log10(np.nanmin(data)),np.log10(np.nanmax(data)),num=nrbin)
+	hist,bins = np.histogram(data, bins=binn)
+	centers = (bins[:-1] + bins[1:]) / 2
+	return centers,hist
 
 
 # Define function for string formatting of scientific notation
@@ -160,51 +148,3 @@ def sn_mag(num):
     exponent = str(int(floor(log10(abs(num)))))
     return r"$10^"+exponent+"$"
 
-#DELETE BELOW THIS LINE
-@static_vars(color_index=-1)
-def plotwfit(ax1,xlist,ylist,func=None):
-    colors = "rgbcmyk"*100
-    plotwfit.color_index+=1  
-    #set default fit 1/sqrt(x)
-    if func is None:
-        def func(x,a,b):#var, params
-            return a+b/np.sqrt(x)
-    parameter, covariance_matrix = curve_fit(func, xlist, ylist)
-
-    threshold = fsolve(lambda x: func(x,*parameter)-.02, 1e2) #initial guess at 1e3
-
-    x = np.linspace(min(xlist), max([threshold,xlist[-1]]), 1e5)
-    y = func(x, *parameter)
-
-    ax1.scatter(xlist, [100*i for i in ylist], marker='x', s=100,color=colors[plotwfit.color_index])
-    ax1.plot(x, 100*y, 'b-', label='Fit: '+sn(parameter[0])+'+\n'+sn(parameter[1])+'/$\sqrt{runtime}$',color=colors[plotwfit.color_index])
-    ax1.autoscale(axis='x',tight=True)
-    ax1.autoscale(axis='y',tight=True)
-    ax1.axhline(100*0.02, color='#666666', ls='--')
-    ax1.axvline(threshold, color='#999999', ls='--')
-    
-    plot.texify.fixax(ax1)
-
-    print "Crossing 2pc threshold at %.2e"%threshold
-    return threshold
-
-
-@static_vars(color_index=-1)
-def ploteffhist(ax1,data):
-    colors = "rgbcmyk"*100
-    plotwfit.color_index+=1  
-    data = data[~np.isnan(data)].flatten()
-    # label = "Min: %.2e, Median: %.2e, Max: %.2e"%(np.nanmin(data),np.median(data),np.nanmax(data))
-    label = "Min: "+sn(np.nanmin(data))+"\nMedian: "+sn(np.median(data))+"\nMax: "+sn(np.nanmax(data))
-    ax1.hist(data, bins = np.logspace(np.log10(np.nanmin(data)),np.log10(np.nanmax(data))) ,label=label,color=colors[plotwfit.color_index])
-    # ax1.semilogy()
-    ax1.semilogx()
-    # ax1.set_xlabel('')
-    # ax1.set_ylabel('')
-    # ax1.set_title('')
-    # ax1.title.set_fontsize(6)
-    plt.text(0.05, 0.9,label, ha='left', va='center', transform=ax1.transAxes, fontsize=6)
-    ax1.axvline(np.nanmin(data), color='#999999', ls='--')
-    ax1.axvline(np.nanmax(data), color='#999999', ls='--')
-    plot.texify.fixax(ax1)
-    return label

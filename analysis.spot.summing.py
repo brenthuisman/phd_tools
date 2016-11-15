@@ -43,12 +43,12 @@ def getctset(nprim,ct1,ct2,unc=5,prefix=''):
 	ctset6['ct']['x'] = []
 	ctset6['rpct']['x'] = []
 	
-	if unc > 1:
-		ctset6['ct']['files'] = [prefix+str(x) for x in range(1,6)]
-		ctset6['rpct']['files'] = [prefix+str(x) for x in range(1,6)]
-	else:
+	if unc == None:
 		ctset6['ct']['files'] = [prefix]
 		ctset6['rpct']['files'] = [prefix]
+	else:
+		ctset6['ct']['files'] = [prefix+str(x) for x in range(1,unc+1)]
+		ctset6['rpct']['files'] = [prefix+str(x) for x in range(1,unc+1)]
 
 	for filen in ctset6['ct']['files']:
 		ffilen = ctset6['ct']['path']+'/'+filen+'/'+rootn
@@ -160,7 +160,7 @@ def plotrange(ax1,ct):
 	um = ct['ct']['uncm']
 	up = ct['ct']['uncp']
 	
-	ax1.step(x, y, label=ct['name']+'ct', color='steelblue', lw=1)
+	#ax1.step(x, y, label=ct['name']+'ct', color='steelblue', lw=1)
 	if len(um)>0:
 		plot.fill_between_steps(ax1, x, um, up, alpha=0.2, color='steelblue', lw=0.5)
 	
@@ -169,13 +169,14 @@ def plotrange(ax1,ct):
 	#ax1.set_xlim(-0.5,5.5)
 	ax1.set_title('PG detection')
 	plot.texax(ax1)
+	ax1.set_ylim(bottom=0)
 
 	x = ct['rpct']['x']
 	y = ct['rpct']['av']
 	um = ct['rpct']['uncm']
 	up = ct['rpct']['uncp']
 	
-	ax1.step(x, y, label=ct['name']+'rpct', color='indianred', lw=1)
+	#ax1.step(x, y, label=ct['name']+'rpct', color='indianred', lw=1)
 	if len(um)>0:
 		plot.fill_between_steps(ax1, x, um, up, alpha=0.2, color='indianred', lw=0.5)
 	#ax1.plot(x,y, label='9', color='yellow', lw=1,drawstyle='steps-mid')#,where='mid')
@@ -183,12 +184,12 @@ def plotrange(ax1,ct):
 	ax1.set_ylabel('PG detected [counts]')
 	#ax1.set_xlim(-0.5,5.5)
 	ax1.set_title('PG detection')
+	ax1.set_ylim(bottom=0)
 	plot.texax(ax1)
 
 ctset_61 = getctset(68442219,'outputct61','outputrpct61',5,'')
 ctset_99 = getctset(113485124,'outputct99','outputrpct99',5,'')
 ctset_101 = getctset(107739042,'outputct101','outputrpct101',5,'')
-ctset_sum = sumctset(68442219+113485124+107739042,'sum',ctset_61,ctset_99,ctset_101)
 
 
 #glob.glob("/home/brent/phd/scratch/doseactortest-stage2/**/ipnl-patient-spot-auger.root")
@@ -199,6 +200,8 @@ f, ((ax1,ax2),(ax3,ax4)) = plt.subplots(nrows=2, ncols=2, sharex=False, sharey=F
 plotrange(ax1,ctset_61)
 plotrange(ax2,ctset_99)
 plotrange(ax3,ctset_101)
+
+ctset_sum = sumctset(68442219+113485124+107739042,'sum',ctset_61,ctset_99,ctset_101) #we appear to modift ctset_61 if unc = 1
 plotrange(ax4,ctset_sum)
 
 #print '====== chisq CT w RPCT ====='
@@ -219,5 +222,5 @@ plotrange(ax4,ctset_sum)
 #print '9,7', chisquare(ctset_int_7['rpct']['av'],f_exp=ctset_int_9['rpct']['av'])
 #print '9,6', chisquare(ctset_int_6['rpct']['av'],f_exp=ctset_int_9['rpct']['av'])
 	
-f.savefig('spotsumplot.pdf', bbox_inches='tight')
+f.savefig('spotplot-sums.pdf', bbox_inches='tight')
 plt.close('all')

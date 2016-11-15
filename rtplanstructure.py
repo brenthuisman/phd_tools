@@ -79,5 +79,5 @@ else:
     plot.texax(ax)
     
 
-plotke[0].savefig(fname[:-3]+'plot.pdf', bbox_inches='tight')
+plotke[0].savefig(fname[:-4]+'-plot.pdf', bbox_inches='tight')
 plt.close('all')

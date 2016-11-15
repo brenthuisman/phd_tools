@@ -2,10 +2,12 @@ class rtplan:
 	def __init__(self,filename, **kwargs):
 		#defaults
 		self.nprims=4e10
+		self.norm2nprim=True
 		self.edep=True
 		self.MSW_to_protons=True
+		self.killzero=True
 		
-		for key in ('nprims', 'edep', 'MSW_to_protons', 'killzero'):
+		for key in ('nprims', 'edep', 'MSW_to_protons', 'killzero', 'norm2nprim'):
 			if key in kwargs:
 				setattr(self, key, kwargs[key])
 		
@@ -172,6 +174,8 @@ class rtplan:
 		self.autospothistrange()
 		if self.MSW_to_protons == True:
 			self.msw_to_prot()
+		if self.norm2nprim == True:
+			self.norm_to_nprim()
 
 
 	def autolayerhistrange(self):
@@ -303,7 +307,8 @@ class rtplan:
 		self.TotalMetersetWeight *= MSWfactor
 		
 		print sum(laysum),self.TotalMetersetWeight,spotsum
-		
+	
+	
 		#if you had enabled the print statements, you saw that sum(spots) is not sum(layers) is not TotalMetersetWeight.
 		#so lets recalc layers and TotalMetersetWeight based on spot weights.
 		for layer in self.layers:
@@ -326,3 +331,20 @@ class rtplan:
 		print sum(laysum),self.TotalMetersetWeight,spotsum
 		
 		print "Conversion to correct numbers of protons complete."
+
+
+	def norm_to_nprim(self):
+		try:
+			assert self.nprims != self.TotalMetersetWeight
+		except AssertionError:
+			print "No normalization needed, skipping..."
+		MSWfactor = self.nprims/self.TotalMetersetWeight
+		for layer in self.layers:
+			layer[2] *= MSWfactor
+		for spot in self.spots:
+			spot[4] *= MSWfactor
+		for field in self.metadata:
+			field[4] *= MSWfactor
+		self.TotalMetersetWeight *= MSWfactor
+		
+		print "Conversion to",self.nprims,"numbers of protons complete."
