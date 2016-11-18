@@ -7,25 +7,6 @@ np.random.seed(9873247)
 
 rootn='ipnl-patient-spot-auger.root'
 
-def ipnlnoise(data,nprim):
-	#IPNL: \cite{Pinto2014a}: 1000+-100 per 4e9 prims per 8mm bin
-	#per prot: 2.5e-7 +- 0.25e-7 (twice better than IBA, but twice bigger bin)
-	mu = 2.5e-7*nprim
-	sigma = 0.25e-7*nprim
-	retval = []
-	for i in data:
-		retval.append(i + np.random.normal(mu,sigma))
-	return retval
-		
-def ibanoise(data,nprim):
-	#IBA: \cite{Perali2014}: 5e-7 +- 0.5e-7 per prot per 4mm bin
-	mu = 5e-7*nprim
-	sigma = 0.5e-7*nprim
-	retval = []
-	for i in data:
-		retval.append(i + np.random.normal(mu,sigma))
-	return retval
-	
 def getctset(nprim,ct1,ct2,unc=5,prefix=''):
 	ctset6 = {'ct':{},'rpct':{},'name':prefix,'nprim':nprim}
 	ctset6['ct']['path'] = ct1
@@ -58,7 +39,7 @@ def getctset(nprim,ct1,ct2,unc=5,prefix=''):
 			if key == 'reconstructedProfileHisto':
 				#print val
 				ctset6['ct']['x'] = val[0] #no need to append, is same for all
-				ctset6['ct']['data'].append(ipnlnoise(val[1],nprim))
+				ctset6['ct']['data'].append(plot.ipnlnoise(val[1],nprim))
 	for filen in ctset6['rpct']['files']:
 		ffilen = ctset6['rpct']['path']+'/'+filen+'/'+rootn
 		print 'opening',ffilen
@@ -67,7 +48,7 @@ def getctset(nprim,ct1,ct2,unc=5,prefix=''):
 			if key == 'reconstructedProfileHisto':
 				#print val[1]
 				ctset6['rpct']['x'] = val[0] #no need to append, is same for all
-				ctset6['rpct']['data'].append(ipnlnoise(val[1],nprim))
+				ctset6['rpct']['data'].append(plot.ipnlnoise(val[1],nprim))
 	
 	if len(ctset6['ct']['data']) > 1:
 		#we can average

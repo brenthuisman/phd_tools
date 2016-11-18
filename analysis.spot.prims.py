@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import dump, numpy as np,matplotlib.pyplot as plt,plot,sys,glob2 as glob,os
+import dump, numpy as np,plot,sys,glob2 as glob,os
 from scipy.stats import chisquare,norm
 
 clrs=plot.colors
@@ -10,25 +10,6 @@ rootn='ipnl-patient-spot-auger.root'
 
 #glob.glob("/home/brent/phd/scratch/doseactortest-stage2/**/ipnl-patient-spot-auger.root")
 
-def ipnlnoise(data,nprim):
-	#IPNL: \cite{Pinto2014a}: 1000+-100 per 4e9 prims per 8mm bin
-	#per prot: 2.5e-7 +- 0.25e-7 (twice better than IBA, but twice bigger bin)
-	mu = 2.5e-7*nprim
-	sigma = 0.25e-7*nprim
-	retval = []
-	for i in data:
-		retval.append(i + np.random.normal(mu,sigma))
-	return retval
-		
-def ibanoise(data,nprim):
-	#IBA: \cite{Perali2014}: 5e-7 +- 0.5e-7 per prot per 4mm bin
-	mu = 5e-7*nprim
-	sigma = 0.5e-7*nprim
-	retval = []
-	for i in data:
-		retval.append(i + np.random.normal(mu,sigma))
-	return retval
-	
 def getctset(nprim,ct1,ct2,prefix):
 	ctset6 = {'ct':{},'rpct':{},'name':prefix,'nprim':nprim}
 	ctset6['ct']['path'] = ct1
@@ -46,37 +27,32 @@ def getctset(nprim,ct1,ct2,prefix):
 	ctset6['ct']['x'] = []
 	ctset6['rpct']['x'] = []
 	
-	#if unc == None:
-		#ctset6['ct']['files'] = [prefix]
-		#ctset6['rpct']['files'] = [prefix]
-	#else:
+	#ctset6['ct']['files'] = [glob.glob(ct1+"/**/"+rootn)[0]]
+	#ctset6['rpct']['files'] = [glob.glob(ct2+"/**/"+rootn)[0]]
 	ctset6['ct']['files'] = glob.glob(ct1+"/**/"+rootn)
 	ctset6['rpct']['files'] = glob.glob(ct2+"/**/"+rootn)
 
 	for ffilen in ctset6['ct']['files']:
-		#ffilen = ctset6['ct']['path']+'/'+filen+'/'+rootn
 		print 'opening',ffilen
 		for key,val in dump.thist2np_xy(ffilen).items():
 			#print key
 			if key == 'reconstructedProfileHisto':
 				#print val
 				ctset6['ct']['x'] = val[0] #no need to append, is same for all
-				ctset6['ct']['data'].append(ipnlnoise(val[1],nprim))
+				ctset6['ct']['data'].append(plot.ipnlnoise(val[1],nprim))
 	for ffilen in ctset6['rpct']['files']:
-		#ffilen = ctset6['rpct']['path']+'/'+filen+'/'+rootn
 		print 'opening',ffilen
 		for key,val in dump.thist2np_xy(ffilen).items():
 			#print key
 			if key == 'reconstructedProfileHisto':
 				#print val[1]
 				ctset6['rpct']['x'] = val[0] #no need to append, is same for all
-				ctset6['rpct']['data'].append(ipnlnoise(val[1],nprim))
+				ctset6['rpct']['data'].append(plot.ipnlnoise(val[1],nprim))
 	
 	if len(ctset6['ct']['data']) > 1:
 		#we can average
 		ndata = np.array(ctset6['ct']['data'])
 		ndata = np.rollaxis(ndata,1)
-		#print ndata.shape
 		for binn in ndata:
 			(mu, sigma) = norm.fit(binn) #returns actually sigma, not var.
 			ctset6['ct']['av'].append(mu)
@@ -138,7 +114,6 @@ def plotrange(ax1,ct):
 
 ###################################
 
-
 #############gate_run_submit_cluster_nomove.sh mac/main-int9ct.mac 10
 #############gate_run_submit_cluster_nomove.sh mac/main-int9rpct.mac 10
 #############gate_run_submit_cluster_nomove.sh mac/main-int8ct.mac 10
@@ -161,7 +136,7 @@ ctset_int_7 = getctset(1e7,'fromcluster/nprims/run.41VE','fromcluster/nprims/run
 ctset_int_8 = getctset(1e8,'fromcluster/nprims/run.bfrX','fromcluster/nprims/run.rOx1','')
 ctset_int_9 = getctset(1e9,'fromcluster/nprims/run.xTcG','fromcluster/nprims/run.b2Aj','')
 
-f, ((ax1,ax2),(ax3,ax4)) = plt.subplots(nrows=2, ncols=2, sharex=False, sharey=False)
+f, ((ax1,ax2),(ax3,ax4)) = plot.subplots(nrows=2, ncols=2, sharex=False, sharey=False)
 
 plotrange(ax1,ctset_int_9)
 plotrange(ax2,ctset_int_8)
@@ -173,7 +148,7 @@ ax2.set_xlabel('')
 ax2.set_ylabel('')
 ax4.set_ylabel('')
 f.savefig('spotplot-nprims.pdf', bbox_inches='tight')
-plt.close('all')
+plot.close('all')
 
 print '====== chisq CT w RPCT ====='
 print '9,9', chisquare(ctset_int_9['ct']['av'],f_exp=ctset_int_9['rpct']['av'])

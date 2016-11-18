@@ -1,6 +1,5 @@
 from texify import *
-
-import numpy as np
+import numpy as np,matplotlib.pyplot as plt
 from math import floor, log10
 
 #colors = "rgbmyck"*20
@@ -95,6 +94,48 @@ def addrandomnoise(indata):
     return [np.random.normal(x, x/500.) if x>0. else x for x in indata]
 
 
+def ipnlnoise(data,nprim):
+	#IPNL: \cite{Pinto2014a}: 1000+-100 per 4e9 prims per 8mm bin
+	#per prot: 2.5e-7 +- 0.25e-7 (twice better than IBA, but twice bigger bin)
+	mu = 2.5e-7*nprim
+	sigma = 0.25e-7*nprim
+	retval = []
+	for i in data:
+		retval.append(i + np.random.poisson(np.random.normal(mu,sigma)))
+	return retval
+
+
+def onlyipnlnoise(data,nprim):
+	#IPNL: \cite{Pinto2014a}: 1000+-100 per 4e9 prims per 8mm bin
+	#per prot: 2.5e-7 +- 0.25e-7 (twice better than IBA, but twice bigger bin)
+	mu = 2.5e-7*nprim
+	sigma = 0.25e-7*nprim
+	retval = []
+	for i in data:
+		retval.append(np.random.poisson(np.random.normal(mu,sigma)))
+	return retval
+
+
+def ibanoise(data,nprim):
+	#IBA: \cite{Perali2014}: 5e-7 +- 0.5e-7 per prot per 4mm bin
+	mu = 5e-7*nprim
+	sigma = 0.5e-7*nprim
+	retval = []
+	for i in data:
+		retval.append(i + np.random.poisson(np.random.normal(mu,sigma)))
+	return retval
+
+
+def onlyibanoise(data,nprim):
+	#IBA: \cite{Perali2014}: 5e-7 +- 0.5e-7 per prot per 4mm bin
+	mu = 5e-7*nprim
+	sigma = 0.5e-7*nprim
+	retval = []
+	for i in data:
+		retval.append(np.random.poisson(np.random.normal(mu,sigma)))
+	return retval
+
+
 def sampledata(indata,scale=0.1):
     #actually, cant that only be done on integer data?
     probs = np.divide(indata,indata.sum())
@@ -148,3 +189,10 @@ def sn_mag(num):
     exponent = str(int(floor(log10(abs(num)))))
     return r"$10^"+exponent+"$"
 
+###################### Forwards to matplotlib.
+
+def subplots(*args,**kwargs):
+	return plt.subplots(*args,**kwargs)
+	
+def close(*args,**kwargs):
+	return plt.close(*args,**kwargs)

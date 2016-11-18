@@ -328,7 +328,18 @@ class image:
 			#doesnt seem necesarry, but lets convert back to correct dimensions anyway
 			self.imdata = self.imdata.reshape(self.imdata.shape[::-1])
 
-	
+
+	def unionmask(self,*maskimages):
+		for msk in maskimages:
+			#reshape first to inverted axis order.
+			mskcopy = msk.imdata.reshape(msk.imdata.shape[::-1])
+			self.imdata = self.imdata.reshape(self.imdata.shape[::-1])
+			#I don't exactly know why, but then simple broadcasting,multiplication works
+			self.imdata = np.logical_or(mskcopy,self.imdata).astype(int)
+			#doesnt seem necesarry, but lets convert back to correct dimensions anyway
+			self.imdata = self.imdata.reshape(self.imdata.shape[::-1])
+
+
 	def savewithmask(self,outpostfix,*maskfiles):
 		self.applymask(*maskfiles)
 		return self.saveas(outpostfix)
