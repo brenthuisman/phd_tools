@@ -3,22 +3,21 @@ class rtplan:
 		#defaults
 		self.nprims=4e10
 		self.norm2nprim=True
-		self.edep=True
 		self.MSW_to_protons=True
 		self.killzero=True
+		self.fixMSWsums=True
 		
-		for key in ('nprims', 'edep', 'MSW_to_protons', 'killzero', 'norm2nprim'):
+		for key in ('fixMSWsums', 'nprims', 'MSW_to_protons', 'killzero', 'norm2nprim'):
 			if key in kwargs:
 				setattr(self, key, kwargs[key])
 		
 		self.TotalMetersetWeight = 0.
 		self.layers = []
 		self.spots = []
-		self.metadata = []
+		self.fields = []
 		self.layerhistrange = []
 		self.rangetable = []
-		self.nrfields = 0
-		self.fieldids = []
+		self.fieldids = [] #not sure why we have this
 		
 		sourcefile = open(filename,'r')
 	
@@ -81,7 +80,6 @@ class rtplan:
 				if newline == 'FieldID':
 					#new field ==  new dataset
 					# fieldID doesnt have to be incremental!
-					self.nrfields += 1
 					capture_FieldID = 1
 					continue
 			
@@ -120,7 +118,6 @@ class rtplan:
 					capture_CumulativeMetersetWeight = 0
 
 			if capture_FieldID == 1:
-				#Field in rtplan starts at 1.
 				FieldID = int(newline)
 				self.fieldids.append(FieldID)
 				capture_FieldID = 0
@@ -153,7 +150,7 @@ class rtplan:
 				if Energy == 0:
 					#End of the field, here NbOfScannedSpots = int(newline) = 0, so dont overwrite.
 					self.layers.append([FieldID,Energy_last,(CumulativeMetersetWeight-previous_CumulativeMetersetWeight),NbOfScannedSpots])
-					self.metadata.append([FieldID,(ControlPointIndex)/2+1,Energy_first,Energy_last,CumulativeMetersetWeight,GantryAngle])
+					self.fields.append([FieldID,(ControlPointIndex)/2+1,Energy_first,Energy_last,CumulativeMetersetWeight,GantryAngle])
 				else:
 					NbOfScannedSpots = int(newline)
 					self.layers.append([FieldID,Energy,(CumulativeMetersetWeight-previous_CumulativeMetersetWeight),NbOfScannedSpots])
@@ -169,9 +166,10 @@ class rtplan:
 		
 	
 		sourcefile.close()
-		#self.nrfields=self.metadata[-1][0]
 		self.autolayerhistrange()
 		self.autospothistrange()
+		if self.fixMSWsums == True:
+			self.fix_MSW_sums()
 		if self.MSW_to_protons == True:
 			self.msw_to_prot()
 		if self.norm2nprim == True:
@@ -183,7 +181,7 @@ class rtplan:
 		#TODO can I do without this? can the edges for a TH1D be changed afterwards?
 		low = 1000000 #1TeV seems like a fine upperlimit
 		high = 0
-		for entry in self.metadata:
+		for entry in self.fields:
 			low = min(low,entry[2],entry[3])
 			high = max(high,entry[2],entry[3])
 	
@@ -215,8 +213,10 @@ class rtplan:
 		histos=[]
 		
 		# Create some histograms
-		for i in range(self.nrfields):
-			curfieldid = self.fieldids[i]
+		for field in self.fields:
+			curfieldid = field[0]
+		#for i in range(len(self.fieldids)):
+			#curfieldid = self.fieldids[i]
 			xv=[]
 			yv=[]
 			for cp in self.layers:
@@ -237,8 +237,10 @@ class rtplan:
 		
 		# Create some histograms
 
-		for i in range(self.nrfields):
-			curfieldid = self.fieldids[i]
+		for field in self.fields:
+			curfieldid = field[0]
+		#for i in range(len(self.fieldids)):
+			#curfieldid = self.fieldids[i]
 			xv=[]
 			yv=[]
 			for spot in self.spots:
@@ -259,76 +261,124 @@ class rtplan:
 		return weight*Gain
 	
 
+	def fix_MSW_sums(self):
+		#fixes layer MSWs and total MSW. Based on experience, neither can be trusted. IN SPOT WE TRUST
+		
+		#Do not assume fieldid is 0 or 1 indexed (can be higher).
+		
+		spotsum = [0.]*len(self.spots)
+		laysum = [0.]*len(self.layers)
+		fieldsum = [0.]*len(self.fields)
+		
+		print len(self.layers),len(self.fields)
+		
+		for i,field in enumerate(self.fields):
+			fieldsum[i] = field[4]
+		
+		for i,layer in enumerate(self.layers):
+			laysum[i] = layer[2]
+		
+		for i,spot in enumerate(self.spots):
+			spotsum[i] += spot[4]
+		
+		print "MSW sums in plan file:"
+		print self.TotalMetersetWeight,sum(fieldsum),sum(laysum),sum(spotsum)
+		
+		#we can assume self.layers is in same order as field. so no need to account for fieldid.
+		
+		fieldind=0 #first field index is zero.
+		lastfield=self.spots[0][0]#take FIELDID of first spot.
+		layind=0 #first layer index is zero.
+		lastenergy=self.spots[0][1]#take ENERGY of first spot.
+		
+		self.TotalMetersetWeight = 0. #reset
+		laysum = [0.]*len(self.layers)
+		fieldsum = [0.]*len(self.fields)
+		
+		for spot in self.spots:
+			if spot[0] != lastfield:
+				#we changed FIELD. update layer info
+				lastfield = spot[0]
+				fieldind += 1
+				#if we changed field, we ALSO change layer! Must check before we check spotenergy
+				lastenergy = spot[1]
+				layind += 1
+			if spot[1] != lastenergy:
+				#we changed LAYER. update layer info
+				lastenergy = spot[1]
+				layind += 1
+				
+			self.TotalMetersetWeight += spot[4]
+			laysum[layind] += spot[4]
+			fieldsum[fieldind] += spot[4]
+		
+		#terugzetten
+		for field,fsum in zip(self.fields,fieldsum):
+			field[4] = fsum
+		for layer,lsum in zip(self.layers,laysum):
+			layer[2] = lsum
+		
+		print "MSW sums in plan file after fix:"
+		print self.TotalMetersetWeight,sum(fieldsum),sum(laysum),sum(spotsum)
+
+
 	def msw_to_prot(self):
-		#to verify that TPSes don't compute the correct MSW sums, we record laysum, spotsum. IN SPOT WE TRUST
-		spotsum = 0.
-		laysum = [0.]*self.nrfields
-		for i,field in enumerate(self.metadata):
-			laysum[i] = field[4]
+		#since its not linear, we must update layer and field sums.
+		
+		spotsum = [0.]*len(self.spots)
+		laysum = [0.]*len(self.layers)
+		fieldsum = [0.]*len(self.fields)
+		
+		for i,field in enumerate(self.fields):
+			fieldsum[i] = field[4]
+		
+		for i,layer in enumerate(self.layers):
+			laysum[i] = layer[2]
+		
+		for i,spot in enumerate(self.spots):
+			spotsum[i] += spot[4]
+		
+		print "MSW sums:"
+		print self.TotalMetersetWeight,sum(fieldsum),sum(laysum),sum(spotsum)
+				
+		fieldind=0 #first field index is zero.
+		lastfield=self.spots[0][0]#take FIELDID of first spot.
+		layind=0 #first layer index is zero.
+		lastenergy=self.spots[0][1]#take ENERGY of first spot.
+		
+		self.TotalMetersetWeight = 0. #reset
+		laysum = [0.]*len(self.layers)
+		fieldsum = [0.]*len(self.fields)
+		
 		for spot in self.spots:
-			spotsum += spot[4]
-		
-		print sum(laysum),self.TotalMetersetWeight,spotsum
-		
-		#since its not linear, we must twopass
-		if self.edep == True:
-			spotsum = 0.
-			#first pass: update MSWs
-			#laysum = [0.]*self.nrfields #we recompute based on new weights
-			for layer in self.layers:
-				E = layer[1]
-				MSW = layer[2]
-				layer[2] = self.ConvertMuToProtons(MSW, E)
-				laysum[layer[0]-1] += layer[2]
-			for spot in self.spots:
-				E = spot[1]
-				MSW = spot[4]
-				spot[4] = self.ConvertMuToProtons(MSW, E)
-				spotsum += spot[4]
-			for i,field in enumerate(self.metadata):
-				field[4] = laysum[i]
-			self.TotalMetersetWeight = sum(laysum)
-		
-		print sum(laysum),self.TotalMetersetWeight,spotsum
-		
-		#convert MSW to nprims. linear.
-		#MSWfactor = self.nprims/self.TotalMetersetWeight #so this gives a slightly wrong number of protons.
-		MSWfactor = self.nprims/spotsum
-		laysum = [0.]*self.nrfields #we recompute
-		spotsum = 0.
-		for layer in self.layers:
-			layer[2] *= MSWfactor
-			laysum[layer[0]-1] += layer[2]
-		for spot in self.spots:
-			spot[4] *= MSWfactor
-			spotsum += spot[4]
-		for field in self.metadata:
-			field[4] *= MSWfactor
-		self.TotalMetersetWeight *= MSWfactor
-		
-		print sum(laysum),self.TotalMetersetWeight,spotsum
-	
-	
-		#if you had enabled the print statements, you saw that sum(spots) is not sum(layers) is not TotalMetersetWeight.
-		#so lets recalc layers and TotalMetersetWeight based on spot weights.
-		for layer in self.layers:
-			layer[2] = 0.
-		for field in self.metadata:
-			field[4] = 0.
-		laysum = [0.]*self.nrfields
-		for spot in self.spots:
-			fieldid = spot[0]
+			if spot[0] != lastfield:
+				#we changed FIELD. update layer info
+				lastfield = spot[0]
+				fieldind += 1
+				#if we changed field, we ALSO change layer! Must check before we check spotenergy
+				lastenergy = spot[1]
+				layind += 1
+			if spot[1] != lastenergy:
+				#we changed LAYER. update layer info
+				lastenergy = spot[1]
+				layind += 1
+			
 			E = spot[1]
-			spotWeight = spot[4]
-			for layer in self.layers:
-				if layer[0] == fieldid and layer[1] == E:
-					layer[2] += spotWeight
-					laysum[layer[0]-1] += spotWeight
-		for i,field in enumerate(self.metadata):
-			field[4] = laysum[i]
-		self.TotalMetersetWeight = sum(laysum)
+			MSW = spot[4]
+			spot[4] = self.ConvertMuToProtons(MSW, E)
+			spotsum[i] += spot[4] #just for the final report
+			self.TotalMetersetWeight += spot[4]
+			laysum[layind] += spot[4]
+			fieldsum[fieldind] += spot[4]
 		
-		print sum(laysum),self.TotalMetersetWeight,spotsum
+		#terugzetten
+		for field,fsum in zip(self.fields,fieldsum):
+			field[4] = fsum
+		for layer,lsum in zip(self.layers,laysum):
+			layer[2] = lsum
+		
+		print "Proton count sums:"
+		print self.TotalMetersetWeight,sum(fieldsum),sum(laysum),sum(spotsum)
 		
 		print "Conversion to correct numbers of protons complete."
 
@@ -343,8 +393,8 @@ class rtplan:
 			layer[2] *= MSWfactor
 		for spot in self.spots:
 			spot[4] *= MSWfactor
-		for field in self.metadata:
+		for field in self.fields:
 			field[4] *= MSWfactor
 		self.TotalMetersetWeight *= MSWfactor
 		
-		print "Conversion to",self.nprims,"numbers of protons complete."
+		print "Normalization to",self.nprims,"numbers of protons complete."

@@ -3,20 +3,30 @@ import sys,rtplan,matplotlib.pyplot as plt,plot,math,numpy as np
 from tableio import write
 
 fname = ''
-if sys.argv[-1] == 'nomu':
+if sys.argv[-1] == 'noproc':
 	fname = sys.argv[-2]
-	rtplan = rtplan.rtplan(fname,MSW_to_protons=False, killzero=True)
+	rtplan = rtplan.rtplan(fname,norm2nprim=False,MSW_to_protons=False)
+if sys.argv[-1] == 'nonorm':
+	fname = sys.argv[-2]
+	rtplan = rtplan.rtplan(fname,norm2nprim=False)
+elif sys.argv[-1] == 'nomu':
+	fname = sys.argv[-2]
+	rtplan = rtplan.rtplan(fname,MSW_to_protons=False)
 else:
 	fname = sys.argv[-1]
-	rtplan = rtplan.rtplan(fname, killzero=True)
+	rtplan = rtplan.rtplan(fname)
 
-#write(rtplan.spots,'spots.txt')
+#write(rtplan.spots,fname+'spots.txt')
+#write(rtplan.layers,fname+'layers.txt')
+#write(rtplan.fields,fname+'fields.txt')
 
 spotdata=rtplan.getspotdata()
 layerdata=rtplan.getlayerdata()
 
-if rtplan.nrfields > 1:
-    plotke = plt.subplots(nrows=2, ncols=rtplan.nrfields, sharex='col', sharey='row')
+nrfields=len(rtplan.fields)
+
+if nrfields > 1:
+    plotke = plt.subplots(nrows=2, ncols=nrfields, sharex='col', sharey='row')
     #f, ax1 = plt.subplots(nrows=1, ncols=rtplan.nrfields, sharex=False, sharey=False)
 
     first = True
