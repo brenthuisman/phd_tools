@@ -3,11 +3,11 @@ class rtplan:
 		#defaults
 		self.nprims=4e10
 		self.norm2nprim=True
-		self.MSW_to_protons=True
+		self.MSWtoprotons=True
 		self.killzero=True
 		self.fixMSWsums=True
 		
-		for key in ('fixMSWsums', 'nprims', 'MSW_to_protons', 'killzero', 'norm2nprim'):
+		for key in ('fixMSWsums', 'nprims', 'MSWtoprotons', 'killzero', 'norm2nprim'):
 			if key in kwargs:
 				setattr(self, key, kwargs[key])
 		
@@ -36,11 +36,14 @@ class rtplan:
 		MSWfactor = 0
 		Energy = 0
 		Energy_first = 0
-		Energy_last = 0
+		#Energy_last = 0
 		NbOfScannedSpots = 0
 		FieldID = 0
 		ControlPointIndex = 0
 		GantryAngle = 0
+		
+		fields_iter = 0
+		controlpoint_iter = 0
 
 		for index, line in enumerate(sourcefile):
 			newline = line.strip()
@@ -92,9 +95,14 @@ class rtplan:
 					continue
 
 			if capture_ControlPointIndex == 1:
+				if controlpoint_iter > 0: #if not the first time here, then add previous field
+					self.layers.append([FieldID,Energy,(CumulativeMetersetWeight-previous_CumulativeMetersetWeight),NbOfScannedSpots])
+				
 				#CPI in rtplan starts at 0
 				ControlPointIndex = int(newline)
 				capture_ControlPointIndex = 0
+				
+				controlpoint_iter += 1
 		
 			if capture_GantryAngle == 1:
 				GantryAngle = int(newline)
@@ -118,19 +126,25 @@ class rtplan:
 					capture_CumulativeMetersetWeight = 0
 
 			if capture_FieldID == 1:
+				if fields_iter > 0: #if not the first time here, then add previous field and go and capture next energy_first
+					self.fields.append([FieldID,ControlPointIndex,Energy_first,Energy,CumulativeMetersetWeight,GantryAngle])
+					capture_Energy_first = 1
+				
 				FieldID = int(newline)
 				self.fieldids.append(FieldID)
 				capture_FieldID = 0
+				
+				fields_iter += 1
 		
 			if capture_Energy == 1:
 				capture_Energy = 0
 				new_Energy = float(newline)
-				if new_Energy == 0:
-					#end of the Field, we still have to record the CMW though!!!!
-					capture_Energy_first = 1
-					Energy_last = Energy
-					Energy = new_Energy
-					continue
+				#if new_Energy == 0:
+					##end of the Field, we still have to record the CMW though!!!!
+					#capture_Energy_first = 1
+					#Energy_last = Energy
+					#Energy = new_Energy
+					#continue
 				Energy = new_Energy
 				if capture_Energy_first == 1:
 					Energy_first = new_Energy
@@ -143,34 +157,43 @@ class rtplan:
 		
 			if capture_NbOfScannedSpots == 1:
 				capture_NbOfScannedSpots = 0
-				if CumulativeMetersetWeight == previous_CumulativeMetersetWeight:
-					#First CPI of the energylayer, so just set the value and be done.
-					NbOfScannedSpots = int(newline)
-					continue
-				if Energy == 0:
-					#End of the field, here NbOfScannedSpots = int(newline) = 0, so dont overwrite.
-					self.layers.append([FieldID,Energy_last,(CumulativeMetersetWeight-previous_CumulativeMetersetWeight),NbOfScannedSpots])
-					self.fields.append([FieldID,(ControlPointIndex)/2+1,Energy_first,Energy_last,CumulativeMetersetWeight,GantryAngle])
-				else:
-					NbOfScannedSpots = int(newline)
-					self.layers.append([FieldID,Energy,(CumulativeMetersetWeight-previous_CumulativeMetersetWeight),NbOfScannedSpots])
+				NbOfScannedSpots = int(newline)
+				
+				#if CumulativeMetersetWeight == previous_CumulativeMetersetWeight:
+					##First CPI of the energylayer, so just set the value and be done.
+					#continue
+				#if Energy == 0:
+					##End of the field, here NbOfScannedSpots = int(newline) = 0, so dont overwrite.
+					#self.layers.append([FieldID,Energy_last,(CumulativeMetersetWeight-previous_CumulativeMetersetWeight),NbOfScannedSpots])
+					#self.fields.append([FieldID,(ControlPointIndex)/2+1,Energy_first,Energy_last,CumulativeMetersetWeight,GantryAngle])
+				#else:
+					#self.layers.append([FieldID,Energy,(CumulativeMetersetWeight-previous_CumulativeMetersetWeight),NbOfScannedSpots])
+				
+				#if CumulativeMetersetWeight-previous_CumulativeMetersetWeight>=0: #also equal to zero, for malformed plans
+					#if Energy == 0:
+						#self.layers.append([FieldID,Energy_last,(CumulativeMetersetWeight-previous_CumulativeMetersetWeight),NbOfScannedSpots])
+					#else:
+						#self.layers.append([FieldID,Energy,(CumulativeMetersetWeight-previous_CumulativeMetersetWeight),NbOfScannedSpots])
 					
 			if capture_Spots == 1:
-				#Only capture spots for first of pairs of CMWs
-				if CumulativeMetersetWeight == previous_CumulativeMetersetWeight:
-					x,y,weight = newline.split(' ')
-					if self.killzero and float(weight) == 0:
-						continue
-					self.spots.append([FieldID,Energy,float(x),float(y),float(weight)])
+				##Only capture spots for first of pairs of CMWs
+				#if CumulativeMetersetWeight == previous_CumulativeMetersetWeight:
+				x,y,weight = newline.split(' ')
+				if self.killzero and float(weight) == 0:
+					continue
+				self.spots.append([FieldID,Energy,float(x),float(y),float(weight)])
 				#Because Spots are multiline, we stop it when handling lines starting with '#', see top of function.
 		
-	
+		#add last field,layer
+		self.fields.append([FieldID,ControlPointIndex,Energy_first,Energy,CumulativeMetersetWeight,GantryAngle])
+		self.layers.append([FieldID,Energy,(CumulativeMetersetWeight-previous_CumulativeMetersetWeight),NbOfScannedSpots])
+		
 		sourcefile.close()
 		self.autolayerhistrange()
 		self.autospothistrange()
 		if self.fixMSWsums == True:
 			self.fix_MSW_sums()
-		if self.MSW_to_protons == True:
+		if self.MSWtoprotons == True:
 			self.msw_to_prot()
 		if self.norm2nprim == True:
 			self.norm_to_nprim()
@@ -265,13 +288,14 @@ class rtplan:
 		#fixes layer MSWs and total MSW. Based on experience, neither can be trusted. IN SPOT WE TRUST
 		
 		#Do not assume fieldid is 0 or 1 indexed (can be higher).
+		#Do not assume fields or layer are read correctly.
+		#Do not assume layer of field ids are even set.
 		
 		spotsum = [0.]*len(self.spots)
 		laysum = [0.]*len(self.layers)
 		fieldsum = [0.]*len(self.fields)
 		
-		print len(self.layers),len(self.fields)
-		
+		#unload
 		for i,field in enumerate(self.fields):
 			fieldsum[i] = field[4]
 		
@@ -284,7 +308,25 @@ class rtplan:
 		print "MSW sums in plan file:"
 		print self.TotalMetersetWeight,sum(fieldsum),sum(laysum),sum(spotsum)
 		
-		#we can assume self.layers is in same order as field. so no need to account for fieldid.
+		#doublecheck that self.fields and self.layers have correct lengths
+		verifylayers=[]
+		verifyfields=[]
+		for spot in self.spots:
+			verifylayers.append(str(spot[0])+str(spot[1]))
+			verifyfields.append(str(spot[0]))
+		verifylayers = len(set(verifylayers))
+		verifyfields = len(set(verifyfields))
+		
+		if verifylayers != len(self.layers) or verifyfields != len(self.fields):
+			print "Input plan probably was NOT a VMAT plan, so we'll rebuild from spot data, remove double layers."
+			laysum = [0.]*verifylayers
+			fieldsum = [0.]*verifyfields
+			self.layers = [x for x in self.layers[::2]]
+			assert len(self.layers) == verifylayers
+		#end doublecheck
+		
+		#completely rebuild layers and fields. may be totally incorrect anyway, IN SPOT WE TRUST.
+		#Correct nr of layers,fields should be already present though.
 		
 		fieldind=0 #first field index is zero.
 		lastfield=self.spots[0][0]#take FIELDID of first spot.

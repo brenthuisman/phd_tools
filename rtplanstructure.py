@@ -3,18 +3,30 @@ import sys,rtplan,matplotlib.pyplot as plt,plot,math,numpy as np
 from tableio import write
 
 fname = ''
-if sys.argv[-1] == 'noproc':
+outname = ''
+if sys.argv[-1] == 'noproc' in sys.argv[-1]:
 	fname = sys.argv[-2]
-	rtplan = rtplan.rtplan(fname,norm2nprim=False,MSW_to_protons=False)
-if sys.argv[-1] == 'nonorm':
+	rtplan = rtplan.rtplan(fname,norm2nprim=False,MSWtoprotons=False)
+	outname = fname[:-4]+sys.argv[-1]+'-plot.pdf'
+elif 'nonorm' in sys.argv[-1]:
 	fname = sys.argv[-2]
 	rtplan = rtplan.rtplan(fname,norm2nprim=False)
-elif sys.argv[-1] == 'nomu':
+	outname = fname[:-4]+sys.argv[-1]+'-plot.pdf'
+elif 'nomu' in sys.argv[-1]:
 	fname = sys.argv[-2]
-	rtplan = rtplan.rtplan(fname,MSW_to_protons=False)
+	rtplan = rtplan.rtplan(fname,MSWtoprotons=False)
+	outname = fname[:-4]+sys.argv[-1]+'-plot.pdf'
+#elif 'dump' in sys.argv[-1]:
+	#fname = sys.argv[-2]
+	#rtplan = rtplan.rtplan(fname,MSWtoprotons=False)
+	#write(rtplan.spots,fname+'spots.txt')
+	#write(rtplan.layers,fname+'layers.txt')
+	#write(rtplan.fields,fname+'fields.txt')
+	#outname = fname[:-4]+sys.argv[-1]+'-plot.pdf'
 else:
 	fname = sys.argv[-1]
 	rtplan = rtplan.rtplan(fname)
+	outname = fname[:-4]+'-plot.pdf'
 
 #write(rtplan.spots,fname+'spots.txt')
 #write(rtplan.layers,fname+'layers.txt')
@@ -89,5 +101,5 @@ else:
     plot.texax(ax)
     
 
-plotke[0].savefig(fname[:-4]+'-plot.pdf', bbox_inches='tight')
+plotke[0].savefig(outname, bbox_inches='tight')
 plt.close('all')
