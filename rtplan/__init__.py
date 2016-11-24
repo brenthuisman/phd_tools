@@ -1,13 +1,14 @@
 class rtplan:
-	def __init__(self,filename, **kwargs):
+	def __init__(self,filenames,**kwargs):
 		#defaults
 		self.nprims=4e10
 		self.norm2nprim=True
 		self.MSWtoprotons=True
 		self.killzero=True
 		self.fixMSWsums=True
+		self.noproc=False
 		
-		for key in ('fixMSWsums', 'nprims', 'MSWtoprotons', 'killzero', 'norm2nprim'):
+		for key in ('noproc', 'fixMSWsums', 'nprims', 'MSWtoprotons', 'killzero', 'norm2nprim'):
 			if key in kwargs:
 				setattr(self, key, kwargs[key])
 		
@@ -15,182 +16,197 @@ class rtplan:
 		self.layers = []
 		self.spots = []
 		self.fields = []
-		self.layerhistrange = []
-		self.rangetable = []
-		self.fieldids = [] #not sure why we have this
 		
-		sourcefile = open(filename,'r')
-	
-		capture_NbOfScannedSpots = 0
-		capture_Spots = 0
-		capture_CumulativeMetersetWeight = 0
-		capture_TotalMetersetWeight = 0
-		capture_Energy = 0
-		capture_Energy_first = 1
-		capture_FieldID = 0
-		capture_ControlPointIndex = 0
-		capture_GantryAngle = 0
+		#interpret multiple files as multiple fields of same plan
+		#increment FieldIDs with 100 etc.
+		fileind = 100
+		for filename in filenames:
+			
+			tmpTotalMetersetWeight = 0.
+			tmplayers = []
+			tmpspots = []
+			tmpfields = []
+			
+			sourcefile = open(filename,'r')
+		
+			capture_NbOfScannedSpots = 0
+			capture_Spots = 0
+			capture_CumulativeMetersetWeight = 0
+			capture_TotalMetersetWeight = 0
+			capture_Energy = 0
+			capture_Energy_first = 1
+			capture_FieldID = 0
+			capture_ControlPointIndex = 0
+			capture_GantryAngle = 0
 
-		previous_CumulativeMetersetWeight = 0
-		CumulativeMetersetWeight = 0
-		MSWfactor = 0
-		Energy = 0
-		Energy_first = 0
-		#Energy_last = 0
-		NbOfScannedSpots = 0
-		FieldID = 0
-		ControlPointIndex = 0
-		GantryAngle = 0
-		
-		fields_iter = 0
-		controlpoint_iter = 0
+			previous_CumulativeMetersetWeight = 0
+			CumulativeMetersetWeight = 0
+			MSWfactor = 0
+			Energy = 0
+			Energy_first = 0
+			#Energy_last = 0
+			NbOfScannedSpots = 0
+			FieldID = 0
+			ControlPointIndex = 0
+			GantryAngle = 0
+			
+			fields_iter = 0
+			controlpoint_iter = 0
 
-		for index, line in enumerate(sourcefile):
-			newline = line.strip()
-			if len(newline)==0:
-				continue
-		
-			if newline[0] == "#":
-				#we are reading a fieldname
-				#stop reading spots if we were doing that.
-				capture_Spots = 0
-				newline = newline.replace('#','')
-				if newline == 'CumulativeMetersetWeight':
-					#if the field is CumulativeMetersetWeight,
-					#we're engaging capture mode because next we'll get
-					#energy and number of spots, and thus we can 
-					#calculate fluence.
-					capture_CumulativeMetersetWeight = 1
-					continue
-	
-				if newline == 'Energy (MeV)':
-					capture_Energy = 1
-					continue
-	
-				if newline == 'TotalMetersetWeightOfAllFields':
-					capture_TotalMetersetWeight = 1
-					continue
-	
-				if newline == 'NbOfScannedSpots':
-					capture_NbOfScannedSpots = 1
+			for index, line in enumerate(sourcefile):
+				newline = line.strip()
+				if len(newline)==0:
 					continue
 			
-				if newline == 'GantryAngle':
-					#new field ==  new dataset
-					capture_GantryAngle = 1
-					continue
+				if newline[0] == "#":
+					#we are reading a fieldname
+					#stop reading spots if we were doing that.
+					capture_Spots = 0
+					newline = newline.replace('#','')
+					if newline == 'CumulativeMetersetWeight':
+						#if the field is CumulativeMetersetWeight,
+						#we're engaging capture mode because next we'll get
+						#energy and number of spots, and thus we can 
+						#calculate fluence.
+						capture_CumulativeMetersetWeight = 1
+						continue
+		
+					if newline == 'Energy (MeV)':
+						capture_Energy = 1
+						continue
+		
+					if newline == 'TotalMetersetWeightOfAllFields':
+						capture_TotalMetersetWeight = 1
+						continue
+		
+					if newline == 'NbOfScannedSpots':
+						capture_NbOfScannedSpots = 1
+						continue
+				
+					if newline == 'GantryAngle':
+						#new field ==  new dataset
+						capture_GantryAngle = 1
+						continue
+				
+					if newline == 'FieldID':
+						#new field ==  new dataset
+						# fieldID doesnt have to be incremental!
+						capture_FieldID = 1
+						continue
+				
+					if newline == 'ControlPointIndex':
+						capture_ControlPointIndex = 1
+						continue
+					
+					if newline == 'X Y Weight':
+						capture_Spots = 1
+						continue
+
+				if capture_ControlPointIndex == 1:
+					if controlpoint_iter > 0: #if not the first time here, then add previous field
+						tmplayers.append([fileind+FieldID,Energy,(CumulativeMetersetWeight-previous_CumulativeMetersetWeight),NbOfScannedSpots])
+					
+					#CPI in rtplan starts at 0
+					ControlPointIndex = int(newline)
+					capture_ControlPointIndex = 0
+					
+					controlpoint_iter += 1
 			
-				if newline == 'FieldID':
-					#new field ==  new dataset
-					# fieldID doesnt have to be incremental!
-					capture_FieldID = 1
-					continue
+				if capture_GantryAngle == 1:
+					GantryAngle = int(newline)
+					capture_GantryAngle = 0
 			
-				if newline == 'ControlPointIndex':
-					capture_ControlPointIndex = 1
-					continue
-				
-				if newline == 'X Y Weight':
-					capture_Spots = 1
-					continue
+				if capture_CumulativeMetersetWeight == 1:
+					#Note: CumulativeMetersetWeight is the amount of dose/fluence delivered so far.
+					#It does NOT!!!! include the dose/fluence in this particular controlpoint.
+					#Note2: CPIs are grouped in pairs: the first defines the weights per spot, the second the total CMW.
+					new_CumulativeMetersetWeight = float(newline)
+					if new_CumulativeMetersetWeight == 0:
+						#If it's 0, we are at the start of a new Field.
+						CumulativeMetersetWeight = 0
+						previous_CumulativeMetersetWeight = 0
+						capture_CumulativeMetersetWeight = 0
+						continue
+					else:
+						#Can this happen?
+						previous_CumulativeMetersetWeight = CumulativeMetersetWeight
+						CumulativeMetersetWeight = new_CumulativeMetersetWeight
+						capture_CumulativeMetersetWeight = 0
 
-			if capture_ControlPointIndex == 1:
-				if controlpoint_iter > 0: #if not the first time here, then add previous field
-					self.layers.append([FieldID,Energy,(CumulativeMetersetWeight-previous_CumulativeMetersetWeight),NbOfScannedSpots])
-				
-				#CPI in rtplan starts at 0
-				ControlPointIndex = int(newline)
-				capture_ControlPointIndex = 0
-				
-				controlpoint_iter += 1
-		
-			if capture_GantryAngle == 1:
-				GantryAngle = int(newline)
-				capture_GantryAngle = 0
-		
-			if capture_CumulativeMetersetWeight == 1:
-				#Note: CumulativeMetersetWeight is the amount of dose/fluence delivered so far.
-				#It does NOT!!!! include the dose/fluence in this particular controlpoint.
-				#Note2: CPIs are grouped in pairs: the first defines the weights per spot, the second the total CMW.
-				new_CumulativeMetersetWeight = float(newline)
-				if new_CumulativeMetersetWeight == 0:
-					#If it's 0, we are at the start of a new Field.
-					CumulativeMetersetWeight = 0
-					previous_CumulativeMetersetWeight = 0
-					capture_CumulativeMetersetWeight = 0
-					continue
-				else:
-					#Can this happen?
-					previous_CumulativeMetersetWeight = CumulativeMetersetWeight
-					CumulativeMetersetWeight = new_CumulativeMetersetWeight
-					capture_CumulativeMetersetWeight = 0
+				if capture_FieldID == 1:
+					if fields_iter > 0: #if not the first time here, then add previous field and go and capture next energy_first
+						tmpfields.append([fileind+FieldID,ControlPointIndex,Energy_first,Energy,CumulativeMetersetWeight,GantryAngle])
+						capture_Energy_first = 1
+					
+					FieldID = int(newline)
+					capture_FieldID = 0
+					
+					fields_iter += 1
+			
+				if capture_Energy == 1:
+					capture_Energy = 0
+					new_Energy = float(newline)
+					#if new_Energy == 0:
+						##end of the Field, we still have to record the CMW though!!!!
+						#capture_Energy_first = 1
+						#Energy_last = Energy
+						#Energy = new_Energy
+						#continue
+					Energy = new_Energy
+					if capture_Energy_first == 1:
+						Energy_first = new_Energy
+						capture_Energy_first = 0
 
-			if capture_FieldID == 1:
-				if fields_iter > 0: #if not the first time here, then add previous field and go and capture next energy_first
-					self.fields.append([FieldID,ControlPointIndex,Energy_first,Energy,CumulativeMetersetWeight,GantryAngle])
-					capture_Energy_first = 1
-				
-				FieldID = int(newline)
-				self.fieldids.append(FieldID)
-				capture_FieldID = 0
-				
-				fields_iter += 1
-		
-			if capture_Energy == 1:
-				capture_Energy = 0
-				new_Energy = float(newline)
-				#if new_Energy == 0:
-					##end of the Field, we still have to record the CMW though!!!!
-					#capture_Energy_first = 1
-					#Energy_last = Energy
-					#Energy = new_Energy
-					#continue
-				Energy = new_Energy
-				if capture_Energy_first == 1:
-					Energy_first = new_Energy
-					capture_Energy_first = 0
-
-			if capture_TotalMetersetWeight == 1:
-				#it appears the sums never are really quite correct, so we'll set later if and when converted to nb_prots
-				self.TotalMetersetWeight = float(newline)
-				capture_TotalMetersetWeight = 0
-		
-			if capture_NbOfScannedSpots == 1:
-				capture_NbOfScannedSpots = 0
-				NbOfScannedSpots = int(newline)
-				
-				#if CumulativeMetersetWeight == previous_CumulativeMetersetWeight:
-					##First CPI of the energylayer, so just set the value and be done.
-					#continue
-				#if Energy == 0:
-					##End of the field, here NbOfScannedSpots = int(newline) = 0, so dont overwrite.
-					#self.layers.append([FieldID,Energy_last,(CumulativeMetersetWeight-previous_CumulativeMetersetWeight),NbOfScannedSpots])
-					#self.fields.append([FieldID,(ControlPointIndex)/2+1,Energy_first,Energy_last,CumulativeMetersetWeight,GantryAngle])
-				#else:
-					#self.layers.append([FieldID,Energy,(CumulativeMetersetWeight-previous_CumulativeMetersetWeight),NbOfScannedSpots])
-				
-				#if CumulativeMetersetWeight-previous_CumulativeMetersetWeight>=0: #also equal to zero, for malformed plans
+				if capture_TotalMetersetWeight == 1:
+					#it appears the sums never are really quite correct, so we'll set later if and when converted to nb_prots
+					tmpTotalMetersetWeight = float(newline)
+					capture_TotalMetersetWeight = 0
+			
+				if capture_NbOfScannedSpots == 1:
+					capture_NbOfScannedSpots = 0
+					NbOfScannedSpots = int(newline)
+					
+					#if CumulativeMetersetWeight == previous_CumulativeMetersetWeight:
+						##First CPI of the energylayer, so just set the value and be done.
+						#continue
 					#if Energy == 0:
+						##End of the field, here NbOfScannedSpots = int(newline) = 0, so dont overwrite.
 						#self.layers.append([FieldID,Energy_last,(CumulativeMetersetWeight-previous_CumulativeMetersetWeight),NbOfScannedSpots])
+						#self.fields.append([FieldID,(ControlPointIndex)/2+1,Energy_first,Energy_last,CumulativeMetersetWeight,GantryAngle])
 					#else:
 						#self.layers.append([FieldID,Energy,(CumulativeMetersetWeight-previous_CumulativeMetersetWeight),NbOfScannedSpots])
 					
-			if capture_Spots == 1:
-				##Only capture spots for first of pairs of CMWs
-				#if CumulativeMetersetWeight == previous_CumulativeMetersetWeight:
-				x,y,weight = newline.split(' ')
-				if self.killzero and float(weight) == 0:
-					continue
-				self.spots.append([FieldID,Energy,float(x),float(y),float(weight)])
-				#Because Spots are multiline, we stop it when handling lines starting with '#', see top of function.
+					#if CumulativeMetersetWeight-previous_CumulativeMetersetWeight>=0: #also equal to zero, for malformed plans
+						#if Energy == 0:
+							#self.layers.append([FieldID,Energy_last,(CumulativeMetersetWeight-previous_CumulativeMetersetWeight),NbOfScannedSpots])
+						#else:
+							#self.layers.append([FieldID,Energy,(CumulativeMetersetWeight-previous_CumulativeMetersetWeight),NbOfScannedSpots])
+						
+				if capture_Spots == 1:
+					##Only capture spots for first of pairs of CMWs
+					#if CumulativeMetersetWeight == previous_CumulativeMetersetWeight:
+					x,y,weight = newline.split(' ')
+					if self.killzero and float(weight) == 0:
+						continue
+					tmpspots.append([fileind+FieldID,Energy,float(x),float(y),float(weight)])
+					#Because Spots are multiline, we stop it when handling lines starting with '#', see top of function.
+			
+			#add last field,layer
+			tmpfields.append([fileind+FieldID,ControlPointIndex,Energy_first,Energy,CumulativeMetersetWeight,GantryAngle])
+			tmplayers.append([fileind+FieldID,Energy,(CumulativeMetersetWeight-previous_CumulativeMetersetWeight),NbOfScannedSpots])
+			
+			sourcefile.close()
+			
+			self.fields.extend(tmpfields)
+			self.layers.extend(tmplayers)
+			self.spots.extend(tmpspots)
+			self.TotalMetersetWeight+=tmpTotalMetersetWeight
+			fileind+=1
+			#end loop over files
 		
-		#add last field,layer
-		self.fields.append([FieldID,ControlPointIndex,Energy_first,Energy,CumulativeMetersetWeight,GantryAngle])
-		self.layers.append([FieldID,Energy,(CumulativeMetersetWeight-previous_CumulativeMetersetWeight),NbOfScannedSpots])
+		if self.noproc:
+			return
 		
-		sourcefile.close()
-		self.autolayerhistrange()
-		self.autospothistrange()
 		if self.fixMSWsums == True:
 			self.fix_MSW_sums()
 		if self.MSWtoprotons == True:
@@ -199,47 +215,13 @@ class rtplan:
 			self.norm_to_nprim()
 
 
-	def autolayerhistrange(self):
-		#find high and low points for histograms
-		#TODO can I do without this? can the edges for a TH1D be changed afterwards?
-		low = 1000000 #1TeV seems like a fine upperlimit
-		high = 0
-		for entry in self.fields:
-			low = min(low,entry[2],entry[3])
-			high = max(high,entry[2],entry[3])
-	
-		#Make sure the upper and lower bins are within view.
-		low-=1
-		high+=1
-		self.layerhistrange=[low,high]
-
-
-	def autospothistrange(self):
-		#find high and low points for histograms
-		#TODO can I do without this? can the edges for a TH1D be changed afterwards?
-		low = 0 #0 is the lowest, obviously
-		high = 0
-		for entry in self.spots:
-			high = max(high,entry[-1])
-	
-		#Make sure the upper and lower bins are within view doesnt seem necesary.
-		#low-=1
-		#high+=1
-		self.spothistrange=[low,high]
-
-
-	def getlayerdata(self, layerhistrange=None):
-		if layerhistrange is not None:
-			self.layerhistrange = layerhistrange
-
+	def getlayerdata(self):
 		#array of data
 		histos=[]
 		
 		# Create some histograms
 		for field in self.fields:
 			curfieldid = field[0]
-		#for i in range(len(self.fieldids)):
-			#curfieldid = self.fieldids[i]
 			xv=[]
 			yv=[]
 			for cp in self.layers:
@@ -251,19 +233,13 @@ class rtplan:
 		return histos
 
 
-	def getspotdata(self, spothistrange=None):
-		if spothistrange is not None:
-			self.spothistrange = spothistrange
-
+	def getspotdata(self):
 		#array of data, not really a histo
 		histos=[]
 		
 		# Create some histograms
-
 		for field in self.fields:
 			curfieldid = field[0]
-		#for i in range(len(self.fieldids)):
-			#curfieldid = self.fieldids[i]
 			xv=[]
 			yv=[]
 			for spot in self.spots:
@@ -323,6 +299,7 @@ class rtplan:
 			fieldsum = [0.]*verifyfields
 			self.layers = [x for x in self.layers[::2]]
 			assert len(self.layers) == verifylayers
+			assert len(self.fields) == verifyfields
 		#end doublecheck
 		
 		#completely rebuild layers and fields. may be totally incorrect anyway, IN SPOT WE TRUST.
