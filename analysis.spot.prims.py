@@ -3,15 +3,15 @@ import dump, numpy as np,plot,sys,glob2 as glob,os
 from scipy.stats import chisquare,norm
 
 clrs=plot.colors
-np.random.seed(759873247)
+np.random.seed(659873247)
 
 rootn='ipnl-patient-spot-auger.root'
 #rootn='iba-patient-spot-auger.root'
 
 #glob.glob("/home/brent/phd/scratch/doseactortest-stage2/**/ipnl-patient-spot-auger.root")
 
-def getctset(nprim,ct1,ct2,prefix):
-	ctset6 = {'ct':{},'rpct':{},'name':prefix,'nprim':nprim}
+def getctset(nprim,ct1,ct2,name):
+	ctset6 = {'ct':{},'rpct':{},'name':name,'nprim':nprim}
 	ctset6['ct']['path'] = ct1
 	ctset6['rpct']['path'] = ct2
 	ctset6['ct']['data'] = []
@@ -35,19 +35,17 @@ def getctset(nprim,ct1,ct2,prefix):
 	for ffilen in ctset6['ct']['files']:
 		print 'opening',ffilen
 		for key,val in dump.thist2np_xy(ffilen).items():
-			#print key
 			if key == 'reconstructedProfileHisto':
-				#print val
 				ctset6['ct']['x'] = val[0] #no need to append, is same for all
 				ctset6['ct']['data'].append(plot.ipnlnoise(val[1],nprim))
+				#ctset6['ct']['data'].append(plot.ibanoise(val[1],nprim))
 	for ffilen in ctset6['rpct']['files']:
 		print 'opening',ffilen
 		for key,val in dump.thist2np_xy(ffilen).items():
-			#print key
 			if key == 'reconstructedProfileHisto':
-				#print val[1]
 				ctset6['rpct']['x'] = val[0] #no need to append, is same for all
 				ctset6['rpct']['data'].append(plot.ipnlnoise(val[1],nprim))
+				#ctset6['rpct']['data'].append(plot.ibanoise(val[1],nprim))
 	
 	if len(ctset6['ct']['data']) > 1:
 		#we can average
@@ -71,7 +69,6 @@ def getctset(nprim,ct1,ct2,prefix):
 			ctset6['rpct']['unc'].append(sigma)
 			ctset6['rpct']['uncm'].append(mu-sigma)
 			ctset6['rpct']['uncp'].append(mu+sigma)
-			#print (mu, sigma) 
 	else:
 		ctset6['rpct']['av'] = ctset6['rpct']['data'][0]
 		
@@ -82,34 +79,35 @@ def plotrange(ax1,ct):
 	y = ct['ct']['av']
 	um = ct['ct']['uncm']
 	up = ct['ct']['uncp']
+	ymax = max(y)
 	
 	if len(um)>0:
-		plot.fill_between_steps(ax1, x, um, up, alpha=0.2, color='steelblue', lw=0.5)
+		ymax = max(ymax,max(up))
+		plot.fill_between_steps(ax1, x, um, up, alpha=0.2, color='steelblue', lw=0.5,clip_on=False) #doesnt support where=mid
 	else:
-		ax1.step(x, y, label=ct['name']+'ct', color='steelblue', lw=1)
+		ax1.step(x, y, label=ct['name']+'ct', color='steelblue', lw=1, where='mid',clip_on=False)
 	
-	ax1.set_xlabel('Depth [mm]')
-	ax1.set_ylabel('PG detected [counts]')
-	#ax1.set_xlim(-0.5,5.5)
-	ax1.set_ylim(bottom=0)
-	ax1.set_title(plot.sn(ct['nprim'],0)+' primaries')
+	ax1.set_xlabel('Depth [mm]', fontsize=8)
+	ax1.set_ylabel('PG detected [counts]', fontsize=8)
+	ax1.set_ylim(bottom=0,top=ymax)
+	ax1.set_title(plot.sn(ct['nprim'],0)+' primaries', fontsize=8)
 	plot.texax(ax1)
 
 	x = ct['rpct']['x']
 	y = ct['rpct']['av']
 	um = ct['rpct']['uncm']
 	up = ct['rpct']['uncp']
+	ymax = max(ymax,max(y))
 	
 	if len(um)>0:
-		plot.fill_between_steps(ax1, x, um, up, alpha=0.2, color='indianred', lw=0.5)
+		ymax = max(ymax,max(up))
+		plot.fill_between_steps(ax1, x, um, up, alpha=0.2, color='indianred', lw=0.5,clip_on=False)
 	else:
-		ax1.step(x, y, label=ct['name']+'rpct', color='indianred', lw=1)
-	#ax1.plot(x,y, label='9', color='yellow', lw=1,drawstyle='steps-mid')#,where='mid')
-	ax1.set_xlabel('Depth [mm]')
-	ax1.set_ylabel('PG detected [counts]')
-	#ax1.set_xlim(-0.5,5.5)
-	ax1.set_ylim(bottom=0)
-	ax1.set_title('PG detection')
+		ax1.step(x, y, label=ct['name']+'rpct', color='indianred', lw=1, where='mid',clip_on=False)
+	ax1.set_xlabel('Depth [mm]', fontsize=8)
+	ax1.set_ylabel('PG detected [counts]', fontsize=8)
+	ax1.set_ylim(bottom=0,top=ymax)
+	ax1.set_title('PG detection for '+plot.sn_mag(ct['nprim'])+'primaries', fontsize=8)
 	plot.texax(ax1)
 
 ###################################
@@ -147,7 +145,7 @@ ax1.set_xlabel('')
 ax2.set_xlabel('')
 ax2.set_ylabel('')
 ax4.set_ylabel('')
-f.savefig('spotplot-nprims.pdf', bbox_inches='tight')
+f.savefig(rootn.split('-')[0]+'-spot-nprims.pdf', bbox_inches='tight')
 plot.close('all')
 
 print '====== chisq CT w RPCT ====='

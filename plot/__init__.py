@@ -1,6 +1,7 @@
 from texify import *
 import numpy as np,matplotlib.pyplot as plt
 from math import floor, log10
+from scipy import interpolate
 
 #colors = "rgbmyck"*20
 colors = ['#3778bf','#feb308','#7b0323','#7bb274','#a8a495','#825f87']*20
@@ -156,6 +157,38 @@ def getloghist(data,nrbin=50):
 	hist,bins = np.histogram(data, bins=binn)
 	centers = (bins[:-1] + bins[1:]) / 2
 	return centers,hist
+
+
+def ipnl_fit_range(x,y):
+	#take max
+	y=np.array(y)
+	#maxind = np.argmax(y)
+	maxind = np.where(y == y.max())[0][-1] #so that we find the LAST index where argmax(y)
+	#print maxind
+	y = y.tolist()
+	#go towards end and find 50% thrshold
+	nextind=maxind+1
+	while y[nextind] > 0.5*y[maxind]:
+		nextind+=1
+	# go x bins left and right and fit within
+	hm_left=nextind-5
+	hm_right=nextind+5
+	xbp=x[hm_left:hm_right]
+	ybp=y[hm_left:hm_right]
+	#print maxind,xbp,ybp,y
+	tck,u = interpolate.splprep( [xbp,ybp] ,k=3 )#cubic spline
+	xnew,ynew = interpolate.splev(  np.linspace( 0, 1, 200 ), tck,der = 0)
+	#take mean value in tail-window as minimum
+	floor=np.mean(y[hm_right:])
+	#take max val in BP window as max
+	top=np.max(ybp)
+	falloffval_50pc=(top-floor)*.5
+	nextind=len(ynew)-1
+	while ynew[nextind] < falloffval_50pc:
+		nextind-=1
+	falloffpos = xnew[nextind]
+	#ax1.plot( xbp,ybp,'' , xnew ,ynew )
+	return falloffpos,[xbp,ybp,'',xnew,ynew]
 
 
 # Define function for string formatting of scientific notation
