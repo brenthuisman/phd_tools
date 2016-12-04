@@ -1,51 +1,79 @@
 #!/usr/bin/env python
-import sys,subprocess,threading,ask_yn,tableio
+import argparse
 
 '''
-This script runs a Gate simulation (mac/main.mac) with different parameters simultaneously.
-It expects a singleline parameter file with whitespace-separated values and the first value being the parameter name as found in the macfile.
-
-TODO: Cope with multiple parameters.
-
+run afterwards with
+find -name 'autogen*' -exec gate_run_submit_cluster_nomove.sh {} 1 \;
 '''
 
-macfile = sys.argv[-2]
-paramfile = sys.argv[-1]
+parser = argparse.ArgumentParser(description='launch multiple params.')
+parser.add_argument('--mac')
+parser.add_argument('--param')
+args = parser.parse_args()
 
-if ask_yn.ask_yn("Do you want to start a paralel simulation for "+macfile+" and the parameters found in "+paramfile) == False:
-    print "Mission abort."
-    sys.exit()
+def readmac(fn):
+	f = open(fn)
+	text = f.read()
+	f.close()
+	return text
 
-param = tableio.read(paramfile)
+def readparam(filename,headersize=0):
+    sourcefile = open(filename,'r')
+    newarr=[]
+    for line in sourcefile.readlines()[headersize:]:
+        try:
+            newarr.append([float(x) for x in line.strip('\n').replace('--','0').replace(',','.').split()])
+        except ValueError:
+            newarr.append([x for x in line.strip('\n').replace('--','0').replace(',','.').split()])
+    sourcefile.close()
+    return newarr
 
-print "Starting Gate simulation. Please wait..."
+paramfile = readparam(args.param)
+macfile = readmac(args.mac)
+assert args.mac.endswith('param.mac')
 
-def popenAndCall(onExit, popenArgs):
-    """
-    Runs the given args in a subprocess.Popen, and then calls the function
-    onExit when the subprocess completes.
-    onExit is a callable object, and popenArgs is a list/tuple of args that 
-    would give to subprocess.Popen.
-    """
-    def runInThread(onExit, popenArgs):
-        proc = subprocess.Popen(popenArgs,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-        proc.wait()
-        onExit()
-        return
-    thread = threading.Thread(target=runInThread, args=(onExit, popenArgs))
-    thread.start()
-    # returns immediately after the thread starts
-    return thread
+for val in range(len(paramfile[0]))[1:]:
+	parstr = ''
+	parfstr = ''
+	
+	for par in range(len(paramfile)):
+		parstr = parstr + '/control/alias ' + paramfile[par][0] + ' ' + paramfile[par][val] + '\n'
+		parfstr = parfstr + paramfile[par][0] + '-' + paramfile[par][val] + '-'
+	
+	
+	outname = 'autogen'+args.mac.split('param')[0]+parfstr+'.mac'
+	#print outname
+	#print parstr+macfile
+	with open(outname,'w') as newmacfile:
+		newmacfile.write(parstr)
+		newmacfile.write(macfile)
 
-def done():
-	print "Finished subprocess!"
 
-threadlist=[]
-for para in param[0][1:]:
-	command = "Gate -a '["+param[0][0]+","+str(para)+"]' "+macfile
-	threadlist.append(popenAndCall(done,command))
 
-for thread in threadlist:
-	thread.join()
+#def popenAndCall(onExit, popenArgs):
+    #"""
+    #Runs the given args in a subprocess.Popen, and then calls the function
+    #onExit when the subprocess completes.
+    #onExit is a callable object, and popenArgs is a list/tuple of args that 
+    #would give to subprocess.Popen.
+    #"""
+    #def runInThread(onExit, popenArgs):
+        #proc = subprocess.Popen(popenArgs,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        #proc.wait()
+        #onExit()
+        #return
+    #thread = threading.Thread(target=runInThread, args=(onExit, popenArgs))
+    #thread.start()
+    ## returns immediately after the thread starts
+    #return thread
 
-print "Exiting..."
+#def done():
+	#print "Finished subprocess!"
+
+#threadlist=[]
+#for para in param[0][1:]:
+	#command = "Gate -a '["+param[0][0]+","+str(para)+"]' "+macfile
+	#threadlist.append(popenAndCall(done,command))
+
+#for thread in threadlist:
+	#thread.join()
