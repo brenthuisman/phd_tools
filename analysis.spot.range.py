@@ -136,12 +136,6 @@ ctset_int_7 = getctset(1e7,'fromcluster/nprims/run.41VE','fromcluster/nprims/run
 ctset_int_8 = getctset(1e8,'fromcluster/nprims/run.bfrX','fromcluster/nprims/run.rOx1',typ)
 ctset_int_9 = getctset(1e9,'fromcluster/nprims/run.xTcG','fromcluster/nprims/run.b2Aj',typ)
 
-#typ='iba'
-#iba_ctset_int_6 = getctset(1e6,'fromcluster/nprims/run.yjzw','fromcluster/nprims/run.wfmx',typ)
-#iba_ctset_int_7 = getctset(1e7,'fromcluster/nprims/run.41VE','fromcluster/nprims/run.NE7B',typ)
-#iba_ctset_int_8 = getctset(1e8,'fromcluster/nprims/run.bfrX','fromcluster/nprims/run.rOx1',typ)
-#iba_ctset_int_9 = getctset(1e9,'fromcluster/nprims/run.xTcG','fromcluster/nprims/run.b2Aj',typ)
-
 #########################################################################################################
 
 f, ((ax1,ax2),(ax3,ax4)) = plot.subplots(nrows=2, ncols=2, sharex=False, sharey=False)
