@@ -30,7 +30,8 @@ def readparam(filename,headersize=0):
 
 paramfile = readparam(args.param)
 macfile = readmac(args.mac)
-assert args.mac.endswith('param.mac')
+assert args.mac.startswith('param-')
+assert args.mac.endswith('.mac')
 
 for val in range(len(paramfile[0]))[1:]:
 	parstr = ''
@@ -38,10 +39,10 @@ for val in range(len(paramfile[0]))[1:]:
 	
 	for par in range(len(paramfile)):
 		parstr = parstr + '/control/alias ' + paramfile[par][0] + ' ' + paramfile[par][val] + '\n'
-		parfstr = parfstr + paramfile[par][0] + '-' + paramfile[par][val] + '-'
+		parfstr = parfstr + '-' + paramfile[par][0] + '-' + paramfile[par][val]
 	
 	
-	outname = 'autogen'+args.mac.split('param')[0]+parfstr+'.mac'
+	outname = 'autogen-'+args.mac.replace('.mac','').replace('param-','')+parfstr+'.mac'
 	#print outname
 	#print parstr+macfile
 	with open(outname,'w') as newmacfile:

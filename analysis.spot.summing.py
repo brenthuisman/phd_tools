@@ -51,10 +51,10 @@ typ='iba'
 #22 , 4 ,
 #4 : 65802598.6018 , 7 : 88235302.6706 , 10 : 67298112.2064 , 43 : 64073566.2641 , 
 
-ctset_4 = auger.getctset(65802598,'run.BkDH','run.hNOp',typ)
-ctset_7 = auger.getctset(88235302,'run.DK0Q','run.bxO2',typ)
-ctset_10 = auger.getctset(67298112,'run.eV6D','run.r4I6',typ)
-ctset_43 = auger.getctset(64073566,'run.JOWZ','run.Lmkh',typ)
+ctset_4 = auger.getctset(65802598,'run.4Zh8','run.8Yoh',typ)
+ctset_7 = auger.getctset(88235302,'run.MjnN','run.a5rv',typ)
+ctset_10 = auger.getctset(67298112,'run.XXMy','run.btzm',typ)
+ctset_43 = auger.getctset(64073566,'run.iohj','run.hDu1',typ)
 
 ctset_sum_0 = auger.sumctset('sum',ctset_4,ctset_7,ctset_10,ctset_43)
 
@@ -74,11 +74,11 @@ plot.close('all')
 #18 , 5 , 
 #6 : 58325030.5789 , 9 : 65802598.6018 , 28 : 54600663.4 , 32 : 66406212.2432 , 39 : 42230305.0377 , 
 
-ctset_6 = auger.getctset(58325030,'run.nkdn','run.xOvz',typ)
-ctset_9 = auger.getctset(65802598,'run.9yQu','run.zqWi',typ)
-ctset_28 = auger.getctset(54600663,'run.Tla5','run.bAMz',typ)
-ctset_32 = auger.getctset(66406212,'run.EDis','run.jBIS',typ)
-ctset_39 = auger.getctset(42230305,'run.YkSQ','run.xBqm',typ)
+ctset_6 = auger.getctset(58325030,'run.SGKK','run.Jfrs',typ)
+ctset_9 = auger.getctset(65802598,'run.MRIY','run.EArn',typ)
+ctset_28 = auger.getctset(54600663,'run.XdFk','run.msYH',typ)
+ctset_32 = auger.getctset(66406212,'run.j7tY','run.u6UU',typ)
+ctset_39 = auger.getctset(42230305,'run.DVsR','run.40gM',typ)
 
 ctset_sum_1 = auger.sumctset('sum',ctset_6,ctset_9,ctset_28,ctset_32,ctset_39)
 

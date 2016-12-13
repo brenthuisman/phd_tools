@@ -1,6 +1,6 @@
 import dump, numpy as np,plot,glob2 as glob,copy,matplotlib.pyplot as plt,scipy
 
-rootn='-patient-spot-auger.root'
+#rootn='-patient-spot-auger.root'
 
 def getctset(nprim,ct1,ct2,name):
 	ctset6 = {'ct':{},'rpct':{},'name':name,'nprim':nprim}
@@ -23,8 +23,8 @@ def getctset(nprim,ct1,ct2,name):
 	ctset6['ct']['uncp'] = []
 	ctset6['rpct']['uncp'] = []
 	
-	ctset6['ct']['files'] = glob.glob(ct1+"/**/"+name+rootn)
-	ctset6['rpct']['files'] = glob.glob(ct2+"/**/"+name+rootn)
+	ctset6['ct']['files'] = glob.glob(ct1+"/**/"+name)#+rootn)
+	ctset6['rpct']['files'] = glob.glob(ct2+"/**/"+name)#+rootn)
 
 	for ffilen in ctset6['ct']['files']:
 		print 'opening',ffilen
@@ -32,26 +32,30 @@ def getctset(nprim,ct1,ct2,name):
 			for key,val in dump.thist2np_xy(ffilen).items():
 				if key == 'reconstructedProfileHisto':
 					ctset6['ct']['x'] = val[0] #no need to append, is same for all
-					if 'ipnl' == name:
+					if 'ipnl' in name:
 						ctset6['ct']['data'].append(ipnlnoise(val[1],nprim))
-					elif 'iba' == name: #reverse
+					elif 'iba' in name: #reverse
 						ctset6['ct']['data'].append(ibanoise(val[1][::-1],nprim))
+			#uncomment for plot of fit procedure
+			#ctset6['ct']['falloff'].append(ipnl_fit_range(ctset6['ct']['x'],ctset6['ct']['data'][-1],True))
 			ctset6['ct']['falloff'].append(ipnl_fit_range(ctset6['ct']['x'],ctset6['ct']['data'][-1]))
 		except IndexError:
 			print "Empty file detected, skipping"
+		#break
 	for ffilen in ctset6['rpct']['files']:
 		print 'opening',ffilen
 		try:
 			for key,val in dump.thist2np_xy(ffilen).items():
 				if key == 'reconstructedProfileHisto':
 					ctset6['rpct']['x'] = val[0] #no need to append, is same for all
-					if 'ipnl' == name:
+					if 'ipnl' in name:
 						ctset6['rpct']['data'].append(ipnlnoise(val[1],nprim))
-					elif 'iba' == name: #reverse
+					elif 'iba' in name: #reverse
 						ctset6['rpct']['data'].append(ibanoise(val[1][::-1],nprim))
 			ctset6['rpct']['falloff'].append(ipnl_fit_range(ctset6['rpct']['x'],ctset6['rpct']['data'][-1]))
 		except IndexError:
 			print "Empty file detected, skipping"
+		#break
 	
 	if len(ctset6['ct']['data']) > 1:
 		#we can average
@@ -128,7 +132,7 @@ def sumctset(name,*cts):
 		ndata = np.rollaxis(ndata,1)
 		#print ndata.shape
 		for binn in ndata:
-			(mu, sigma) = norm.fit(binn) #returns actually sigma, not var.
+			(mu, sigma) = scipy.stats.norm.fit(binn) #returns actually sigma, not var.
 			ctset6['ct']['av'].append(mu)
 			ctset6['ct']['unc'].append(sigma)
 			ctset6['ct']['uncm'].append(mu-sigma)
@@ -140,7 +144,7 @@ def sumctset(name,*cts):
 		ndata = np.array(ctset6['rpct']['data'])
 		ndata = np.rollaxis(ndata,1)
 		for binn in ndata:
-			(mu, sigma) = norm.fit(binn) #returns actually sigma, not var.
+			(mu, sigma) = scipy.stats.norm.fit(binn) #returns actually sigma, not var.
 			ctset6['rpct']['av'].append(mu)
 			ctset6['rpct']['unc'].append(sigma)
 			ctset6['rpct']['uncm'].append(mu-sigma)
@@ -232,11 +236,11 @@ def ipnl_fit_range_oud(x,y):
 	return falloffpos,[xbp,ybp,'',xnew,ynew]
 
 
-def ipnl_fit_range(x,y):
+def ipnl_fit_range(x,y,plotten=False):
 	y=np.array(y)
 	
-	#f, ax1 = plot.subplots(nrows=1, ncols=1, sharex=False, sharey=False)
-	#ax1.step( x,y, color='moccasin') #bindata
+	if plotten: f, ax1 = plot.subplots(nrows=1, ncols=1, sharex=False, sharey=False)
+	if plotten: ax1.scatter( x,y, color='black',marker="x",clip_on=False) #bindata
 	
 	#smooth that shit out.
 	#https://en.wikipedia.org/wiki/Smoothing_spline
@@ -245,28 +249,37 @@ def ipnl_fit_range(x,y):
 	x_intpol = np.linspace(x[0],x[-1],1024,endpoint=False)
 	y_intpol = y_intpol_f(x_intpol) #interpolate for x_intpol
 	y_intpol = y_intpol.clip(min=0) #set any possible negatives to zero
-	#ax1.step(x,y2,color='steelblue')
-	#ax1.plot(x_intpol,y_intpol,color='indianred')
+	
+	#if plotten: ax1.step(x,y2,color='steelblue', where='mid')
+	if plotten: ax1.plot(x_intpol,y_intpol,color='indianred')
 	
 	#take max
 	maxind = np.where(y_intpol == y_intpol.max())[0][-1] #so that we find the LAST index where argmax(y)
-	#ax1.axvline(x_intpol[maxind],color='green')
+	
+	if plotten: ax1.axvline(x_intpol[maxind],color='green')
 	
 	#get 25 percentile, and take mean as baseline.
 	baseline = y_intpol[y_intpol < np.percentile(y_intpol, 25)].mean()
-	#ax1.axhline(baseline,color='green')
-	#ax1.axhline(y_intpol.max(),color='green')
+	
+	if plotten: ax1.axhline(baseline,color='green')
+	if plotten: ax1.axhline(y_intpol.max(),color='green')
 	
 	falloff = y_intpol[maxind]-baseline
 	falloff_index=len(x_intpol)-1
 	while y_intpol[falloff_index] < 0.5*falloff+baseline:
 		falloff_index-=1
 	falloff_pos=x_intpol[falloff_index]
-	#ax1.axvline(falloff_pos,color='green')
 	
-	#f.savefig('recons.pdf', bbox_inches='tight')
-	#plot.close('all')
-	#quit()
+	if plotten: ax1.axvline(falloff_pos,color='green')
+	if plotten: plot.texax(ax1)
+	if plotten: ax1.set_xlabel('Depth [mm]', fontsize=8)
+	if plotten: ax1.set_ylabel('PG detected [counts]', fontsize=8)
+	if plotten: from matplotlib.ticker import MaxNLocator
+	if plotten: ax1.yaxis.set_major_locator(MaxNLocator(integer=True))
+	if plotten: ax1.set_ylim(bottom=0)
+	if plotten: f.savefig('recons.pdf', bbox_inches='tight')
+	if plotten: plot.close('all')
+	if plotten: quit()
 	return falloff_pos
 
 
@@ -371,6 +384,7 @@ def plotrange(ax1,ct):
 		plot.fill_between_steps(ax1, x, um, up, alpha=0.2, color='steelblue', lw=0.5,clip_on=False) #doesnt support where=mid
 	else:
 		ax1.step(x, y, label=ct['name']+'ct', color='steelblue', lw=1, where='mid',clip_on=False)
+		#ax1.step(x, y, label=ct['name']+'ct', color='steelblue', lw=1, where='mid')
 	
 	x = ct['rpct']['x']
 	y = ct['rpct']['av']
@@ -383,6 +397,7 @@ def plotrange(ax1,ct):
 		plot.fill_between_steps(ax1, x, um, up, alpha=0.2, color='indianred', lw=0.5,clip_on=False)
 	else:
 		ax1.step(x, y, label=ct['name']+'rpct', color='indianred', lw=1, where='mid',clip_on=False)
+		#ax1.step(x, y, label=ct['name']+'rpct', color='indianred', lw=1, where='mid')
 	ax1.set_xlabel('Depth [mm]', fontsize=8)
 	ax1.set_ylabel('PG detected [counts]', fontsize=8)
 	ax1.set_ylim(bottom=0,top=ymax)
@@ -418,7 +433,7 @@ def plotfodiffdist(ax1,ct,zs):
 		for i in range(len(ct['rpct']['data'])):
 			forpct=ct['rpct']['falloff'][i]
 			fodiff.append(forpct-foct)
-	(mu, sigma) = norm.fit(fodiff)
+	(mu, sigma) = scipy.stats.norm.fit(fodiff)
 	
 	y,bins=np.histogram(fodiff, np.arange(-120,120,1))
 	#print mu, sigma
@@ -445,10 +460,12 @@ def plotfodist(ax1,ct,zs):
 	for i in range(len(ct['ct']['data'])):
 		x,y,fo=ct['ct']['x'],ct['ct']['data'][i],ct['ct']['falloff'][i]
 		fo_ct.append(fo)
+	(ctmu, ctsigma) = scipy.stats.norm.fit(fo_ct)
 	
 	for i in range(len(ct['rpct']['data'])):
 		x,y,fo=ct['rpct']['x'],ct['rpct']['data'][i],ct['rpct']['falloff'][i]
 		fo_rpct.append(fo)
+	(rpctmu, rpctsigma) = scipy.stats.norm.fit(fo_rpct)
 	
 	y,bins=np.histogram(fo_ct, np.arange(-120,120,1))
 	bincenters = 0.5*(bins[1:]+bins[:-1])
@@ -468,3 +485,6 @@ def plotfodist(ax1,ct,zs):
 	labels = ["$10^9$","$10^8$","$10^7$","$10^6$"]
 	ax1.set_yticklabels(labels, fontsize=8, va='baseline', ha='left')
 	ax1.set_ylabel('Primaries [nr]', fontsize=8)
+	
+	plt.figtext(0.05, 0.9-zs/200.,plot.sn_mag(ct['nprim'])+"CT: $\mu$ = "+str(ctmu)[:3]+", $\sigma$ = "+str(ctsigma)[:3], ha='left', va='center', fontsize=6, transform=ax1.transAxes)
+	plt.figtext(0.05, 0.875-zs/200.,plot.sn_mag(ct['nprim'])+"RPCT: $\mu$ = "+str(rpctmu)[:3]+", $\sigma$ = "+str(rpctsigma)[:3], ha='left', va='center', fontsize=6, transform=ax1.transAxes)

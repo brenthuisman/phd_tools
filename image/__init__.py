@@ -649,6 +649,10 @@ class image:
 		self.imdata = self.imdata.reshape(shape)
 
 
+	def towater(self):
+		self.imdata.fill(0)
+
+
 	def savegammamask(self):
 		self.togammamask()
 		self.saveas('1-8msk')

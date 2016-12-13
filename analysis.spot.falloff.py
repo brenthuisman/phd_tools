@@ -5,12 +5,30 @@ import numpy as np,plot,auger
 
 #########################################################################################################
 
-typ='ipnl'
+#typ='ipnl'
+typ='ipnlf'
 #typ='iba'
-ctset_int_6 = auger.getctset(1e6,'run.yjzw','run.wfmx',typ)
-ctset_int_7 = auger.getctset(1e7,'run.41VE','run.NE7B',typ)
-ctset_int_8 = auger.getctset(1e8,'run.bfrX','run.rOx1',typ)
-ctset_int_9 = auger.getctset(1e9,'run.xTcG','run.b2Aj',typ)
+
+typ+='-auger-tof-1.root'
+#typ+='-auger-tof-3.root'
+#typ+='-auger-notof-1.root'
+#typ+='-auger-notof-3.root'
+
+#ctset_int_9 = auger.getctset(1e9,'run.xTcG','run.b2Aj',typ)
+#ctset_int_6 = auger.getctset(1e6,'run.yjzw','run.wfmx',typ)
+#ctset_int_7 = auger.getctset(1e7,'run.41VE','run.NE7B',typ)
+#ctset_int_8 = auger.getctset(1e8,'run.bfrX','run.rOx1',typ)
+
+#nieuw, per ongeluk ook /params gelaunched
+#ctset_int_6 = auger.getctset(1e6,'run.Wi8r','run.EWkk',typ)#Chmd0kbq
+#ctset_int_7 = auger.getctset(1e7,'run.p8Ka','run.R0Vm',typ)#eZUoFdCA
+#ctset_int_8 = auger.getctset(1e8,'run.thhg','run.pYMB',typ)#MXDeqfA3
+#ctset_int_9 = auger.getctset(1e9,'run.mJ3k','run.E8EC',typ)#M0YetFT6
+#ipnlf, per ongeluk ook /params gelaunched
+ctset_int_6 = auger.getctset(1e6,'run.K4XZ','run.rYCr',typ)#ftvabsYW
+ctset_int_7 = auger.getctset(1e7,'run.z6KS','run.YCOL',typ)#9cynNgPF
+ctset_int_8 = auger.getctset(1e8,'run.Urwi','run.Ghea',typ)#ruRlYegH
+ctset_int_9 = auger.getctset(1e9,'run.LsBG','run.pPs7',typ)#2gFE6CuZ
 
 #########################################################################################################
 
