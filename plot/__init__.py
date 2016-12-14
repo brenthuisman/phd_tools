@@ -155,6 +155,9 @@ def sn_mag(num):
 
 def subplots(*args,**kwargs):
 	return plt.subplots(*args,**kwargs)
+
+def legend(*args,**kwargs):
+	return plt.legend(*args,**kwargs)
 	
 def close(*args,**kwargs):
 	return plt.close(*args,**kwargs)

@@ -1,9 +1,15 @@
 #!/usr/bin/env python
-import image,sys,numpy as np,rtplan,auger,plot
+import image,numpy as np,rtplan,auger,argparse
 from collections import Counter
 from tableio import write
 
-rtplan = rtplan.rtplan(['data/plan.txt'],norm2nprim=False)
+parser = argparse.ArgumentParser(description='RTPlanstructure relayerer. It takes an input rtplan, and input dose per-spot image and outputs new rtplans, each with only the spots that have their fall-off in a certain depth-bin.')
+parser.add_argument("-rt", "--rtplan", type=str, help="input rtplan (dumped by Gate)")
+parser.add_argument("-di", "--doseimage", type=str, help="mhd image with dose per spot (4D)")
+parser.add_argument("-f", "--field", type=int, default=102, help="limit rtplan parsing to this field.")
+args = parser.parse_args()
+
+rtplan = rtplan.rtplan([args.rt],norm2nprim=False)
 MSW=[]
 for spot in rtplan.spots:
 	if spot[0] == 102:#
@@ -11,7 +17,7 @@ for spot in rtplan.spots:
 
 spotim_ct = image.image("results.vF3d/dosespotid.2gy.mhd")
 spotim_ct3d = image.image("results.vF3d/dosespotid.3d.2gy.mhd")
-#spotim_ct3d.to90pcmask
+spotim_ct3d.to90pcmask
 spotim_ct3d.toprojection(".x", [0,1,1,1])
 
 new_procedure = True

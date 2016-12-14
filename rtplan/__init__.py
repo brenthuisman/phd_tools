@@ -1,3 +1,5 @@
+import os
+
 class rtplan:
 	def __init__(self,filenames,**kwargs):
 		#defaults
@@ -8,7 +10,7 @@ class rtplan:
 		self.fixMSWsums=True
 		self.noproc=False
 		
-		for key in ('noproc', 'fixMSWsums', 'nprims', 'MSWtoprotons', 'killzero', 'norm2nprim'):
+		for key in ('noproc', 'fixMSWsums', 'nprims', 'MSWtoprotons', 'killzero', 'norm2nprim', 'spotlist'):
 			if key in kwargs:
 				setattr(self, key, kwargs[key])
 		
@@ -21,6 +23,7 @@ class rtplan:
 		#increment FieldIDs with 100 etc.
 		fileind = 100
 		for filename in filenames:
+			spotind = -1 #RELAYER
 			
 			tmpTotalMetersetWeight = 0.
 			tmplayers = []
@@ -28,6 +31,10 @@ class rtplan:
 			tmpfields = []
 			
 			sourcefile = open(filename,'r')
+			
+			destfile = open(os.devnull,'w+') #RELAYER
+			if hasattr(self, 'spotlist'): #RELAYER
+				destfile = open(filename+'spotlayer','w+') #RELAYER
 		
 			capture_NbOfScannedSpots = 0
 			capture_Spots = 0
@@ -44,7 +51,6 @@ class rtplan:
 			MSWfactor = 0
 			Energy = 0
 			Energy_first = 0
-			#Energy_last = 0
 			NbOfScannedSpots = 0
 			FieldID = 0
 			ControlPointIndex = 0
@@ -53,7 +59,13 @@ class rtplan:
 			fields_iter = 0
 			controlpoint_iter = 0
 
+			oldline='' #RELAYER
 			for index, line in enumerate(sourcefile):
+				if oldline.len() > 0: #RELAYER
+					destfile.write(oldline) #RELAYER
+				oldline = line #RELAYER
+				spotind += 1 #RELAYER
+				
 				newline = line.strip()
 				if len(newline)==0:
 					continue
@@ -146,12 +158,6 @@ class rtplan:
 				if capture_Energy == 1:
 					capture_Energy = 0
 					new_Energy = float(newline)
-					#if new_Energy == 0:
-						##end of the Field, we still have to record the CMW though!!!!
-						#capture_Energy_first = 1
-						#Energy_last = Energy
-						#Energy = new_Energy
-						#continue
 					Energy = new_Energy
 					if capture_Energy_first == 1:
 						Energy_first = new_Energy
@@ -166,30 +172,20 @@ class rtplan:
 					capture_NbOfScannedSpots = 0
 					NbOfScannedSpots = int(newline)
 					
-					#if CumulativeMetersetWeight == previous_CumulativeMetersetWeight:
-						##First CPI of the energylayer, so just set the value and be done.
-						#continue
-					#if Energy == 0:
-						##End of the field, here NbOfScannedSpots = int(newline) = 0, so dont overwrite.
-						#self.layers.append([FieldID,Energy_last,(CumulativeMetersetWeight-previous_CumulativeMetersetWeight),NbOfScannedSpots])
-						#self.fields.append([FieldID,(ControlPointIndex)/2+1,Energy_first,Energy_last,CumulativeMetersetWeight,GantryAngle])
-					#else:
-						#self.layers.append([FieldID,Energy,(CumulativeMetersetWeight-previous_CumulativeMetersetWeight),NbOfScannedSpots])
-					
-					#if CumulativeMetersetWeight-previous_CumulativeMetersetWeight>=0: #also equal to zero, for malformed plans
-						#if Energy == 0:
-							#self.layers.append([FieldID,Energy_last,(CumulativeMetersetWeight-previous_CumulativeMetersetWeight),NbOfScannedSpots])
-						#else:
-							#self.layers.append([FieldID,Energy,(CumulativeMetersetWeight-previous_CumulativeMetersetWeight),NbOfScannedSpots])
-						
 				if capture_Spots == 1:
-					##Only capture spots for first of pairs of CMWs
-					#if CumulativeMetersetWeight == previous_CumulativeMetersetWeight:
 					x,y,weight = newline.split(' ')
 					if self.killzero and float(weight) == 0:
 						continue
 					tmpspots.append([fileind+FieldID,Energy,float(x),float(y),float(weight)])
+					
+					if hasattr(self, 'spotlist'): #RELAYER
+						if spotind in self.spotlist: #RELAYER
+							oldline='' #set to nothing so that the spot is skipped. #RELAYER
+							
 					#Because Spots are multiline, we stop it when handling lines starting with '#', see top of function.
+			
+			if oldline.len() > 0: #RELAYER
+				destfile.write(oldline) #RELAYER
 			
 			#add last field,layer
 			tmpfields.append([fileind+FieldID,ControlPointIndex,Energy_first,Energy,CumulativeMetersetWeight,GantryAngle])
