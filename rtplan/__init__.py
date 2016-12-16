@@ -10,7 +10,7 @@ class rtplan:
 		self.fixMSWsums=True
 		self.noproc=False
 		
-		for key in ('noproc', 'fixMSWsums', 'nprims', 'MSWtoprotons', 'killzero', 'norm2nprim', 'spotlist'):
+		for key in ('noproc', 'fixMSWsums', 'nprims', 'MSWtoprotons', 'killzero', 'norm2nprim', 'spotlist', 'fieldind', 'relayername'):
 			if key in kwargs:
 				setattr(self, key, kwargs[key])
 		
@@ -34,7 +34,7 @@ class rtplan:
 			
 			destfile = open(os.devnull,'w+') #RELAYER
 			if hasattr(self, 'spotlist'): #RELAYER
-				destfile = open(filename+'spotlayer','w+') #RELAYER
+				destfile = open(filename.replace('.txt','')+self.relayername+'.txt','w+') #RELAYER
 		
 			capture_NbOfScannedSpots = 0
 			capture_Spots = 0
@@ -61,10 +61,9 @@ class rtplan:
 
 			oldline='' #RELAYER
 			for index, line in enumerate(sourcefile):
-				if oldline.len() > 0: #RELAYER
+				if len(oldline) > 0: #RELAYER
 					destfile.write(oldline) #RELAYER
 				oldline = line #RELAYER
-				spotind += 1 #RELAYER
 				
 				newline = line.strip()
 				if len(newline)==0:
@@ -179,13 +178,32 @@ class rtplan:
 					tmpspots.append([fileind+FieldID,Energy,float(x),float(y),float(weight)])
 					
 					if hasattr(self, 'spotlist'): #RELAYER
-						if spotind in self.spotlist: #RELAYER
-							oldline='' #set to nothing so that the spot is skipped. #RELAYER
+						oldline=' '.join(newline.split(' ')[:2]+['0'])+'\n' #set by default all to zero #RELAYER
+						if hasattr(self, 'fieldind'): #RELAYER
+							if FieldID == self.fieldind: #RELAYER
+								spotind += 1 #RELAYER
+								if spotind in self.spotlist:
+									print spotind, weight
+									oldline = line #puterback
+							#else:
+								#oldline='' #set to nothing so that the spot is skipped because this is the wrong layer. #RELAYER
+						else:
+							spotind += 1 #RELAYER
+							if spotind in self.spotlist: #RELAYER
+								oldline = line #puterback
+								#oldline=' '.join(newline.split(' ')[:2]+['0']) #set to nothing so that the spot is skipped. #RELAYER
 							
 					#Because Spots are multiline, we stop it when handling lines starting with '#', see top of function.
 			
-			if oldline.len() > 0: #RELAYER
-				destfile.write(oldline) #RELAYER
+			if hasattr(self, 'spotlist'): #RELAYER
+				if len(oldline) > 0: #RELAYER
+					if hasattr(self, 'fieldind'): #RELAYER
+						if fileind == self.fieldind: #RELAYER
+							destfile.write(oldline) #RELAYER
+					else: #RELAYER
+						destfile.write(oldline) #RELAYER
+				print "Edited plan written to",destfile.name #RELAYER
+				destfile.close() #RELAYER
 			
 			#add last field,layer
 			tmpfields.append([fileind+FieldID,ControlPointIndex,Energy_first,Energy,CumulativeMetersetWeight,GantryAngle])
@@ -294,8 +312,9 @@ class rtplan:
 			laysum = [0.]*verifylayers
 			fieldsum = [0.]*verifyfields
 			self.layers = [x for x in self.layers[::2]]
-			assert len(self.layers) == verifylayers
-			assert len(self.fields) == verifyfields
+			#print len(self.layers), verifylayers
+			#assert len(self.layers) == verifylayers
+			#assert len(self.fields) == verifyfields
 		#end doublecheck
 		
 		#completely rebuild layers and fields. may be totally incorrect anyway, IN SPOT WE TRUST.

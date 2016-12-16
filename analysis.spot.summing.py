@@ -45,15 +45,18 @@ from scipy.stats import chisquare
 
 ################################################################################
 
-typ='ipnl'
-typ='iba'
+#typ='ipnl-auger-tof-1.root'
+#typ='ipnl-auger-notof-1.root'
+#typ='iba-auger-tof-3.root'
+typ='iba-auger-notof-3.root'
+
 #nieuwe sums. distal layer
 #22 , 4 ,
 #4 : 65802598.6018 , 7 : 88235302.6706 , 10 : 67298112.2064 , 43 : 64073566.2641 , 
 
 ctset_4 = auger.getctset(65802598,'run.4Zh8','run.8Yoh',typ)
 ctset_7 = auger.getctset(88235302,'run.MjnN','run.a5rv',typ)
-ctset_10 = auger.getctset(67298112,'run.XXMy','run.btzm',typ)
+ctset_10 = auger.getctset(67298112,'run.XXMy','run.btzm',typ)#XXMy + 3x HyIv
 ctset_43 = auger.getctset(64073566,'run.iohj','run.hDu1',typ)
 
 ctset_sum_0 = auger.sumctset('sum',ctset_4,ctset_7,ctset_10,ctset_43)

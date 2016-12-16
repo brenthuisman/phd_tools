@@ -3,7 +3,7 @@ import image,sys,numpy as np,rtplan,auger,plot
 from collections import Counter
 from tableio import write
 
-rtplan = rtplan.rtplan(['data/plan.txt'],norm2nprim=False)
+rtplan = rtplan.rtplan(['data/plan.txt'],norm2nprim=False)#,noproc=True)
 MSW=[]
 for spot in rtplan.spots:
 	if spot[0] == 102:#
@@ -13,57 +13,6 @@ spotim_ct = image.image("results.vF3d/dosespotid.2gy.mhd")
 spotim_ct3d = image.image("results.vF3d/dosespotid.3d.2gy.mhd")
 #spotim_ct3d.to90pcmask
 spotim_ct3d.toprojection(".x", [0,1,1,1])
-
-new_procedure = True
-
-################################################################################
-
-if new_procedure == False:
-	#layim = image.image("doselayerid.mhd")
-	#mask = image.image("mask/absdiff.dose.fullplan.10000.skinmask.mhd")
-	outpostfix = ".3d"
-	crush = [0,0,0,1]
-
-	mask.tomask_atthreshold(0.7) # cutoff in grey
-
-	print np.count_nonzero(mask.imdata)
-	mask.insert_block('x','-',100-35) #remove a noisy area not contributing to a few-mm shift
-	print np.count_nonzero(mask.imdata)
-	maskfname = mask.saveas('.thres.x')
-
-	spotim3d = spotim.save_crush_argmax(outpostfix, crush)
-	spotim3d = image.image(spotim3d)
-	spotim3dmsk = spotim3d.applymask_clitk("msk",maskfname)
-
-	layim3d = layim.save_crush_argmax(outpostfix, crush)
-	layim3d = image.image(layim3d)
-	layim3dmsk = layim3d.applymask_clitk("msk",maskfname)#clitk convert everything to float, so must cast back to int later
-
-	spt_hist = dict(Counter(spotim3dmsk.imdata.flatten().tolist()))
-	lay_hist = dict(Counter(layim3dmsk.imdata.flatten().tolist()))#.most_common(5)
-
-	print np.count_nonzero(spotim3dmsk.imdata)
-	print np.count_nonzero(layim3dmsk.imdata)
-	print spt_hist#.keys()
-	print lay_hist#.keys()
-
-	for spotid in spt_hist.keys():
-		if spotid == 0.:
-			continue
-		print spotid, newspots[int(spotid)] #klopt!
-
-	#print rtplan.ConvertMuToProtons(1,140) #about 10^8
-	#print rtplan.ConvertMuToProtons(0.1,140) #about 10^7
-	#print rtplan.ConvertMuToProtons(0.01,140) #about 10^6
-
-	#find spot of 1e8,1e7,1e6
-	for spotid,spot in enumerate(newspots):
-		if 0.95e6 < spot[-1] < 1.20e6:
-			print '1e6', spotid, spot
-		if 0.98e7 < spot[-1] < 1.02e7:
-			print '1e7', spotid, spot
-		if 0.98e8 < spot[-1] < 1.02e8:
-			print '1e8', spotid, spot
 
 ################################################################################
 
@@ -108,35 +57,51 @@ for spindex,spot in enumerate(ct):
 
 ################################################################################
 
-
+#bin spots and get spotcount.
 indices = np.digitize(falloffs,x)
 ind_counter = Counter(indices)
 # falloffs and x[indices] are identical. Comprende?
+y,bins=np.histogram(falloffs,xhist)
+#y,bins=np.histogram(x[indices],xhist)
 
-f, ax1 = plot.subplots(nrows=1, ncols=1, sharex=False, sharey=False)
-#y,bins=np.histogram(falloffs,xhist)
-y,bins=np.histogram(x[indices],xhist)
+y_msw = []
+for ind,x_val in enumerate(x):
+	binmsw = 0.
+	if ind_counter[ind] > 0:
+		print x_val,',', ind_counter[ind],',', 
+		for spotind,i in enumerate(indices):
+			if ind == i:
+				binmsw += MSW[spotind][-1]
+				#print spotind#,':',MSW[spotind][-1],',',
+				#print MSW[spotind]
+		#if newMSW > 0:
+			#print plot.sn(newMSW/ind_counter[ind]),
+			#print plot.sn(newMSW),
+		#print ''
+	y_msw.append(binmsw)
+
+
+
+
+
+f, (ax1,ax2) = plot.subplots(nrows=1, ncols=2, sharex=False, sharey=False)
 ax1.step(x,y, color='indianred',lw=1., label='Spot counts')
 ax1.step(x,spotim_ct3d.imdata/spotim_ct3d.imdata.max()*float(y.max()), color='steelblue',lw=1., label='Dose (normalized)')
 ax1.set_xlabel('Depth [mm]')
 ax1.set_ylabel('Counts')
-plot.legend(frameon = False)#,fancybox = True,ncol = 1,fontsize = 'x-small',loc = 'upper right')
+ax1.set_xlim(-60,25)
 
+plot.legend(frameon = False)#,fancybox = True,ncol = 1,fontsize = 'x-small',loc = 'upper right')
 plot.texax(ax1)
+
+ax2.semilogy()
+ax2.step(x,y_msw, color='indianred',lw=1., label='Spot prot numbers')
+ax2.set_xlim(-60,25)
+#ax2.hist(x,bins=len(x)*10,weights=y_msw,bottom=min(x)/100.,histtype='bar',color='black')
+
+
+plot.texax(ax2)
 f.savefig('dose-ranges.pdf', bbox_inches='tight')
 plot.close('all')
 
 ################################################################################
-
-for ind,x_val in enumerate(x):
-	if ind_counter[ind] > 0:
-		print x_val,',', ind_counter[ind],',', 
-		newMSW = 0.
-		for spotind,i in enumerate(indices):
-			if ind == i:
-				newMSW += MSW[spotind][-1]
-				print spotind,#':',MSW[spotind][-1],',',
-		#if newMSW > 0:
-			#print plot.sn(newMSW/ind_counter[ind]),
-			#print plot.sn(newMSW),
-		print ''
