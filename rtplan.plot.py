@@ -60,6 +60,7 @@ if nrfields > 1:
 	for layer,ax in zip(layerdata,plotke[-1][1]): #1 is tweede rij
 		try:
 			ax.hist(layer[0],bins=len(layer[0])*10,weights=layer[1],bottom=min(layer[1])/100.,histtype='bar',color='black')
+			print layer[1]
 			ax.set_xlim(min(layer[0]),max(layer[0]))
 			ax.set_ylim(10.**int(math.log10(min(layer[1]))),max(layer[1]))
 			ax.semilogy()

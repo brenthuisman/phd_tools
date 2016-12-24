@@ -4,6 +4,12 @@ from collections import Counter
 from tableio import write
 
 rtplan = rtplan.rtplan(['data/plan.txt'],norm2nprim=False)#,noproc=True)
+
+#print rtplan.ConvertMuToProtons(4.73,148.78)
+#print rtplan.ConvertMuToProtons(62.05-48.74,134.68)
+#print rtplan.ConvertMuToProtons(162.35-151.15,116.66)
+#quit()
+
 MSW=[]
 for spot in rtplan.spots:
 	if spot[0] == 102:#
@@ -81,7 +87,7 @@ for ind,x_val in enumerate(x):
 	y_msw.append(binmsw)
 
 
-
+print y_msw
 
 
 f, (ax1,ax2) = plot.subplots(nrows=1, ncols=2, sharex=False, sharey=False)

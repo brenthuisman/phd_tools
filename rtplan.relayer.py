@@ -16,7 +16,7 @@ geolayer = slice(-2,None)
 
 # CODE
 
-orirtp = rtplan.rtplan([rtpfile],noproc=True)#,MSWtoprotons=False)
+orirtp = rtplan.rtplan([rtpfile],norm2nprim=False)#,MSWtoprotons=False)
 MSW=[]
 for spot in orirtp.spots:
 	if spot[0] == 100+field:#
