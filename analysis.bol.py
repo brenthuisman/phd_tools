@@ -29,7 +29,7 @@ ax1 = plt.axes(projection='3d')
 ax1.view_init(30, -50)
 
 auger.plotfodiffdist(ax1,ctset_ipnl,0)
-auger.plotfodiffdist(ax1,ctset_iba,10)
+auger.plotfodiffdist(ax1,ctset_iba,1)
 #plt.tight_layout(rect = [-0.1, 0.0, 1.0, 1.1])#L,B,R,T
 fig.savefig('layer-sphere-falloffdiffdist.pdf')#, bbox_inches='tight')
 plt.close('all')
@@ -41,7 +41,7 @@ ax1 = plt.axes(projection='3d')
 ax1.view_init(30, -50)
 
 auger.plotfodist(ax1,ctset_ipnl,0)
-auger.plotfodist(ax1,ctset_iba,10)
+auger.plotfodist(ax1,ctset_iba,1)
 
 #plt.legend()#shadow = True,frameon = True,fancybox = True,ncol = 1,fontsize = 'x-small',loc = 'lower right')
 

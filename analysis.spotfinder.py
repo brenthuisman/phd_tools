@@ -91,23 +91,29 @@ print y_msw
 
 
 f, (ax1,ax2) = plot.subplots(nrows=1, ncols=2, sharex=False, sharey=False)
-ax1.step(x,y, color='indianred',lw=1., label='Spot counts')
-ax1.step(x,spotim_ct3d.imdata/spotim_ct3d.imdata.max()*float(y.max()), color='steelblue',lw=1., label='Dose (normalized)')
-ax1.set_xlabel('Depth [mm]')
-ax1.set_ylabel('Counts')
+ax1.step(x,y, color='indianred',lw=1., label='Geometric layers')
+ax1.step(x,spotim_ct3d.imdata/spotim_ct3d.imdata.max()*float(y.max()), color='steelblue',lw=1., label='Integral dose (scaled)')
+ax1.set_xlabel('FOP [mm]')
+ax1.set_ylabel('Number of spots')
 ax1.set_xlim(-60,25)
+ax1.set_ylim(0,140)
 
-plot.legend(frameon = False)#,fancybox = True,ncol = 1,fontsize = 'x-small',loc = 'upper right')
+ax1.legend(frameon = False)#,fancybox = True,ncol = 1,fontsize = 'x-small',loc = 'upper right')
 plot.texax(ax1)
 
 ax2.semilogy()
-ax2.step(x,y_msw, color='indianred',lw=1., label='Spot prot numbers')
+ax2.step(x,y_msw, color='forestgreen',lw=1., label='Protons')
 ax2.set_xlim(-60,25)
+ax2.set_ylim(5e7,5e9)
+ax2.set_xlabel('FOP [mm]')
+ax2.set_ylabel('Number of Protons')
+ax2.legend(frameon = False)#,fancybox = True,ncol = 1,fontsize = 'x-small',loc = 'upper right')
 #ax2.hist(x,bins=len(x)*10,weights=y_msw,bottom=min(x)/100.,histtype='bar',color='black')
 
 
 plot.texax(ax2)
-f.savefig('dose-ranges.pdf', bbox_inches='tight')
+
+f.savefig('spotfinder.pdf', bbox_inches='tight')
 plot.close('all')
 
 ################################################################################

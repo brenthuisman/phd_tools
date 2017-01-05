@@ -59,9 +59,9 @@ ax1 = plt.axes(projection='3d')
 ax1.view_init(30, -50)
 
 auger.plotfodiffdist(ax1,ctset_int_9,0)
-auger.plotfodiffdist(ax1,ctset_int_8,10)
-auger.plotfodiffdist(ax1,ctset_int_7,20)
-auger.plotfodiffdist(ax1,ctset_int_6,30)
+auger.plotfodiffdist(ax1,ctset_int_8,1)
+auger.plotfodiffdist(ax1,ctset_int_7,2)
+auger.plotfodiffdist(ax1,ctset_int_6,3)
 #plt.tight_layout(rect = [-0.1, 0.0, 1.0, 1.1])#L,B,R,T
 fig.savefig(typ+'-spot-falloffdiffdist.pdf')#, bbox_inches='tight')
 plt.close('all')
@@ -73,9 +73,9 @@ ax1 = plt.axes(projection='3d')
 ax1.view_init(30, -50)
 
 auger.plotfodist(ax1,ctset_int_9,0)
-auger.plotfodist(ax1,ctset_int_8,10)
-auger.plotfodist(ax1,ctset_int_7,20)
-auger.plotfodist(ax1,ctset_int_6,30)
+auger.plotfodist(ax1,ctset_int_8,1)
+auger.plotfodist(ax1,ctset_int_7,2)
+auger.plotfodist(ax1,ctset_int_6,3)
 
 #plt.legend()#shadow = True,frameon = True,fancybox = True,ncol = 1,fontsize = 'x-small',loc = 'lower right')
 
