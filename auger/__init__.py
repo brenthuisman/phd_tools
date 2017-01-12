@@ -33,8 +33,8 @@ def getctset(nprim,ct1,ct2,name):
 					ctset6['ct']['x'] = val[0] #no need to append, is same for all
 					ctset6['ct']['data'].append(addnoise(val[1],nprim,name)) #append 'onlynoise' to name for only noise
 			#uncomment for plot of fit procedure
-			#ctset6['ct']['falloff'].append(ipnl_fit_range(ctset6['ct']['x'],ctset6['ct']['data'][-1],True))
-			ctset6['ct']['falloff'].append(ipnl_fit_range(ctset6['ct']['x'],ctset6['ct']['data'][-1]))
+			#ctset6['ct']['falloff'].append(get_fop(ctset6['ct']['x'],ctset6['ct']['data'][-1],plot='fopfit.pdf'))
+			ctset6['ct']['falloff'].append(get_fop(ctset6['ct']['x'],ctset6['ct']['data'][-1]))
 		except IndexError:
 			print "Empty file detected, skipping"
 		#break
@@ -45,7 +45,7 @@ def getctset(nprim,ct1,ct2,name):
 				if key == 'reconstructedProfileHisto':
 					ctset6['rpct']['x'] = val[0] #no need to append, is same for all
 					ctset6['rpct']['data'].append(addnoise(val[1],nprim,name))
-			ctset6['rpct']['falloff'].append(ipnl_fit_range(ctset6['rpct']['x'],ctset6['rpct']['data'][-1]))
+			ctset6['rpct']['falloff'].append(get_fop(ctset6['rpct']['x'],ctset6['rpct']['data'][-1]))
 		except IndexError:
 			print "Empty file detected, skipping"
 		#break
@@ -146,10 +146,10 @@ def sumctset(name,*cts):
 		ctset6['rpct']['av'] = ctset6['rpct']['data'][0]
 		
 	for dataset in ctset6['ct']['data']:
-		ctset6['ct']['falloff'].append(ipnl_fit_range(ctset6['ct']['x'],dataset))
+		ctset6['ct']['falloff'].append(get_fop(ctset6['ct']['x'],dataset))
 	
 	for dataset in ctset6['rpct']['data']:
-		ctset6['rpct']['falloff'].append(ipnl_fit_range(ctset6['rpct']['x'],dataset))
+		ctset6['rpct']['falloff'].append(get_fop(ctset6['rpct']['x'],dataset))
 		
 	return ctset6
 
@@ -181,7 +181,16 @@ def addnoise(data,nprim,typ):
 	return retval
 
 
-def ipnl_fit_range(x,y,plotten=False):
+def get_fop(x,y,**kwargs):
+	plotten = False
+	plottenname = ''
+	threshold = 0.5
+	if 'plot' in kwargs:
+		plotten = True
+		plottenname = str(kwargs['plot'])
+	if 'threshold' in kwargs:
+		threshold = float(kwargs['threshold'])
+	
 	y=np.array(y)
 	
 	if plotten: import plot
@@ -212,7 +221,7 @@ def ipnl_fit_range(x,y,plotten=False):
 	
 	falloff = y_intpol[maxind]-baseline
 	falloff_index=len(x_intpol)-1
-	while y_intpol[falloff_index] < 0.5*falloff+baseline:
+	while y_intpol[falloff_index] < threshold*falloff+baseline: #default threshold is 0.5
 		falloff_index-=1
 	falloff_pos=x_intpol[falloff_index]
 	
@@ -223,7 +232,7 @@ def ipnl_fit_range(x,y,plotten=False):
 	if plotten: from matplotlib.ticker import MaxNLocator
 	if plotten: ax1.yaxis.set_major_locator(MaxNLocator(integer=True))
 	if plotten: ax1.set_ylim(bottom=0)
-	if plotten: f.savefig('recons.pdf', bbox_inches='tight')
+	if plotten: f.savefig(plottenname, bbox_inches='tight')
 	if plotten: plot.close('all')
 	if plotten: quit()
 	return falloff_pos

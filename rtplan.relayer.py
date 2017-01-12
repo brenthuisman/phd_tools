@@ -43,7 +43,7 @@ for spindex,spot in enumerate(ct):
 
 	spot = spot.reshape(spot.shape[::-1])
 	
-	fo=auger.ipnl_fit_range(x,spot)
+	fo=auger.get_fop(x,spot)
 	falloffs.append(fo)
 
 indices = np.digitize(falloffs,x)

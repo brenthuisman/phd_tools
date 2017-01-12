@@ -161,3 +161,6 @@ def legend(*args,**kwargs):
 	
 def close(*args,**kwargs):
 	return plt.close(*args,**kwargs)
+	
+def get_cmap(*args,**kwargs):
+	return plt.get_cmap(*args,**kwargs)

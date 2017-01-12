@@ -6,11 +6,17 @@ import numpy as np,plot,auger
 #########################################################################################################
 
 #typ='ipnl-auger-tof-1.root'
+typ='iba-auger-notof-3.root'
+
 #typ='ipnl-auger-notof-1.root'
+#typ='iba-auger-tof-3.root'
+#typ='ipnl-auger-tof-3.root'
+#typ='iba-auger-tof-1.root'
+#typ='ipnl-auger-notof-3.root'
+#typ='iba-auger-notof-1.root'
+
 #typ='ipnlf-auger-tof-1.root'
 #typ='ipnlf-auger-notof-1.root'
-typ='iba-auger-tof-3.root'
-#typ='iba-auger-notof-3.root'
 
 #we dont know what the added or reduced noise level is when changing energy windows, so we cant compare performance for ipnl3 and iba1.
 #we could study the signal only.

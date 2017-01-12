@@ -47,7 +47,7 @@ for spindex,spot in enumerate(ct):
 	#print spot.shape
 	#print spot
 	
-	fo=auger.ipnl_fit_range(x,spot)
+	fo=auger.get_fop(x,spot)
 	falloffs.append(fo)
 	
 	#if spindex in [4, 7, 10, 32, 43]:
