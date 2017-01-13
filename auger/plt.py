@@ -82,7 +82,8 @@ def plotfodiffdist(ax1,ct,zs,labels=None):
 	c = ['grey']*len(y)
 	ax1.bar(bincenters,y, color=c,lw=0.2, zs=zs, zdir='y',label=printprim(ct['nprim'])+' primaries')
 	
-	ax1.set_xlim3d(-10,20)
+	if zs==0:
+		ax1.set_xlim3d(mu-20,mu+20)
 	
 	ax1.set_xlabel('Detected Shifts [mm]', fontsize=8)
 	ax1.set_zlabel('[counts]', fontsize=8)
@@ -128,7 +129,9 @@ def plotfodist(ax1,ct,zs,labels=None):
 	c = ['steelblue']*len(y)
 	ax1.bar(bincenters,y, color=c,lw=0.2, zs=zs, zdir='y', alpha=0.5, label=printprim(ct['nprim'])+' primaries')
 	
-	ax1.set_xlim3d(-10,20)
+	if zs==0:
+		centr = (ctmu+rpctmu)/2.
+		ax1.set_xlim3d(centr-20,centr+20)
 	
 	ax1.set_xlabel('Falloff Position [mm]', fontsize=8)
 	ax1.set_zlabel('[counts]', fontsize=8)

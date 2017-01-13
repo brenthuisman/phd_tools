@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 import image,numpy as np,rtplan,auger,plot,argparse
-from collections import Counter
-from tableio import write
-import argparse
+#from collections import Counter
+#from tableio import write
 
 parser = argparse.ArgumentParser(description='launch multiple params.')
 parser.add_argument('--plotspot')
+parser.add_argument('--shifttolerance')
 args = parser.parse_args()
 
 ################################################################################
@@ -28,34 +28,35 @@ x = np.linspace(-148,148,300) #bincenters
 
 shifts = []
 pgshifts = []
+diffshifts = []
 
 for spindex, (ct,rpct,pg,rppg) in enumerate( zip( *images ) ):
-	#if args.plotspot:
-		#shift = auger.get_fop(x,ctspot) - auger.get_fop(x,rpctspot)
+	shift = auger.get_fop(x,rpct) - auger.get_fop(x,ct)
+	pgshift = auger.get_fop(x,rppg) - auger.get_fop(x,pg)
+	diffshift = pgshift-shift
 	
-	#if args.shifttolerance:
-		## ensure a shift calculated at 20% and 80% height within 1mm of shift computed at default 50%
-		#shift2 = auger.get_fop(x,rpctspotx,threshold=0.2) - auger.get_fop(x,ctspotx,threshold=0.2)
-		#shift8 = auger.get_fop(x,rpctspotx,threshold=0.8) - auger.get_fop(x,ctspotx,threshold=0.8)
+	if args.shifttolerance:
+		# ensure a shift calculated at 20% and 80% height within 1mm of shift computed at default 50%
+		shift2 = auger.get_fop(x,rpct,threshold=0.2) - auger.get_fop(x,ct,threshold=0.2)
+		shift8 = auger.get_fop(x,rpct,threshold=0.8) - auger.get_fop(x,ct,threshold=0.8)
+		pgshift2 = auger.get_fop(x,rppg,threshold=0.2) - auger.get_fop(x,pg,threshold=0.2)
+		pgshift8 = auger.get_fop(x,rppg,threshold=0.8) - auger.get_fop(x,pg,threshold=0.8)
 		
-		#if np.isclose([shift2,shift8],shift,atol=float(args.shifttolerance)).all():
-			## all values in *ctfops are within 1.0 (mm) of *ctfop. it is a front shift
-			#shifts.append(shift)
-		#else:
-			#shifts.append(np.nan)
-	#else:
-		#shifts.append(shift)
+		if np.isclose([shift2,shift8],shift,atol=float(args.shifttolerance)).all() and np.isclose([pgshift2,pgshift8],pgshift,atol=float(args.shifttolerance)).all():
+			# all values in *ctfops are within 1.0 (mm) of *ctfop. it is a front shift
+			shifts.append(shift)
+			pgshifts.append(pgshift)
+			diffshifts.append(diffshift)
+		else:
+			shifts.append(np.nan)
+			pgshifts.append(np.nan)
+			diffshifts.append(np.nan)
+	else:
+		shifts.append(shift)
+		pgshifts.append(pgshift)
+		diffshifts.append(diffshift)
 		
 	if args.plotspot is not None and spindex == int(args.plotspot):
-		#spotimages = [im.flatten() for im in spotimages] #flatten, because theres no other axes anyway
-		#ct = spotimages[0]
-		#print len(ct)
-		#rpct = spotimages[1]
-		#pg = spotimages[2]
-		#rppg = spotimages[3]
-		
-		shift = auger.get_fop(x,ct) - auger.get_fop(x,rpct)
-		pgshift = auger.get_fop(x,pg) - auger.get_fop(x,rppg)
 		
 		f, (ax1,ax2) = plot.subplots(nrows=1, ncols=2, sharex=False, sharey=False)
 		ax1.step(x,ct, color='steelblue',lw=1., label='')
@@ -70,8 +71,54 @@ for spindex, (ct,rpct,pg,rppg) in enumerate( zip( *images ) ):
 		ax2.set_ylabel('Integrated Dose [a.u.]')
 		ax2.set_title('Integrated PG Profile (along x)'+', shift '+str(pgshift)[:4], fontsize=8)
 		
+		ax1.set_xlim(-50,25)
+		ax2.set_xlim(-50,25)
+		
 		f.suptitle('spotid '+str(spindex)+', weight '+plot.sn(MSW[spindex][-1]), fontsize=8)
 		plot.texax(ax1)
 		plot.texax(ax2)
 		f.savefig('new-fop'+str(args.plotspot)+'.pdf', bbox_inches='tight')
 		plot.close('all')
+		quit()
+	
+	print 'Spot', spindex, 'analyzed!'
+
+
+#get rid of nans, order is no longer spotid
+suppressed = np.isnan(shifts).sum() #should be same in all arrays.
+
+shifts = np.array(shifts)
+diffshifts = np.array(diffshifts)
+pgshifts = np.array(pgshifts)
+shifts = shifts[~np.isnan(shifts)]
+pgshifts = pgshifts[~np.isnan(pgshifts)]
+diffshifts = diffshifts[~np.isnan(diffshifts)]
+
+xhist = np.linspace(-150,150,301) #4mm voxels, endpoints
+x = np.linspace(-148,148,300) #bincenters, mm bins
+#indices = np.digitize(shifts,x)
+y,bins=np.histogram(shifts,xhist)
+#y,bins=np.histogram(x[indices],xhist)
+pgy,pgbins=np.histogram(pgshifts,xhist)
+diffy,diffbins=np.histogram(diffshifts,xhist)
+
+f, (ax1,ax2) = plot.subplots(nrows=1, ncols=2, sharex=False, sharey=False)
+ax1.step(x,y, color='steelblue',lw=1., label='Dose Shifts')
+ax1.step(x,pgy, color='indianred',lw=1., label='PG Shifts')
+ax1.set_xlabel('FOP shift [mm]')
+ax1.set_ylabel('Number of spots')
+ax1.set_xlim(-5,32)
+
+ax2.step(x,diffy, color='forestgreen',lw=1., label='Diff in shift\n$\mu='+str(np.mean(diffshifts))[:5]+', \sigma='+str(np.std(diffshifts))[:4]+'$')
+ax2.set_xlabel('PG-Dose shift [mm]')
+ax2.set_ylabel('Number of spots')
+ax2.set_xlim(-25,25)
+
+plot.texax(ax1)
+plot.texax(ax2)
+ax1.legend(frameon = False)
+ax2.legend(frameon = False)
+
+f.suptitle('Nr. of spots: '+str(len(shifts)), fontsize=8)
+f.savefig('shift-diffs-'+str(args.shifttolerance)+'.pdf', bbox_inches='tight')
+plot.close('all')

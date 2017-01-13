@@ -5,8 +5,8 @@ import numpy as np,plot,auger
 
 #########################################################################################################
 
-#typ='ipnl-auger-tof-1.root'
-typ='iba-auger-notof-3.root'
+typ='ipnl-auger-tof-1.root'
+#typ='iba-auger-notof-3.root'
 
 #typ='ipnl-auger-notof-1.root'
 #typ='iba-auger-tof-3.root'
@@ -15,29 +15,24 @@ typ='iba-auger-notof-3.root'
 #typ='ipnl-auger-notof-3.root'
 #typ='iba-auger-notof-1.root'
 
+#ipnl FFFF
 #typ='ipnlf-auger-tof-1.root'
 #typ='ipnlf-auger-notof-1.root'
 
 #we dont know what the added or reduced noise level is when changing energy windows, so we cant compare performance for ipnl3 and iba1.
 #we could study the signal only.
 
-#nieuw, per ongeluk ook /params gelaunched
-#ctset_int_6 = auger.getctset(1e6,'run.Wi8r','run.EWkk',typ)#Chmd0kbq # 0kbq + 2x oeOe
-#ctset_int_7 = auger.getctset(1e7,'run.p8Ka','run.R0Vm',typ)#eZUoFdCA
-#ctset_int_8 = auger.getctset(1e8,'run.thhg','run.pYMB',typ)#MXDeqfA3 # qfA3 + 4x hM25
-#ctset_int_9 = auger.getctset(1e9,'run.mJ3k','run.E8EC',typ)#M0YetFT6
-
-#ipnlf, per ongeluk ook /params gelaunched
-#ctset_int_6 = auger.getctset(1e6,'run.K4XZ','run.rYCr',typ)#ftvabsYW
-#ctset_int_7 = auger.getctset(1e7,'run.z6KS','run.YCOL',typ)#9cynNgPF
-#ctset_int_8 = auger.getctset(1e8,'run.Urwi','run.Ghea',typ)#ruRlYegH
-#ctset_int_9 = auger.getctset(1e9,'run.LsBG','run.pPs7',typ)#2gFE6CuZ
+#nieuw
+#ctset_int_6 = auger.getctset(1e6,'run.rFN5','run.jUPf',typ)
+#ctset_int_7 = auger.getctset(1e7,'run.AE5G','run.gK11',typ)
+#ctset_int_8 = auger.getctset(1e8,'run.lNkm','run.ztcV',typ)
+#ctset_int_9 = auger.getctset(1e9,'run.A3vG','run.9950',typ)
 
 #waterbox
-ctset_int_6 = auger.getctset(1e6,'run.FBsY','run.Rrgc',typ)
-ctset_int_7 = auger.getctset(1e7,'run.F6Ma','run.pPGx',typ)
-ctset_int_8 = auger.getctset(1e8,'run.gEGy','run.oxlI',typ)
-ctset_int_9 = auger.getctset(1e9,'run.XQty','run.wWZR',typ)
+ctset_int_6 = auger.getctset(1e6,'run.WbDj','run.f9cL',typ)
+ctset_int_7 = auger.getctset(1e7,'run.ngMk','run.Ho8b',typ)
+ctset_int_8 = auger.getctset(1e8,'run.cj4U','run.RWsd',typ)
+ctset_int_9 = auger.getctset(1e9,'run.kVk7','run.iias',typ)
 
 #########################################################################################################
 

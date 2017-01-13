@@ -36,8 +36,8 @@ if args.dosepg:
 
 	f, ax1 = plot.subplots(nrows=1, ncols=1, sharex=False, sharey=False)
 
-	ax1.step(x,spot, color='indianred',lw=1., label='')
-	ax1.step(x,spot2, color='steelblue',lw=1., label='')
+	ax1.step(x,spot, color='steelblue',lw=1., label='')
+	ax1.step(x,spot2, color='indianred',lw=1., label='')
 
 	ax1.set_xlabel('FOP [mm], shift: '+str(rpctfo-ctfo) )
 	#ax1.set_ylabel('Number of spots')
