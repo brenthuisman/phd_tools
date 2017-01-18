@@ -22,8 +22,13 @@ def getctset(nprim,ct1,ct2,name):
 	ctset6['ct']['uncp'] = []
 	ctset6['rpct']['uncp'] = []
 	
-	ctset6['ct']['files'] = glob.glob(ct1+"/**/"+name)#+rootn)
-	ctset6['rpct']['files'] = glob.glob(ct2+"/**/"+name)#+rootn)
+	ctset6['ct']['files'] = glob.glob(ct1+"/**/"+name)
+	ctset6['rpct']['files'] = glob.glob(ct2+"/**/"+name)
+	
+	print '==== Report ===='
+	print ct1, len(ctset6['ct']['files'])
+	print ct2, len(ctset6['rpct']['files'])
+	print '==== ====== ===='
 
 	for ffilen in ctset6['ct']['files']:
 		print 'opening',ffilen

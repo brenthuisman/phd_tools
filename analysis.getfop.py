@@ -13,8 +13,10 @@ args = parser.parse_args()
 
 
 if args.dosepg:
-	spotim_ct = image.image('output/source-ct-'+str(int(args.dosepg))+'.mhd')
-	spotim_rpct = image.image('output/source-rpct-'+str(int(args.dosepg))+'.mhd')
+	#spotim_ct = image.image('output/source-ct-'+str(int(args.dosepg))+'.mhd')
+	#spotim_rpct = image.image('output/source-rpct-'+str(int(args.dosepg))+'.mhd')
+	spotim_ct = image.image('source-139.mhd')
+	spotim_rpct = image.image('source-144.mhd')
 	#spotim_ct = image.image("output/source-ct-61.mhd")
 	#spotim_ct = image.image("output/dosedist-ct-61-Dose.mhd")
 	spotim_ct.toprojection(".x", [0,1,1,1])
