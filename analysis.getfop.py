@@ -38,15 +38,15 @@ if args.dosepg:
 
 	f, ax1 = plot.subplots(nrows=1, ncols=1, sharex=False, sharey=False)
 
-	ax1.step(x,spot, color='steelblue',lw=1., label='')
-	ax1.step(x,spot2, color='indianred',lw=1., label='')
+	ax1.step(x,spot, color='steelblue',lw=1., label='CT FOP: '+str(ctfo))
+	ax1.step(x,spot2, color='indianred',lw=1., label='RPCT FOP: '+str(rpctfo))
 
 	ax1.set_xlabel('FOP [mm], shift: '+str(rpctfo-ctfo) )
 	#ax1.set_ylabel('Number of spots')
 	#ax1.set_xlim(-60,25)
 	#ax1.set_ylim(0,140)
 
-	#ax1.legend(frameon = False)
+	ax1.legend(frameon = False)
 	plot.texax(ax1)
 
 	f.savefig('fop-pg'+str(int(args.dosepg))+'.pdf', bbox_inches='tight')

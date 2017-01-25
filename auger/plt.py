@@ -90,7 +90,7 @@ def plotfodiffdist(ax1,ct,zs,labels=None):
 	ax1.locator_params(axis='y',nbins=len(labels))
 	ax1.set_yticklabels(labels, fontsize=8, va='baseline', ha='left')
 	#zs/10.
-	plt.figtext(0.05, 0.9-zs/40.,printprim(ct['nprim'])+": $\mu$ = "+str(mu)[:3]+", $\sigma$ = "+str(sigma)[:3], ha='left', va='center', fontsize=6, transform=ax1.transAxes)
+	plt.figtext(0.05, 0.9-zs/40.,printprim(ct['nprim'])+": $\mu$ = "+str(mu)[:4]+", $\sigma$ = "+str(sigma)[:4], ha='left', va='center', fontsize=6, transform=ax1.transAxes)
 
 
 def plotfodist(ax1,ct,zs,labels=None):
@@ -139,5 +139,5 @@ def plotfodist(ax1,ct,zs,labels=None):
 	ax1.set_yticklabels(labels, fontsize=8, va='baseline', ha='left')
 	ax1.set_ylabel('Primaries [nr]', fontsize=8)
 	
-	plt.figtext(0.05, 0.9-zs/20.,printprim(ct['nprim'])+"CT: $\mu$ = "+str(ctmu)[:3]+", $\sigma$ = "+str(ctsigma)[:3], ha='left', va='center', fontsize=6, transform=ax1.transAxes)
-	plt.figtext(0.05, 0.875-zs/20.,printprim(ct['nprim'])+"RPCT: $\mu$ = "+str(rpctmu)[:3]+", $\sigma$ = "+str(rpctsigma)[:3], ha='left', va='center', fontsize=6, transform=ax1.transAxes)
+	plt.figtext(0.05, 0.9-zs/20.,printprim(ct['nprim'])+"CT: $\mu$ = "+str(ctmu)[:4]+", $\sigma$ = "+str(ctsigma)[:4], ha='left', va='center', fontsize=6, transform=ax1.transAxes)
+	plt.figtext(0.05, 0.875-zs/20.,printprim(ct['nprim'])+"RPCT: $\mu$ = "+str(rpctmu)[:4]+", $\sigma$ = "+str(rpctsigma)[:4], ha='left', va='center', fontsize=6, transform=ax1.transAxes)

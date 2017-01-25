@@ -309,13 +309,19 @@ class image:
 		return image(outname)
 
 
-	def applymask_clitk(self,postfix,maskfile):
+	def applymask_clitk(self,postfix,maskfile,p=0.):
 		inname = self.infile
 		outname = self.infile[:-4]+str(postfix)+'.mhd'
-		subprocess.call(['clitkSetBackground','-i',inname,'-m',maskfile,'-o',outname])
+		subprocess.call(['clitkSetBackground','-i',inname,'-m',maskfile,'-o',outname,'-p',str(p)])
 		#os.popen("clitkSetBackground -i "+inname+" -m "+maskfile+" -o "+outname)
 		print "New mhd file:",outname
 		return image(outname)
+
+
+	def smudge(self,mskval,frac=1.):
+		#assume mskval must be ignored
+		tmp = np.ma.masked_where(self.imdata == mskval, self.imdata)
+		self.imdata[self.imdata != mskval] = tmp.mean()
 
 
 	def applymask(self,*maskimages):

@@ -18,26 +18,45 @@ typs=['ipnl-auger-tof-1.root','iba-auger-notof-3.root']
 for typ in typs:
 
 	#loc = 'spot61'
-	#ctset_int_6 = auger.getctset(1e6,'run.rFN5','run.jUPf',typ)# 5 , 0  # Lax4 , 
-	#ctset_int_7 = auger.getctset(1e7,'run.AE5G','run.gK11',typ)# 2 , 0  # ZbiH , 
-	#ctset_int_8 = auger.getctset(1e8,'run.lNkm','run.ztcV',typ)# 0 , 4  #  , YBPS
-	#ctset_int_9 = auger.getctset(1e9,'run.A3vG','run.9950',typ)# 7 , 10 # RB5q , qB35
+	#ctset_int_6 = auger.getctset(1e6,'run.rFN5','run.jUPf',typ)# 5 , 0  # AGJb , 
+	#ctset_int_7 = auger.getctset(1e7,'run.AE5G','run.gK11',typ)# 2 , 0  # ZbiH , 		:done
+	#ctset_int_8 = auger.getctset(1e8,'run.lNkm','run.ztcV',typ)# 0 , 4  #  , i7Oz
+	#ctset_int_9 = auger.getctset(1e9,'run.A3vG','run.9950',typ)# 7 , 10 # PB2P , KVWm
 
-	loc = 'spot29'
-	ctset_int_6 = auger.getctset(1e6,'run.7OvR','run.ykAn',typ)#
-	ctset_int_7 = auger.getctset(1e7,'run.aNrj','run.GERe',typ)# , 1 # , w9gm
-	ctset_int_8 = auger.getctset(1e8,'run.E3So','run.okUi',typ)#
-	ctset_int_9 = auger.getctset(1e9,'run.9WZ0','run.xEMN',typ)#
+	#loc = 'spot29'
+	#ctset_int_6 = auger.getctset(1e6,'run.7OvR','run.ykAn',typ)#
+	#ctset_int_7 = auger.getctset(1e7,'run.aNrj','run.GERe',typ)# , 1 # , w9gm 			:done
+	#ctset_int_8 = auger.getctset(1e8,'run.E3So','run.okUi',typ)#
+	#ctset_int_9 = auger.getctset(1e9,'run.9WZ0','run.xEMN',typ)#
 
 	#loc = 'spot40'
-	#ctset_int_6 = auger.getctset(1e6,'run.zE43','run.MUoq',typ)# 7 ,  # EdQf , 
+	#ctset_int_6 = auger.getctset(1e6,'run.zE43','run.MUoq',typ)# 7 ,  # EdQf , 		:done
 	#ctset_int_7 = auger.getctset(1e7,'run.V4ER','run.Hhup',typ)#  ,  #  ,  
-	#ctset_int_8 = auger.getctset(1e8,'run.XkoP','run.cLDV',typ)#  , 6 #  , kDxT
-	#ctset_int_9 = auger.getctset(1e9,'run.AuZu','run.ECUY',typ)# 2 , 1 # ExPu ,  MhGM
+	#ctset_int_8 = auger.getctset(1e8,'run.XkoP','run.cLDV',typ)#  , 6 #  , kDxT		:done
+	#ctset_int_9 = auger.getctset(1e9,'run.AuZu','run.ECUY',typ)# 2 , 1 # vWKg , wS3i
 
 	#loc = 'waterbox'
 	#ctset_int_6 = auger.getctset(1e6,'run.WbDj','run.f9cL',typ)
 	#ctset_int_7 = auger.getctset(1e7,'run.ngMk','run.Ho8b',typ)
+	#ctset_int_8 = auger.getctset(1e8,'run.cj4U','run.RWsd',typ)
+	#ctset_int_9 = auger.getctset(1e9,'run.kVk7','run.iias',typ)
+	
+	#loc = 'waterboxshifted'
+	#ctset_int_6 = auger.getctset(1e6,'run.BPnu','run.q7Vn',typ)
+	#ctset_int_7 = auger.getctset(1e7,'run.UAJZ','run.ebjM',typ)
+	#ctset_int_8 = auger.getctset(1e8,'run.SwIj','run.XYSQ',typ)# 50 ,  # SwIj ,  
+	#ctset_int_9 = auger.getctset(1e9,'run.1vRP','run.KvuV',typ)#  , 11 #  ,  g4RC
+	
+	loc = 'waterboxfakeshift' #compare 144MeV against shifted 139mev
+	ctset_int_6 = auger.getctset(1e6,'run.pSBH','run.q7Vn',typ)
+	ctset_int_7 = auger.getctset(1e7,'run.pDRM','run.ebjM',typ)
+	ctset_int_8 = auger.getctset(1e8,'run.IdLD','run.XYSQ',typ)
+	ctset_int_9 = auger.getctset(1e9,'run.LswJ','run.KvuV',typ)
+	
+	#loc = 'realspots' ############################################################################TODO!!!!!!!
+	#ctset_int_6 = auger.getctset(27500000,'run.LUBP','run.hRZn',typ)# ,  # , 
+	#ctset_int_7 = auger.getctset(47300000,'run.7WZC','run.3Zs9',typ)# 3 , 11 # s3aB, 4gLD
+	
 	#ctset_int_8 = auger.getctset(1e8,'run.cj4U','run.RWsd',typ)
 	#ctset_int_9 = auger.getctset(1e9,'run.kVk7','run.iias',typ)
 	############################################################################################

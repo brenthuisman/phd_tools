@@ -24,7 +24,7 @@ images = [image.image('output/new_dosespotid-ct.mhd'),
 images = [im.imdata.reshape(im.imdata.shape[::-1]).squeeze() for im in images] #squeeze to remove dims with len()==1
 
 xhist = np.linspace(-150,150,301) #1mm voxels, endpoints
-x = np.linspace(-148,148,300) #bincenters
+x = np.linspace(-149.5,149.5,300) #bincenters
 
 shifts = []
 pgshifts = []
@@ -95,7 +95,7 @@ pgshifts = pgshifts[~np.isnan(pgshifts)]
 diffshifts = diffshifts[~np.isnan(diffshifts)]
 
 xhist = np.linspace(-150,150,301) #4mm voxels, endpoints
-x = np.linspace(-148,148,300) #bincenters, mm bins
+x = np.linspace(-149.5,149.5,300) #bincenters, mm bins
 #indices = np.digitize(shifts,x)
 y,bins=np.histogram(shifts,xhist)
 #y,bins=np.histogram(x[indices],xhist)

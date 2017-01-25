@@ -35,7 +35,7 @@ def getctset(nprim,ct1,ct2,name):
 		try:
 			for key,val in dump.thist2np_xy(ffilen).items():
 				if key == 'reconstructedProfileHisto':
-					ctset6['ct']['x'] = val[0] #no need to append, is same for all
+					ctset6['ct']['x'] = scale_bincenters(val[0],name) #no need to append, is same for all. are bincenters
 					ctset6['ct']['data'].append(addnoise(val[1],nprim,name)) #append 'onlynoise' to name for only noise
 			#uncomment for plot of fit procedure
 			#ctset6['ct']['falloff'].append(get_fop(ctset6['ct']['x'],ctset6['ct']['data'][-1],plot='fopfit.pdf'))
@@ -48,7 +48,7 @@ def getctset(nprim,ct1,ct2,name):
 		try:
 			for key,val in dump.thist2np_xy(ffilen).items():
 				if key == 'reconstructedProfileHisto':
-					ctset6['rpct']['x'] = val[0] #no need to append, is same for all
+					ctset6['rpct']['x'] = scale_bincenters(val[0],name) #no need to append, is same for all. are bincenters
 					ctset6['rpct']['data'].append(addnoise(val[1],nprim,name))
 			ctset6['rpct']['falloff'].append(get_fop(ctset6['rpct']['x'],ctset6['rpct']['data'][-1]))
 		except IndexError:
@@ -116,7 +116,6 @@ def sumctset(name,*cts):
 		for dindex,dataset in enumerate(ctset6['ct']['data']): #only works if number of unc sets are same
 			for bindex,binn in enumerate(dataset):
 				ctset6['ct']['data'][dindex][bindex] += ctset['ct']['data'][dindex][bindex]
-
 	for ctset in cts[1:]: #skip first
 		for dindex,dataset in enumerate(ctset6['rpct']['data']): #only works if number of unc sets are same
 			for bindex,binn in enumerate(dataset):
@@ -180,10 +179,19 @@ def addnoise(data,nprim,typ):
 		if 'onlynoise' in typ:
 			#retval.append(np.random.poisson(np.random.normal(mu,sigma))) # does this mean anything, poisson from gauss?
 			retval.append(np.random.poisson(mu))
+		elif 'nonoise' in typ:
+			#retval.append(i + np.random.poisson(np.random.normal(mu,sigma)))
+			retval.append(i)
 		else:
 			#retval.append(i + np.random.poisson(np.random.normal(mu,sigma)))
 			retval.append(i + np.random.poisson(mu))
 	return retval
+
+def scale_bincenters(xax,typ):
+	if 'iba' in typ:
+		return [i/0.8 for i in xax]
+	elif 'ipnl' in typ:
+		return xax
 
 
 def get_fop(x,y,**kwargs):
@@ -206,7 +214,7 @@ def get_fop(x,y,**kwargs):
 	#https://en.wikipedia.org/wiki/Smoothing_spline
 	y2 = scipy.signal.cspline1d(y,lamb=2)
 	y_intpol_f = scipy.interpolate.interp1d(x,y2,kind='cubic') #interpolate function
-	x_intpol = np.linspace(x[0],x[-1],1024,endpoint=False)
+	x_intpol = np.linspace(x[0],x[-1],2048,endpoint=False)
 	y_intpol = y_intpol_f(x_intpol) #interpolate for x_intpol
 	y_intpol = y_intpol.clip(min=0) #set any possible negatives to zero
 	
