@@ -59,20 +59,22 @@ for spindex, (ct,rpct,pg,rppg) in enumerate( zip( *images ) ):
 	if args.plotspot is not None and spindex == int(args.plotspot):
 		
 		f, (ax1,ax2) = plot.subplots(nrows=1, ncols=2, sharex=False, sharey=False)
-		ax1.step(x,ct, color='steelblue',lw=1., label='')
-		ax1.step(x,rpct, color='indianred',lw=1., label='')
+		ax1.step(x,ct, color='steelblue',lw=1., label='FOP: '+str(auger.get_fop(x,ct))[:5])
+		ax1.step(x,rpct, color='indianred',lw=1., label='FOP: '+str(auger.get_fop(x,rpct))[:5])
 		ax1.set_xlabel('FOP [mm]')
 		ax1.set_ylabel('Integrated Dose [a.u.]')
 		ax1.set_title('Integrated Dose Profile (along x)'+', shift '+str(shift)[:4], fontsize=8)
+		ax1.legend(prop={'size':6},loc='best',frameon = False)
 		
-		ax2.step(x,pg, color='steelblue',lw=1., label='')
-		ax2.step(x,rppg, color='indianred',lw=1., label='')
+		ax2.step(x,pg, color='steelblue',lw=1., label='FOP: '+str(auger.get_fop(x,pg))[:5])
+		ax2.step(x,rppg, color='indianred',lw=1., label='FOP: '+str(auger.get_fop(x,rppg))[:5])
 		ax2.set_xlabel('FOP [mm]')
 		ax2.set_ylabel('Integrated Dose [a.u.]')
 		ax2.set_title('Integrated PG Profile (along x)'+', shift '+str(pgshift)[:4], fontsize=8)
+		ax2.legend(prop={'size':6},loc='best',frameon = False)
 		
-		ax1.set_xlim(-50,25)
-		ax2.set_xlim(-50,25)
+		#ax1.set_xlim(-75,75)
+		#ax2.set_xlim(-75,75)
 		
 		f.suptitle('spotid '+str(spindex)+', weight '+plot.sn(MSW[spindex][-1]), fontsize=8)
 		plot.texax(ax1)
@@ -107,12 +109,12 @@ ax1.step(x,y, color='steelblue',lw=1., label='Dose Shifts')
 ax1.step(x,pgy, color='indianred',lw=1., label='PG Shifts')
 ax1.set_xlabel('FOP shift [mm]')
 ax1.set_ylabel('Number of spots')
-ax1.set_xlim(-5,32)
+#ax1.set_xlim(-5,32)
 
 ax2.step(x,diffy, color='forestgreen',lw=1., label='Diff in shift\n$\mu='+str(np.mean(diffshifts))[:5]+'$\n$\sigma='+str(np.std(diffshifts))[:4]+'$')
 ax2.set_xlabel('PG-Dose shift [mm]')
 ax2.set_ylabel('Number of spots')
-ax2.set_xlim(-25,25)
+#ax2.set_xlim(-25,25)
 
 plot.texax(ax1)
 plot.texax(ax2)

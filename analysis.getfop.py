@@ -15,13 +15,23 @@ args = parser.parse_args()
 if args.dosepg:
 	#spotim_ct = image.image('output/source-ct-'+str(int(args.dosepg))+'.mhd')
 	#spotim_rpct = image.image('output/source-rpct-'+str(int(args.dosepg))+'.mhd')
-	spotim_ct = image.image('source-139.mhd')
-	spotim_rpct = image.image('source-144.mhd')
+	
 	#spotim_ct = image.image("output/source-ct-61.mhd")
-	#spotim_ct = image.image("output/dosedist-ct-61-Dose.mhd")
-	spotim_ct.toprojection(".x", [0,1,1,1])
 	#spotim_rpct = image.image("output/source-rpct-61.mhd")
+	
+	#spotim_ct = image.image("output/dosedist-ct-61-Dose.mhd")
 	#spotim_rpct = image.image("output/dosedist-rpct-61-Dose.mhd")
+	
+	#spotim_ct = image.image('source-139.mhd')
+	#spotim_rpct = image.image('source-144.mhd')
+	
+	#spotim_ct = image.image('ct/source-ct-LAYERID-geolay5e8.mhd')
+	#spotim_rpct = image.image('rpct/source-rpct-LAYERID-geolay5e8.mhd')
+	
+	spotim_ct = image.image('ct/source-ct-LAYERID-elay5e8.mhd')
+	spotim_rpct = image.image('rpct/source-rpct-LAYERID-elay5e8.mhd')
+	
+	spotim_ct.toprojection(".x", [0,1,1,1])
 	spotim_rpct.toprojection(".x", [0,1,1,1])
 	xhist = np.linspace(-150,150,151) #4mm voxels, endpoints
 	x = np.linspace(-148,148,150) #bincenters
@@ -49,7 +59,7 @@ if args.dosepg:
 	ax1.legend(frameon = False)
 	plot.texax(ax1)
 
-	f.savefig('fop-pg'+str(int(args.dosepg))+'.pdf', bbox_inches='tight')
+	f.savefig('fop-pg'+str(args.dosepg)+'.pdf', bbox_inches='tight')
 	plot.close('all')
 	quit()
 

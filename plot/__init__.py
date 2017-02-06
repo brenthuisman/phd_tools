@@ -93,6 +93,14 @@ def fill_between_steps(ax, x, y1, y2=0, step_where='pre', **kwargs):
     return ax.fill_between(xx, yy1, y2=yy2, **kwargs)
 
 
+def bincenters_to_binedges(indata):
+	indata = np.array(indata)
+	outdata = (indata[1:] + indata[:-1]) / 2
+	leftedge = 2*indata[0]-outdata[0]
+	rightedge = 2*indata[-1]-outdata[-1]
+	return np.append(np.append(leftedge,outdata),rightedge)
+
+
 def addrandomnoise(indata):
 	## should be replaced with iba/ipnl funcs
     return [np.random.normal(x, x/500.) if x>0. else x for x in indata]
@@ -164,3 +172,10 @@ def close(*args,**kwargs):
 	
 def get_cmap(*args,**kwargs):
 	return plt.get_cmap(*args,**kwargs)
+
+def figtext(*args,**kwargs):
+	print args[2]
+	return plt.figtext(*args,**kwargs)
+
+def colorbar(*args,**kwargs):
+	return plt.colorbar(*args,**kwargs)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import argparse,rtplan,plot,math#,numpy as np
+import argparse,rtplan,plot,math,numpy as np,matplotlib
 from tableio import write
 from glob import glob
 
@@ -8,6 +8,7 @@ parser.add_argument('--noproc', action='store_true')
 parser.add_argument('--nonorm', action='store_true')
 parser.add_argument('--nomu', action='store_true')
 parser.add_argument('--dump', action='store_true')
+parser.add_argument('--scatter', action='store_true')
 parser.add_argument('files', nargs='*')  # This is it!!
 args = parser.parse_args()
 
@@ -18,7 +19,7 @@ print "openening",args.files
 
 rtplan = rtplan.rtplan(args.files,norm2nprim=(not args.nonorm),MSWtoprotons=(not args.nomu),noproc=(args.noproc))
 
-outname = args.files[0][:-4]+('nonorm' if args.nonorm else '')+('nomu' if args.nomu else '')+('noproc' if args.noproc else '')+'-plot.pdf'
+outname = args.files[0][:-4]+('nonorm' if args.nonorm else '')+('nomu' if args.nomu else '')+('noproc' if args.noproc else '')+('scatter' if args.scatter else '')+'-plot.pdf'
 
 if args.dump:
 	write(rtplan.spots,outname+'spots.txt')
@@ -30,81 +31,86 @@ layerdata=rtplan.getlayerdata()
 
 nrfields=len(rtplan.fields)
 
-if nrfields > 1:
-	plotke = plot.subplots(nrows=2, ncols=nrfields, sharex='col', sharey='row')
-	plotke[0].get_axes()[0].annotate('Total nr of primaries: '+plot.sn(rtplan.TotalMetersetWeight), (0.5, 0.96), xycoords='figure fraction', ha='center', fontsize=8)
-	#plotke[0].suptitle('Total nr of primaries: '+plot.sn(rtplan.TotalMetersetWeight), fontsize=8)
-	#f, ax1 = plot.subplots(nrows=1, ncols=rtplan.nrfields, sharex=False, sharey=False)
+plotke = plot.subplots(nrows=2, ncols=nrfields, sharex='col', sharey='row')
+plotke[0].get_axes()[0].annotate('Total nr of primaries: '+plot.sn(rtplan.TotalMetersetWeight), (0.5, 0.96), xycoords='figure fraction', ha='center', fontsize=8)
+#plotke[0].suptitle('Total nr of primaries: '+plot.sn(rtplan.TotalMetersetWeight), fontsize=8)
+#f, ax1 = plot.subplots(nrows=1, ncols=rtplan.nrfields, sharex=False, sharey=False)
 
-	first = True
-	for fieldnr,(spot,ax) in enumerate(zip(spotdata,plotke[-1][0])): #0 is eerste rij
-		if len(spot) == 0:
-			continue
-		try:
-			ax.scatter(spot[0],spot[1],marker='x',alpha=0.1,c='black',clip_on=False)
-		
-			ax.set_xlim(min(spot[0]),max(spot[0]))
-			ax.set_ylim(min(spot[1]),max(spot[1]))
-		
-			ax.semilogy()
-		except:
-			pass
-		if first:
-			ax.set_ylabel('Spots [nr. protons]')
-			first=False
-		#ax.set_xlabel('$E$ [MeV]')
-		plot.texax(ax)
-		ax.set_title('Field nr. '+str(fieldnr+1)+": "+str(len(spot[0]))+" spots", fontsize=8)
-		
-	first = True
-	for layer,ax in zip(layerdata,plotke[-1][1]): #1 is tweede rij
-		try:
-			ax.hist(layer[0],bins=len(layer[0])*10,weights=layer[1],bottom=min(layer[1])/100.,histtype='bar',color='black')
-			print layer[1]
-			ax.set_xlim(min(layer[0]),max(layer[0]))
-			ax.set_ylim(10.**int(math.log10(min(layer[1]))),max(layer[1]))
-			ax.semilogy()
-		except:
-			pass
-		#print 10.**int(math.log10(min(layer[1])))
-		if first:
-			ax.set_ylabel('Layers [nr. protons]')
-			first=False
-		ax.set_xlabel('$E$ [MeV]')
-		ax.set_title(str(len(layer[0]))+" energy layers", fontsize=8)
-		plot.texax(ax)
-		
+if nrfields == 1:
+	spotaxes = [plotke[-1][0]] #0 is eerste kolom
+	layaxes = [plotke[-1][1]] #0 is eerste kolom
+	spotloop= [spotdata[0]]
+	layloop = [layerdata[0]]
 else:
-	plotke = plot.subplots(nrows=2, ncols=1, sharex='col', sharey='row')
-	plotke[0].get_axes()[0].annotate('Total nr of primaries: '+plot.sn(rtplan.TotalMetersetWeight), (0.5, 0.96), xycoords='figure fraction', ha='center', fontsize=8)
-	#plotke[0].suptitle('Total nr of primaries: '+plot.sn(rtplan.TotalMetersetWeight), fontsize=8)
+	spotaxes = plotke[-1][0] #0 is eerste kolom
+	layaxes = plotke[-1][1] #0 is eerste kolom
+	spotloop = spotdata
+	layloop = layerdata
 
-	ax = plotke[-1][0] #0 is eerste kolom
-	spot=spotdata[0]
+first = True
+layer_min_y = 1e10
+layer_max_y = 1e1
+
+for fieldnr,(spot,ax) in enumerate(zip(spotloop,spotaxes)): #0 is eerste rij
+	if len(spot) == 0:
+		continue
+	try:
+		if args.scatter:
+			ax.scatter(spot[0],spot[1],marker='x',alpha=0.1,c='black',clip_on=False)
+			ax.set_xlim(min(spot[0]),max(spot[0]))
+		else:
+			xbins = plot.bincenters_to_binedges(sorted(list(set(spot[0]))))
+			ybins = np.logspace(np.log10(min(spot[1])),np.log10(max(spot[1])),30,endpoint=True)
+			
+			counts, _, _ = np.histogram2d(spot[0], spot[1], bins=(xbins, ybins))
+			a = ax.pcolormesh(xbins, ybins, counts.T,cmap='Greys',norm=matplotlib.colors.LogNorm())
+			
+			ax.set_xlim(min(xbins),max(xbins))
+
+		ax.set_ylim(min(spot[1]),max(spot[1]))
 	
-	ax.scatter(spot[0],spot[1],marker='x',alpha=0.1,c='black',clip_on=False)
-	
-	ax.set_xlim(min(spot[0]),max(spot[0]))
-	ax.set_ylim(min(spot[1]),max(spot[1]))
-	
-	ax.semilogy()
-	ax.set_ylabel('Spots [nr. protons]')
+		ax.semilogy()
+	except Exception as e:
+		print str(e)
+		pass
+	if first:
+		ax.set_ylabel('Spots [nr. protons]')
+		first=False
+	#ax.set_xlabel('$E$ [MeV]')
 	plot.texax(ax)
-	ax.set_title('Single Field'+": "+str(len(spot[0]))+" spots", fontsize=8)
+	ax.set_title('Field nr. '+str(fieldnr+1)+": "+str(len(spot[0]))+" spots", fontsize=8)
 	
-	ax = plotke[-1][1]
-	layer=layerdata[0]
-	
-	ax.hist(layer[0],bins=len(layer[0])*10,weights=layer[1],bottom=min(layer[1])/10.,histtype='bar',color='black')
-
-	ax.set_xlim(min(layer[0]),max(layer[0]))
-	ax.set_ylim(10.**int(math.log10(min(layer[1]))),max(layer[1]))
-	ax.semilogy()
-	ax.set_ylabel('Layers [nr. protons]')
+first = True
+for layer,ax in zip(layloop,layaxes): #1 is tweede rij
+	try:
+		ax.hist(layer[0],bins=len(layer[0])*10,weights=layer[1],bottom=min(layer[1])/100.,histtype='bar',color='black')
+		
+		new_layer_min_y = min(layer[1])/1.5
+		new_layer_max_y = max(layer[1])*1.5
+		if new_layer_min_y < layer_min_y:
+			layer_min_y=new_layer_min_y
+			ax.set_ylim(ymin=layer_min_y)
+		if new_layer_max_y > layer_max_y:
+			layer_max_y=new_layer_max_y
+			ax.set_ylim(ymax=layer_max_y)
+		
+		ax.semilogy()
+	except:
+		pass
+	#print 10.**int(math.log10(min(layer[1])))
+	if first:
+		ax.set_ylabel('Layers [nr. protons]')
+		first=False
 	ax.set_xlabel('$E$ [MeV]')
 	ax.set_title(str(len(layer[0]))+" energy layers", fontsize=8)
 	plot.texax(ax)
-	
+
+
+if not args.scatter:
+	cb = plotke[0].colorbar(a, ax=plotke[-1].ravel().tolist())
+	cb.outline.set_visible(False)
+	cb.set_label('Spotcount', rotation=270)
 
 plotke[0].savefig(outname, bbox_inches='tight')
+print 'Plot saved to',outname
 plot.close('all')
