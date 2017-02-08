@@ -41,8 +41,8 @@ def getctset(nprim,ct1,ct2,name):
 					ctset6['ct']['x'] = scale_bincenters(val[0],name) #no need to append, is same for all. are bincenters
 					ctset6['ct']['data'].append(addnoise(val[1],nprim,name)) #append 'onlynoise' to name for only noise
 			#uncomment for plot of fit procedure
-			ctset6['ct']['falloff'].append(get_fop(ctset6['ct']['x'],ctset6['ct']['data'][-1],plot='fopfit.pdf'))
-			#ctset6['ct']['falloff'].append(get_fop(ctset6['ct']['x'],ctset6['ct']['data'][-1]))
+			#ctset6['ct']['falloff'].append(get_fop(ctset6['ct']['x'],ctset6['ct']['data'][-1],plot='fopfit.pdf'))
+			ctset6['ct']['falloff'].append(get_fop(ctset6['ct']['x'],ctset6['ct']['data'][-1]))
 		except IndexError:
 			print "Empty file detected, skipping"
 		#break
@@ -250,12 +250,14 @@ def get_fop(x,y,**kwargs):
 	if plotten: ax1.axvline(falloff_pos,color='green')
 	if plotten: plot.texax(ax1)
 	if plotten: ax1.set_xlabel('Depth [mm]', fontsize=8)
-	if plotten: ax1.set_ylabel('PG detected [counts]', fontsize=8)
+	if plotten: ax1.set_ylabel('PG yield [counts]', fontsize=8)
 	if plotten: from matplotlib.ticker import MaxNLocator
 	if plotten: ax1.yaxis.set_major_locator(MaxNLocator(integer=True))
 	if plotten: ax1.set_ylim(bottom=0)
+	if plotten: ax1.set_title('FOP = '+str(falloff_pos), fontsize=8)
 	if plotten: f.savefig(plottenname, bbox_inches='tight')
 	if plotten: print 'Plotted PG profile to',plottenname
 	if plotten: plot.close('all')
+	if plotten: print 'FOP is',falloff_pos
 	if plotten: quit()
 	return falloff_pos

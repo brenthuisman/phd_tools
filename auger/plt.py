@@ -88,7 +88,7 @@ def plotfodiffdist(ax1,ct,zs,emisfops=None,labels=["$10^9$","$10^8$","$10^7$","$
 	#zs/10.
 	
 	label_extra=''
-	if len(emisfops) == len(labels):
+	if emisfops is not None and len(emisfops) == len(labels):
 		label_extra=', $Shift_{em}$ = '+str(emisfops[zs][1]-emisfops[zs][0])
 	plot.figtext(0.05, 0.9-zs/40.,labels[zs]+": $\mu_{shift}$ = "+str(mu)[:4]+", $\sigma_{shift}$ = "+str(sigma)[:4]+label_extra, ha='left', va='center', fontsize=6, transform=ax1.transAxes)
 
@@ -131,7 +131,7 @@ def plotfodist(ax1,ct,zs,emisfops=None,labels=["$10^9$","$10^8$","$10^7$","$10^6
 	
 	labelCT_extra=''
 	labelRPCT_extra=''
-	if len(emisfops) == len(labels):
+	if emisfops is not None and len(emisfops) == len(labels):
 		labelCT_extra=', $FOP_{em}$ = '+str(emisfops[zs][0])
 		labelRPCT_extra=', $FOP_{em}$ = '+str(emisfops[zs][1])
 	#elif len(emisfops) == 1:

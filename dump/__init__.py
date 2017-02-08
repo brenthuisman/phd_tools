@@ -1,19 +1,20 @@
 import ROOT as r,pickle,numpy as np
 
-def dump(rootfiles,field,bins,lowrange,highrange):
-	#get nr primaries
-	prims=0
-	#print '/'.join(rootfiles[0].split('/')[:-1])+'/stat-proton.txt'
-	header = open('/'.join(rootfiles[0].split('/')[:-1])+'/stat-proton.txt','r')
-	for line in header:
-		newline = line.strip()
-		if len(newline)==0:
-			continue
-		if 'NumberOfEvents' in newline:
-			prims = float(newline.split()[-1])
-	if prims is 0:
-		print "No valid number of primaries detected. Aborting..." 
-		return
+def dump(rootfiles,field,bins,lowrange,highrange,statfile=None):
+	if statfile != None:
+		#get nr primaries
+		prims=0
+		#print '/'.join(rootfiles[0].split('/')[:-1])+'/stat-proton.txt'
+		header = open('/'.join(rootfiles[0].split('/')[:-1])+'/stat-proton.txt','r')
+		for line in header:
+			newline = line.strip()
+			if len(newline)==0:
+				continue
+			if 'NumberOfEvents' in newline:
+				prims = float(newline.split()[-1])
+		if prims is 0:
+			print "No valid number of primaries detected. Aborting..." 
+			return
 	outdata = [0]*bins
 
 	for rootfile in rootfiles:
@@ -26,7 +27,10 @@ def dump(rootfiles,field,bins,lowrange,highrange):
 		#because root is a bitch, it is 1-indexed. so thats why theres a shift.
 		for i in range(1,hnew.GetNbinsX()+1):
 			#print hnew.GetBinCenter(i), hnew.GetBinContent(i)
-			outdata[i-1] = float(hnew.GetBinContent(i))/float(prims)
+			if statfile == None:
+				outdata[i-1] = float(hnew.GetBinContent(i))
+			else:
+				outdata[i-1] = float(hnew.GetBinContent(i))/float(prims)
 
 	return outdata
 

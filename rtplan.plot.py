@@ -2,6 +2,7 @@
 import argparse,rtplan,plot,math,numpy as np,matplotlib
 from tableio import write
 from glob import glob
+import matplotlib as mpl
 
 parser = argparse.ArgumentParser(description='RTPlanstructure plotter.')
 parser.add_argument('--noproc', action='store_true')
@@ -29,12 +30,22 @@ if args.dump:
 spotdata=rtplan.getspotdata()
 layerdata=rtplan.getlayerdata()
 
+MSW=[]
+for spot in rtplan.spots:
+	MSW.append(spot[-1])
+
+median_spotweight = np.median(MSW)
+
 nrfields=len(rtplan.fields)
 
+fontsize=6
+mpl.rcParams['xtick.labelsize'] = fontsize
+mpl.rcParams['ytick.labelsize'] = fontsize
+mpl.rcParams['axes.titlesize'] = fontsize
+mpl.rcParams['axes.labelsize'] = fontsize
+
 plotke = plot.subplots(nrows=2, ncols=nrfields, sharex='col', sharey='row')
-plotke[0].get_axes()[0].annotate('Total nr of primaries: '+plot.sn(rtplan.TotalMetersetWeight), (0.5, 0.96), xycoords='figure fraction', ha='center', fontsize=8)
-#plotke[0].suptitle('Total nr of primaries: '+plot.sn(rtplan.TotalMetersetWeight), fontsize=8)
-#f, ax1 = plot.subplots(nrows=1, ncols=rtplan.nrfields, sharex=False, sharey=False)
+plotke[0].get_axes()[0].annotate('Total nr of primaries: '+plot.sn(rtplan.TotalMetersetWeight)+'. Median spot weight: '+plot.sn(median_spotweight), (0.5, 0.96), xycoords='figure fraction', ha='center', fontsize=fontsize)
 
 if nrfields == 1:
 	spotaxes = [plotke[-1][0]] #0 is eerste kolom
@@ -50,6 +61,7 @@ else:
 first = True
 layer_min_y = 1e10
 layer_max_y = 1e1
+vmax=10
 
 for fieldnr,(spot,ax) in enumerate(zip(spotloop,spotaxes)): #0 is eerste rij
 	if len(spot) == 0:
@@ -63,27 +75,31 @@ for fieldnr,(spot,ax) in enumerate(zip(spotloop,spotaxes)): #0 is eerste rij
 			ybins = np.logspace(np.log10(min(spot[1])),np.log10(max(spot[1])),30,endpoint=True)
 			
 			counts, _, _ = np.histogram2d(spot[0], spot[1], bins=(xbins, ybins))
-			a = ax.pcolormesh(xbins, ybins, counts.T,cmap='Greys',norm=matplotlib.colors.LogNorm())
+			#if vmax < np.max(counts):
+				#vmax = np.max(counts)
+			a = ax.pcolormesh(xbins, ybins, counts.T,cmap='coolwarm',norm=matplotlib.colors.LogNorm(),vmin=1e0,vmax=1e2)
+			#a = ax.pcolormesh(xbins, ybins, counts.T,cmap='Greys',norm=matplotlib.colors.LogNorm(), vmin=0.7)
 			
 			ax.set_xlim(min(xbins),max(xbins))
 
-		ax.set_ylim(min(spot[1]),max(spot[1]))
+		ax.set_ylim(min(spot[1]),max(spot[1])*1.05)
 	
 		ax.semilogy()
 	except Exception as e:
 		print str(e)
 		pass
 	if first:
-		ax.set_ylabel('Spots [nr. protons]')
+		ax.set_ylabel('Spots\nNr. protons')
 		first=False
 	#ax.set_xlabel('$E$ [MeV]')
 	plot.texax(ax)
-	ax.set_title('Field nr. '+str(fieldnr+1)+": "+str(len(spot[0]))+" spots", fontsize=8)
+	ax.set_title('Field '+str(fieldnr+1)+"\n"+str(len(spot[0]))+" spots")
 	
 first = True
 for layer,ax in zip(layloop,layaxes): #1 is tweede rij
 	try:
-		ax.hist(layer[0],bins=len(layer[0])*10,weights=layer[1],bottom=min(layer[1])/100.,histtype='bar',color='black')
+		xbins = plot.bincenters_to_binedges(sorted(layer[0]))
+		ax.hist(layer[0],bins=xbins,weights=layer[1],bottom=min(layer[1])/100.,histtype='bar',color='grey',linewidth=0.2)
 		
 		new_layer_min_y = min(layer[1])/1.5
 		new_layer_max_y = max(layer[1])*1.5
@@ -99,15 +115,15 @@ for layer,ax in zip(layloop,layaxes): #1 is tweede rij
 		pass
 	#print 10.**int(math.log10(min(layer[1])))
 	if first:
-		ax.set_ylabel('Layers [nr. protons]')
+		ax.set_ylabel('Layers\nNr. protons')
 		first=False
 	ax.set_xlabel('$E$ [MeV]')
-	ax.set_title(str(len(layer[0]))+" energy layers", fontsize=8)
+	ax.set_title(str(len(layer[0]))+" energy layers")
 	plot.texax(ax)
 
 
 if not args.scatter:
-	cb = plotke[0].colorbar(a, ax=plotke[-1].ravel().tolist())
+	cb = plotke[0].colorbar(a, ax=plotke[-1].ravel().tolist(), aspect=50)
 	cb.outline.set_visible(False)
 	cb.set_label('Spotcount', rotation=270)
 

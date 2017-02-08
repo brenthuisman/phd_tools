@@ -5,8 +5,13 @@ import image,numpy as np,rtplan,auger,plot,argparse
 
 parser = argparse.ArgumentParser(description='launch multiple params.')
 parser.add_argument('--plotspot')
-parser.add_argument('--shifttolerance')
+parser.add_argument('--tolerance')
 args = parser.parse_args()
+volume_offset=-142.097+7.96
+#-142.097 komt uit mhd header source images, en is centrum van eerste voxel (bin).
+#Dit is in MHD coords systeem, en dat verschilt van het met isocenter
+#NOOT: offset in spotid images is ANDERS dan in overige simulaties (voxels in x direction zijn 1mm, elders 2mm (met MHD offset -141.597)
+#NOOT2: in dit geval is pgsource_offset ook geldig voor dosespotid image, immers zelfde subvolume
 
 ################################################################################
 
@@ -23,27 +28,34 @@ images = [image.image('output/new_dosespotid-ct.mhd'),
 
 images = [im.imdata.reshape(im.imdata.shape[::-1]).squeeze() for im in images] #squeeze to remove dims with len()==1
 
-xhist = np.linspace(-150,150,301) #1mm voxels, endpoints
 x = np.linspace(-149.5,149.5,300) #bincenters
+xhist = np.linspace(-150,150,301) #1mm voxels, endpoints
+x = x+(volume_offset-x[0])   #offset for pg source image
+xhist = xhist+(volume_offset-xhist[0]) #same
 
 shifts = []
 pgshifts = []
 diffshifts = []
 
 for spindex, (ct,rpct,pg,rppg) in enumerate( zip( *images ) ):
+	if args.plotspot is not None and spindex != int(args.plotspot):
+		continue
+	
 	shift = auger.get_fop(x,rpct) - auger.get_fop(x,ct)
 	pgshift = auger.get_fop(x,rppg) - auger.get_fop(x,pg)
 	diffshift = pgshift-shift
 	
-	if args.shifttolerance:
-		# ensure a shift calculated at 20% and 80% height within 1mm of shift computed at default 50%
-		shift2 = auger.get_fop(x,rpct,threshold=0.2) - auger.get_fop(x,ct,threshold=0.2)
-		shift8 = auger.get_fop(x,rpct,threshold=0.8) - auger.get_fop(x,ct,threshold=0.8)
-		pgshift2 = auger.get_fop(x,rppg,threshold=0.2) - auger.get_fop(x,pg,threshold=0.2)
-		pgshift8 = auger.get_fop(x,rppg,threshold=0.8) - auger.get_fop(x,pg,threshold=0.8)
+	if args.tolerance:
+		# ensure that distance from 50%fop to 20%fop and 80%fop are similar to within $tolerance mm, AT CT DOSE IMAGE ONLY
+		# this way slope does not matter, and because computed at CT only its clinically usable.
+		fop20 = auger.get_fop(x,ct,threshold=0.2)
+		fop50 = auger.get_fop(x,ct,threshold=0.5)
+		fop80 = auger.get_fop(x,ct,threshold=0.8)
+		diff20 = abs(fop50-fop20)
+		diff80 = abs(fop80-fop50)
 		
-		if np.isclose([shift2,shift8],shift,atol=float(args.shifttolerance)).all() and np.isclose([pgshift2,pgshift8],pgshift,atol=float(args.shifttolerance)).all():
-			# all values in *ctfops are within 1.0 (mm) of *ctfop. it is a front shift
+		if abs(diff80-diff20) < args.tolerance:
+			# both conditions met
 			shifts.append(shift)
 			pgshifts.append(pgshift)
 			diffshifts.append(diffshift)
@@ -79,7 +91,7 @@ for spindex, (ct,rpct,pg,rppg) in enumerate( zip( *images ) ):
 		f.suptitle('spotid '+str(spindex)+', weight '+plot.sn(MSW[spindex][-1]), fontsize=8)
 		plot.texax(ax1)
 		plot.texax(ax2)
-		f.savefig('new-fop'+str(args.plotspot)+'.pdf', bbox_inches='tight')
+		f.savefig('fop_v3-'+str(args.plotspot)+'.pdf', bbox_inches='tight')
 		plot.close('all')
 		quit()
 	
@@ -96,8 +108,9 @@ shifts = shifts[~np.isnan(shifts)]
 pgshifts = pgshifts[~np.isnan(pgshifts)]
 diffshifts = diffshifts[~np.isnan(diffshifts)]
 
-xhist = np.linspace(-150,150,301) #4mm voxels, endpoints
-x = np.linspace(-149.5,149.5,300) #bincenters, mm bins
+#xhist = np.linspace(-150,150,301) #1mm voxels, endpoints
+#x = np.linspace(-149.5,149.5,300) #bincenters, mm bins
+
 #indices = np.digitize(shifts,x)
 y,bins=np.histogram(shifts,xhist)
 #y,bins=np.histogram(x[indices],xhist)
@@ -121,6 +134,6 @@ plot.texax(ax2)
 ax1.legend(frameon = False)
 ax2.legend(frameon = False)
 
-f.suptitle('Nr. of spots: '+str(len(shifts))+'{d}'.format(d=', with '+str(args.shifttolerance)+' mm tolerance' if args.shifttolerance is not None else '.'), fontsize=8)
-f.savefig('shift-diffs-'+str(args.shifttolerance)+'.pdf', bbox_inches='tight')
+f.suptitle('Nr. of spots: '+str(len(shifts))+'{d}'.format(d=', with '+str(args.tolerance)+' mm tolerance' if args.tolerance is not None else '.'), fontsize=8)
+f.savefig('shift-diffs-v3-'+str(args.tolerance)+'.pdf', bbox_inches='tight')
 plot.close('all')
