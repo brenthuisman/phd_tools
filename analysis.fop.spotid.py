@@ -5,6 +5,7 @@ import image,numpy as np,rtplan,auger,plot,argparse
 
 parser = argparse.ArgumentParser(description='launch multiple params.')
 parser.add_argument('--plotspot')
+parser.add_argument('--ctonly', action='store_true')
 parser.add_argument('--tolerance')
 args = parser.parse_args()
 volume_offset=-142.097+7.96
@@ -70,30 +71,48 @@ for spindex, (ct,rpct,pg,rppg) in enumerate( zip( *images ) ):
 		
 	if args.plotspot is not None and spindex == int(args.plotspot):
 		
-		f, (ax1,ax2) = plot.subplots(nrows=1, ncols=2, sharex=False, sharey=False)
-		ax1.step(x,ct, color='steelblue',lw=1., label='FOP: '+str(auger.get_fop(x,ct))[:5])
-		ax1.step(x,rpct, color='indianred',lw=1., label='FOP: '+str(auger.get_fop(x,rpct))[:5])
-		ax1.set_xlabel('FOP [mm]')
-		ax1.set_ylabel('Integrated Dose [a.u.]')
-		ax1.set_title('Integrated Dose Profile (along x)'+', shift '+str(shift)[:4], fontsize=8)
-		ax1.legend(prop={'size':6},loc='best',frameon = False)
-		
-		ax2.step(x,pg, color='steelblue',lw=1., label='FOP: '+str(auger.get_fop(x,pg))[:5])
-		ax2.step(x,rppg, color='indianred',lw=1., label='FOP: '+str(auger.get_fop(x,rppg))[:5])
-		ax2.set_xlabel('FOP [mm]')
-		ax2.set_ylabel('Integrated Dose [a.u.]')
-		ax2.set_title('Integrated PG Profile (along x)'+', shift '+str(pgshift)[:4], fontsize=8)
-		ax2.legend(prop={'size':6},loc='best',frameon = False)
-		
-		#ax1.set_xlim(-75,75)
-		#ax2.set_xlim(-75,75)
-		
-		f.suptitle('spotid '+str(spindex)+', weight '+plot.sn(MSW[spindex][-1]), fontsize=8)
-		plot.texax(ax1)
-		plot.texax(ax2)
-		f.savefig('fop_v3-'+str(args.plotspot)+'.pdf', bbox_inches='tight')
-		plot.close('all')
-		quit()
+		if args.ctonly:
+			f, ax1 = plot.subplots(nrows=1, ncols=1, sharex=False, sharey=False)
+			ax1.step(x,ct/ct.max(), color='steelblue',lw=1., label='Dose,\nFOP: '+str(auger.get_fop(x,ct))[:4]+' mm')
+			ax1.step(x,pg/pg.max(), color='indianred',lw=1., label='PG production,\nFOP: '+str(auger.get_fop(x,pg))[:4]+' mm')
+			ax1.set_xlabel('Position w.r.t. isocenter [mm]')
+			ax1.set_ylabel('Dose/PG production, rescaled [a.u.]')
+			ax1.legend(frameon = False)
+			ax1.set_xlim(-75,75)
+			f.suptitle('Spotid '+str(spindex)+', '+plot.sn(MSW[spindex][-1])+' protons', fontsize=8)
+			plot.texax(ax1)
+			f.savefig('CT-dose-pg-'+str(args.plotspot)+'.pdf', bbox_inches='tight')
+			plot.close('all')
+			quit()
+		else:
+			f, (ax1,ax2) = plot.subplots(nrows=1, ncols=2, sharex=False, sharey=False)
+			ax1.step(x,ct, color='steelblue',lw=1., label='FOP: '+str(auger.get_fop(x,ct))[:5])
+			ax1.step(x,rpct, color='indianred',lw=1., label='FOP: '+str(auger.get_fop(x,rpct))[:5])
+			ax1.set_xlabel('FOP [mm]')
+			ax1.set_ylabel('Integrated Dose [a.u.]')
+			ax1.set_title('Integrated Dose Profile (along x)'+', shift '+str(shift)[:4], fontsize=8)
+			ax1.legend(prop={'size':6},loc='best',frameon = False)
+			
+			#from scipy.ndimage.filters import gaussian_filter
+
+			ax2.step(x,pg, color='steelblue',lw=1., label='FOP: '+str(auger.get_fop(x,pg))[:5])
+			ax2.step(x,rppg, color='indianred',lw=1., label='FOP: '+str(auger.get_fop(x,rppg))[:5])
+			#ax2.step(x,gaussian_filter(pg, sigma=15), color='blue',lw=1., label='FOP: '+str(auger.get_fop(x,gaussian_filter(pg, sigma=10)))[:5])
+			#ax2.step(x,gaussian_filter(rppg, sigma=15), color='red',lw=1., label='FOP: '+str(auger.get_fop(x,gaussian_filter(rppg, sigma=10)))[:5])
+			ax2.set_xlabel('FOP [mm]')
+			ax2.set_ylabel('Integrated Dose [a.u.]')
+			ax2.set_title('Integrated PG Profile (along x)'+', shift '+str(pgshift)[:4], fontsize=8)
+			ax2.legend(prop={'size':6},loc='best',frameon = False)
+			
+			ax1.set_xlim(-75,75)
+			ax2.set_xlim(-75,75)
+			
+			f.suptitle('spotid '+str(spindex)+', weight '+plot.sn(MSW[spindex][-1]), fontsize=8)
+			plot.texax(ax1)
+			plot.texax(ax2)
+			f.savefig('fop_v5-'+str(args.plotspot)+'.pdf', bbox_inches='tight')
+			plot.close('all')
+			quit()
 	
 	print 'Spot', spindex, 'analyzed!'
 

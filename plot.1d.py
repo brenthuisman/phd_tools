@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import numpy,sys,matplotlib.pyplot as plt,pickle
+import numpy,sys,matplotlib.pyplot as plt,pickle,dump
 
 #print plt.style.available
 #plt.style.use('ggplot')
@@ -20,6 +20,8 @@ for filename in filesin:
 		data = numpy.fromfile(filename, dtype='<f4')
 	if filename.endswith('.pylist'):
 		data = pickle.load(open(filename))
+	if filename.endswith('.root'):
+		data = dump.thist2np(filename)['histo']
 	plt.plot(data, label=filename,alpha=0.8)
 
 	#plt.plot(data, label=filename)

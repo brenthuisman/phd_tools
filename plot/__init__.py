@@ -179,3 +179,6 @@ def figtext(*args,**kwargs):
 
 def colorbar(*args,**kwargs):
 	return plt.colorbar(*args,**kwargs)
+
+def plot(*args,**kwargs):
+	return plt.plot(*args,**kwargs)

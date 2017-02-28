@@ -1,13 +1,13 @@
 #!/usr/bin/env python
-import image,numpy as np,rtplan,auger,plot,argparse
-from collections import Counter
-from tableio import write
-import argparse
+import image,numpy as np,auger,plot
 
 volume_offset=-141.597+7.96
 #-141.597 komt uit mhd header source images, en is centrum van eerste voxel (bin).
 #Dit is in MHD coords systeem, en dat verschilt van het met isocenter
 #NOOT: offset in images is ANDERS dan in spotid simulaties (voxels in x direction zijn hier 2mm, elders 1mm (met MHD offset -142.097)
+
+#volume_offset=-141.04 # OLD waterbox sources
+volume_offset=-149#waterbox sources
 
 ###########################################################################################################
 
@@ -34,10 +34,12 @@ spotim_rpct = image.image('data/source-144.mhd')
 spotim_ct.toprojection(".x", [0,1,1,1])
 spotim_rpct.toprojection(".x", [0,1,1,1])
 
-x = np.linspace(-148,148,150) #bincenters
+x = np.linspace(-149,149,150) #bincenters
 xhist = np.linspace(-150,150,151) #2mm voxels, endpoints
 x = x+(volume_offset-x[0])   #offset for pg source image
 xhist = xhist+(volume_offset-xhist[0]) #same
+
+#print x
 
 spot = spotim_ct.imdata
 spot2 = spotim_rpct.imdata

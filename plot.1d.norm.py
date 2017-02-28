@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import numpy,sys,matplotlib.pyplot as plt
+import numpy,sys,matplotlib.pyplot as plt,dump
 
 #print plt.style.available
 #plt.style.use('ggplot')
@@ -16,15 +16,18 @@ for filename in filesin:
 		for line in header:
 			newline = line.strip()
 			data.append(float(newline.split()[-1]))
-		maxi=max(data)
-		plt.plot([x/maxi for x in data], label=filename)
+			
 	if filename.endswith('.raw'):
 		data = numpy.fromfile(filename, dtype='<f4')
-		maxi=max(data)
-		plt.plot([x/maxi for x in data], label=filename)
+		
+	if filename.endswith('.root'):
+		data = dump.thist2np(filename)['histo']
+
+	maxi=max(data)
+	plt.plot([x/maxi for x in data], label=filename)
 	#plt.plot(data, label=filename)
 	plt.ylabel('Counts')
 	plt.ylabel('PG energy')
 	#plt.legend(loc=4,prop={'size':6})
-	plt.legend(prop={'size':10})
+	plt.legend(prop={'size':10},loc='best')
 	plt.savefig(fileout)

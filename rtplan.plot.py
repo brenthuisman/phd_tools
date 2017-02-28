@@ -34,7 +34,8 @@ MSW=[]
 for spot in rtplan.spots:
 	MSW.append(spot[-1])
 
-median_spotweight = np.median(MSW)
+#spot_weight_mean = np.median(MSW)
+spot_weight_mean = np.mean(MSW)
 
 nrfields=len(rtplan.fields)
 
@@ -45,7 +46,7 @@ mpl.rcParams['axes.titlesize'] = fontsize
 mpl.rcParams['axes.labelsize'] = fontsize
 
 plotke = plot.subplots(nrows=2, ncols=nrfields, sharex='col', sharey='row')
-plotke[0].get_axes()[0].annotate('Total nr of primaries: '+plot.sn(rtplan.TotalMetersetWeight)+'. Median spot weight: '+plot.sn(median_spotweight), (0.5, 0.96), xycoords='figure fraction', ha='center', fontsize=fontsize)
+plotke[0].get_axes()[0].annotate('Total nr of primaries: '+plot.sn(rtplan.TotalMetersetWeight)+'. Mean spot weight: '+plot.sn(spot_weight_mean), (0.5, 0.96), xycoords='figure fraction', ha='center', fontsize=fontsize)
 
 if nrfields == 1:
 	spotaxes = [plotke[-1][0]] #0 is eerste kolom
@@ -61,7 +62,7 @@ else:
 first = True
 layer_min_y = 1e10
 layer_max_y = 1e1
-vmax=10
+#vmax=10
 
 for fieldnr,(spot,ax) in enumerate(zip(spotloop,spotaxes)): #0 is eerste rij
 	if len(spot) == 0:

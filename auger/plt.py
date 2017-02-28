@@ -111,12 +111,12 @@ def plotfodist(ax1,ct,zs,emisfops=None,labels=["$10^9$","$10^8$","$10^7$","$10^6
 	
 	y,bins=np.histogram(fo_ct, np.arange(-120,120,1))
 	bincenters = 0.5*(bins[1:]+bins[:-1])
-	c = ['indianred']*len(y)
+	c = ['steelblue']*len(y)
 	ax1.bar(bincenters,y, color=c,lw=0.2, zs=zs, zdir='y', alpha=0.5, label=labels[zs]+' primaries')
 	
 	y,bins=np.histogram(fo_rpct, np.arange(-120,120,1))
 	bincenters = 0.5*(bins[1:]+bins[:-1])
-	c = ['steelblue']*len(y)
+	c = ['indianred']*len(y)
 	ax1.bar(bincenters,y, color=c,lw=0.2, zs=zs, zdir='y', alpha=0.5, label=labels[zs]+' primaries')
 	
 	if zs==0:
