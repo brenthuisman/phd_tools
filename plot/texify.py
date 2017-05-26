@@ -1,12 +1,6 @@
 import matplotlib as mpl
 import numpy as np
 
-''' 
-Make plots look more latexy. Import this lib, and call texify_ax(ax) on all your axes.
-
-TODO: overload savefig/show to apply texify_ax on all axes found with fig.get_axes()
-'''
-
 def texfigsize(scale):
     fig_width_pt = 469.755                          # Get this from LaTeX using \the\textwidth
     inches_per_pt = 1.0/72.27                       # Convert pt to inch
@@ -24,7 +18,7 @@ pgf_with_latex = {                      # setup matplotlib to use latex for outp
     "font.sans-serif": [],
     "font.monospace": [],
     "axes.labelsize": 10,               # LaTeX default is 10pt font.
-    "text.fontsize": 10,
+    "font.size": 10,
     "legend.fontsize": 8,               # Make the legend/label fonts a little smaller
     "xtick.labelsize": 8,
     "ytick.labelsize": 8,
@@ -36,20 +30,42 @@ pgf_with_latex = {                      # setup matplotlib to use latex for outp
         r"\usepackage[T1]{fontenc}",        # plots will be generated using this preamble
         ]
     }
-mpl.rcParams.update(pgf_with_latex)
 
-def texax(ax):
+clearsans = {
+    "font.family": "Clear Sans",
+    "font.serif": [],                   # blank entries should cause plots to inherit fonts from the document
+    "font.sans-serif": [],
+    "font.monospace": [],
+    "font.size": 6,
+    "axes.titlesize" : 8,
+    "legend.fontsize": 6,               # Make the legend/label fonts a little smaller
+    "xtick.labelsize": 6,
+    "ytick.labelsize": 6,
+    "xtick.direction": 'out',
+    "ytick.direction": 'out',
+    "xtick.minor.visible": False,
+    "ytick.minor.visible": False,
+    "figure.figsize": texfigsize(0.9),     # default fig size of 0.9 textwidth
+    }
+
+#mpl.rcParams.update(pgf_with_latex)
+mpl.rcParams.update(clearsans)
+
+def texax(ax,twinx=None):
     SPINE_COLOR = 'gray'
 
-    for spine in ['top', 'right']:
+    for spine in ['top']:
         ax.spines[spine].set_visible(False)
 
-    for spine in ['left', 'bottom']:
+    for spine in ['left', 'bottom','right']:
         ax.spines[spine].set_color(SPINE_COLOR)
         ax.spines[spine].set_linewidth(0.5)
 
     ax.xaxis.set_ticks_position('bottom')
-    ax.yaxis.set_ticks_position('left')
+    if twinx is None:
+        ax.yaxis.set_ticks_position('left')
+        for spine in ['top', 'right']:
+            ax.spines[spine].set_visible(False)
 
     for axis in [ax.xaxis, ax.yaxis]:
         axis.set_tick_params(direction='out', color=SPINE_COLOR)

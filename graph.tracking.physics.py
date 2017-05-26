@@ -16,18 +16,23 @@ cntr = Counter(hist)
 labels = '-'.join(cntr.keys())
 
 d = {
-'nCapture':'Neutron Capture',
-'hIoni':'Hadron Ionisation',
-'Transportation':'Transportation',
-'StepLimiter':'StepLimiter',
-'ionIoni':'Ion Ionisation',
-'phot':'Photo Electric Effect',
-'initStep':'Initial Step',
-'neutronInelastic':'Neutron Inelastic',
-'hadElastic':'Hadron Elastic',
-'compt':'Compton Scattering',
-'Rayl':'Rayleigh Scattering',
-'protonInelastic':'Proton Inelastic'
+'nCapture':'Neutron Capture (h)',
+'hIoni':'Hadron Ionisation (h)',
+'Transportation':'Transportation (MC)',
+'StepLimiter':'StepLimiter (MC)',
+'ionIoni':'Ion Ionisation (h)',
+'phot':'Photoelectric Effect ($\gamma$)',
+'initStep':'Initial Step (MC)',
+'neutronInelastic':'Neutron Inelastic (h)',
+'hadElastic':'Hadron Elastic (h)',
+'compt':'Compton Scatter ($\gamma$)',
+'Rayl':'Rayleigh Scatter ($\gamma$)',
+'protonInelastic':'Proton Inelastic (h)',
+'eBrem':'Bremsstrahlung (e)',
+'eIoni':'Ionisation (e)',
+'annihil':'Annihilation (e)',
+'msc':'Coulomb Scatter (e, h)',
+'conv':'Pair creation ($\gamma$)'
 }
 
 pattern = re.compile(r'\b(' + '|'.join(d.keys()) + r')\b')
@@ -45,7 +50,7 @@ f, ax1 = plot.subplots(nrows=1, ncols=1, sharex=False, sharey=False)
 
 ax1.bar(xdata, cntr.values(), width, color=clrs[0],lw=0)
 ax1.xaxis.set_major_locator(mpl.ticker.FixedLocator(range(len(cntr))))
-ax1.set_xticklabels(labels, fontsize=8, rotation=30, ha='center')
+ax1.set_xticklabels(labels, fontsize=8, rotation=20, ha='center')
 #ax1.set_xticklabels(['']+cntr.keys(), fontsize=8, rotation=15, ha='center')
 
 ax1.set_ylabel('Counts')

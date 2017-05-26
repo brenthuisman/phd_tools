@@ -407,6 +407,15 @@ class image:
 		return self.saveas(outpostfix)
 
 
+	def normalize(self):
+		self.imdata = self.imdata/self.imdata.max()
+
+
+	def savenormalize(self,outpostfix='.normalize'):
+		self.normalize()
+		return self.saveas(outpostfix)
+
+
 	def savehighpass(self,threshold,outpostfix='.highpass'):
 		self.tohighpass(threshold)
 		return self.saveas(outpostfix)

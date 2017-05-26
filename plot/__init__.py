@@ -5,6 +5,7 @@ import scipy.interpolate
 import scipy.signal
 import scipy.optimize
 import plot
+import matplotlib as mpl
 
 #colors = "rgbmyck"*20
 colors = ['#3778bf','#feb308','#7b0323','#7bb274','#a8a495','#825f87']*20
@@ -19,6 +20,12 @@ def static_vars(**kwargs):
             setattr(func, k, kwargs[k])
         return func
     return decorate
+
+
+def plot_errorbands(ax,x,y,ystddev,**kwargs):
+	ax.plot(x,y,**kwargs)
+	ax.fill_between(x, [i-istd for i,istd in zip(y,ystddev)], [i+istd for i,istd in zip(y,ystddev)],alpha=0.3,interpolate=True,lw=0,**kwargs)
+	return ax
 
 
 def fill_between_steps(ax, x, y1, y2=0, step_where='pre', **kwargs):
@@ -128,6 +135,80 @@ def getloghist(data,nrbin=50):
 	return centers,hist
 
 
+def plot2dhist(ax,X,Y,**kwargs):
+    
+    if 'log' in kwargs:
+        if kwargs.pop('log'):
+            kwargs['norm'] = mpl.colors.LogNorm()
+    
+    if 'xbins' in kwargs:
+        xbins = kwargs.pop('xbins')
+    else:
+        xbins = np.linspace(min(X),max(X),40)
+        
+    if 'ybins' in kwargs:
+        ybins = kwargs.pop('ybins')
+    else:
+        ybins = np.linspace(min(Y),max(Y),40)
+    
+    #default args to pcolormesh
+    if 'cmap' not in kwargs:
+        kwargs['cmap'] = 'coolwarm'
+    
+    counts, _, _ = np.histogram2d(X, Y, bins=(xbins, ybins))
+    #a = ax.imshow(counts.T)
+    a = ax.pcolormesh(xbins, ybins, counts.T, **kwargs)
+    #cmap='coolwarm')#,norm=mpl.colors.LogNorm(),vmin=1e0,vmax=1e2)
+    texax(ax)
+    ax.text(0.05, 0.95, 'Counts: '+str(len(X)) , ha='left', va='center', transform=ax.transAxes)
+    if len(xbins) == len(ybins):
+        ax.axis('equal')
+    return a
+
+def plot1dhist(ax,data,nbins,**kwargs):
+    
+    if not 'facecolor' in kwargs:
+        kwargs['facecolor'] = 'indianred'
+    
+    if not 'lw' in kwargs:
+        kwargs['lw'] = 0
+    
+    ax.hist(data,nbins,**kwargs)
+    texax(ax)
+    
+    ax.text(0.05, 0.95, 'Counts: '+str(len(data)) , ha='left', va='center', transform=ax.transAxes)
+
+
+def plotbar(ax,data,**kwargs):
+    #if you want logarithmic axis, supply log=True to kwargs
+    
+    from collections import Counter
+    
+    cntr = Counter(data)
+    labels = cntr.keys()
+    
+    if not 'facecolor' in kwargs:
+        kwargs['facecolor'] = 'indianred'
+    
+    if not 'lw' in kwargs:
+        kwargs['lw'] = 0
+        
+    if 'relabel' in kwargs:
+        relabel = kwargs.pop('relabel')
+        labels = [relabel[lab] for lab in labels]
+    
+    ind = np.arange(len(cntr))
+    margin = 0.2
+    width = (1.-2.*margin)
+    xdata = ind - width/2.
+
+    ax.bar(xdata, cntr.values(), width, **kwargs)
+    ax.xaxis.set_major_locator(mpl.ticker.FixedLocator(range(len(cntr))))
+    ax.set_xticklabels(labels, rotation=20, ha='center')
+    texax(ax)
+    return cntr
+
+
 # Define function for string formatting of scientific notation
 def sci_notation(num, decimal_digits=1, precision=None, exponent=None):
     """
@@ -182,3 +263,9 @@ def colorbar(*args,**kwargs):
 
 def plot(*args,**kwargs):
 	return plt.plot(*args,**kwargs)
+
+def subplot_tool(*args,**kwargs):
+	return plt.subplot_tool(*args,**kwargs)
+
+def show(*args,**kwargs):
+	return plt.show(*args,**kwargs)

@@ -27,7 +27,7 @@ pgsrc_rpctfo=auger.get_fop(pgsrc_rpct_x,pgsrc_rpct_y)
 ###########################################################################################################
 
 #emission in worldframe
-smooth_param = 8.5 #IBA: 20 FWHM of some spread function = 2.35sigma of a gaussian, Priegnitz 2015
+smooth_param = 20 #IBA: 20, Priegnitz 2015
 
 pgemis_ct = dump.thist2np_xy('fromcluster/run.8ZQJ/output.2399064/GammProdCount-Prod.root')
 pgemis_rpct = dump.thist2np_xy('fromcluster/run.ahDK/output.2399464/GammProdCount-Prod.root')
@@ -38,9 +38,9 @@ pgemis_rpct_x = np.array(pgemis_rpct['histo'][0])
 pgemis_rpct_y = np.array(pgemis_rpct['histo'][1])
 pgemis_rpct_y = pgemis_rpct_y/pgemis_rpct_y.max()
 
-pgemis_ct_y_smooth = gaussian_filter(pgemis_ct_y, sigma=smooth_param)
+pgemis_ct_y_smooth = gaussian_filter(pgemis_ct_y, sigma=10)
 pgemis_ct_y_smooth = pgemis_ct_y_smooth/pgemis_ct_y_smooth.max()
-pgemis_rpct_y_smooth = gaussian_filter(pgemis_rpct_y, sigma=smooth_param)
+pgemis_rpct_y_smooth = gaussian_filter(pgemis_rpct_y, sigma=10)
 pgemis_rpct_y_smooth = pgemis_rpct_y_smooth/pgemis_rpct_y_smooth.max()
 
 pgemis_ctfo=auger.get_fop(pgemis_ct_x,pgemis_ct_y)
@@ -49,6 +49,10 @@ pgemis_rpctfo=auger.get_fop(pgemis_rpct_x,pgemis_rpct_y)
 pgemis_smooth_ctfo=auger.get_fop(pgemis_ct_x,pgemis_ct_y_smooth)
 pgemis_smooth_rpctfo=auger.get_fop(pgemis_rpct_x,pgemis_rpct_y_smooth)
 
+
+pgemis_ct_y_smooth20 = gaussian_filter(pgemis_ct_y, sigma=20)
+pgemis_ct_y_smooth20 = pgemis_ct_y_smooth20/pgemis_ct_y_smooth20.max()
+pgemis_smooth20_ctfo=auger.get_fop(pgemis_ct_x,pgemis_ct_y_smooth20)
 
 ###########################################################################################################
 
@@ -102,8 +106,9 @@ f, (ax1,ax2) = plot.subplots(nrows=1, ncols=2, sharex=False, sharey=False)
 ax1.step(pgemis_ct_x,pgemis_ct_y, color='steelblue',lw=1., alpha=0.6, label='Prod FOP:\n'+str(pgemis_ctfo)[:5], where='mid')
 #ax1.step(pgemis_rpct_x,pgemis_rpct_y, color='indianred',lw=1., alpha=0.4, label='PROD RPCT FOP: '+str(pgemis_rpctfo), where='mid')
 
-ax1.step(pgemis_ct_x,pgemis_ct_y_smooth, color='seagreen',lw=1., alpha=0.6, label='Prod Smooth FOP:\n'+str(pgemis_smooth_ctfo)[:5], where='mid')
+ax1.step(pgemis_ct_x,pgemis_ct_y_smooth, color='seagreen',lw=1., alpha=0.6, label='Prod PSF10 FOP:\n'+str(pgemis_smooth_ctfo)[:5], where='mid')
 #ax1.step(pgemis_rpct_x,pgemis_rpct_y_smooth, color='indianred',lw=1., alpha=0.6, label='PROD SMOOTH RPCT FOP: '+str(pgemis_smooth_rpctfo), where='mid')
+ax1.plot(pgemis_ct_x, pgemis_ct_y_smooth20, linestyle='--', drawstyle='steps-mid', color='seagreen',lw=1., alpha=0.6, label='Prod PSF20 FOP:\n'+str(pgemis_smooth20_ctfo)[:5])
 
 pgipnl_ctfo = auger.get_fop(pgipnl_ct_x,pgipnl_ct_y,plot=True,ax=ax1,label='Detected Smooth ')
 #ax1.step(pgipnl_ct_x,pgipnl_ct_y, color='indianred',lw=1., alpha=0.8, label='PGIPNL FOP:\n'+str(pgipnl_ctfo)[:5], where='mid')
@@ -117,6 +122,7 @@ ax2.step(pgemis_ct_x,pgemis_ct_y, color='steelblue',lw=1., alpha=0.6, label='Pro
 
 ax2.step(pgemis_ct_x,pgemis_ct_y_smooth, color='seagreen',lw=1., alpha=0.6, label='Prod Smooth FOP:\n'+str(pgemis_smooth_ctfo)[:5], where='mid')
 #ax1.step(pgemis_rpct_x,pgemis_rpct_y_smooth, color='indianred',lw=1., alpha=0.6, label='PROD SMOOTH RPCT FOP: '+str(pgemis_smooth_rpctfo), where='mid')
+ax2.plot(pgemis_ct_x, pgemis_ct_y_smooth20, linestyle='--', drawstyle='steps-mid', color='seagreen',lw=1., alpha=0.6, label='Prod PSF20 FOP:\n'+str(pgemis_smooth20_ctfo)[:5])
 
 pgipnl_ctfo = auger.get_fop(pgipnl_ct_x,pgipnl_ct_y,plot=True,ax=ax2,smooth=False,label='Detected ')
 #ax2.step(pgipnl_ct_x,pgipnl_ct_y, color='indianred',lw=1., alpha=0., label='PGIPNL FOP:\n'+str(pgipnl_ctfo)[:5], where='mid')
@@ -147,6 +153,6 @@ ax2.legend(frameon = False,loc='upper right')
 plot.texax(ax1)
 plot.texax(ax2)
 
-f.savefig('pgevo-waterbox.pdf', bbox_inches='tight')
+f.savefig('pgevo3-waterbox.pdf', bbox_inches='tight')
 plot.close('all')
 

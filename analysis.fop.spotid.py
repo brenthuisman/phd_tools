@@ -9,7 +9,7 @@ parser.add_argument('--ctonly', action='store_true')
 parser.add_argument('--tolerance')
 args = parser.parse_args()
 volume_offset=-142.097+7.96
-#-142.097 komt uit mhd header source images, en is centrum van eerste voxel (bin).
+#-142.097 komt uit mhd header 1D PG source images, en is centrum van eerste voxel (bin).
 #Dit is in MHD coords systeem, en dat verschilt van het met isocenter
 #NOOT: offset in spotid images is ANDERS dan in overige simulaties (voxels in x direction zijn 1mm, elders 2mm (met MHD offset -141.597)
 #NOOT2: in dit geval is pgsource_offset ook geldig voor dosespotid image, immers zelfde subvolume
@@ -21,6 +21,11 @@ MSW=[]
 for spot in rtplan.spots:
 	if spot[0] == 102:#
 		MSW.append(spot)
+
+#print MSW[29]
+#print MSW[40]
+#print MSW[61]
+#quit()
 
 images = [image.image('output/new_dosespotid-ct.mhd'),
 		  image.image('output/new_dosespotid-rpct.mhd'),
