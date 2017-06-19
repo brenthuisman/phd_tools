@@ -165,18 +165,23 @@ def plot2dhist(ax,X,Y,**kwargs):
         ax.axis('equal')
     return a
 
-def plot1dhist(ax,data,nbins,**kwargs):
+def plot1dhist(ax,data,**kwargs):
     
     if not 'facecolor' in kwargs:
         kwargs['facecolor'] = 'indianred'
     
     if not 'lw' in kwargs:
         kwargs['lw'] = 0
+        
+    if not 'bins' in kwargs:
+        kwargs['bins']=np.linspace(min(data),max(data),40)
+        
+    if 'count' in kwargs:
+        ax.text(0.05, 0.95, 'Counts: '+str(len(data)) , ha='left', va='center', transform=ax.transAxes)
+        kwargs.pop('count')
     
-    ax.hist(data,nbins,**kwargs)
+    ax.hist(data,**kwargs)
     texax(ax)
-    
-    ax.text(0.05, 0.95, 'Counts: '+str(len(data)) , ha='left', va='center', transform=ax.transAxes)
 
 
 def plotbar(ax,data,**kwargs):
@@ -196,6 +201,11 @@ def plotbar(ax,data,**kwargs):
     if 'relabel' in kwargs:
         relabel = kwargs.pop('relabel')
         labels = [relabel[lab] for lab in labels]
+        
+    if 'rotation' in kwargs:
+        rotation = kwargs.pop('rotation')
+    else:
+        rotation = 20
     
     ind = np.arange(len(cntr))
     margin = 0.2
@@ -204,7 +214,7 @@ def plotbar(ax,data,**kwargs):
 
     ax.bar(xdata, cntr.values(), width, **kwargs)
     ax.xaxis.set_major_locator(mpl.ticker.FixedLocator(range(len(cntr))))
-    ax.set_xticklabels(labels, rotation=20, ha='center')
+    ax.set_xticklabels(labels, rotation=rotation, ha='center')
     texax(ax)
     return cntr
 

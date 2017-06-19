@@ -45,7 +45,7 @@ clearsans = {
     "ytick.direction": 'out',
     "xtick.minor.visible": False,
     "ytick.minor.visible": False,
-    "figure.figsize": texfigsize(0.9),     # default fig size of 0.9 textwidth
+    #"figure.figsize": texfigsize(0.9),     # default fig size of 0.9 textwidth
     }
 
 #mpl.rcParams.update(pgf_with_latex)
