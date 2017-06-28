@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import argparse,numpy as np,matplotlib as mpl,image,plot
 from scipy import fftpack
+from collections import OrderedDict
 
 parser = argparse.ArgumentParser(description='Perform frequency analysis on image. Is it blurry?')
 parser.add_argument('files', nargs='*')
@@ -46,28 +47,24 @@ def azimuthalAverage(image, center=None):
 
     return radial_prof
 
-# nocuts, thin
 
-#imyields = ["run.2npr/output.local_1/epiddose-all-Dose.mhd","run.UlRn/output.local_1/epiddose-all-Dose.mhd","run.Vz1L/output.local_1/epiddose-all-Dose.mhd"]
-#imuncs = ["run.2npr/output.local_1/epiddose-all-Dose-Uncertainty.mhd","run.UlRn/output.local_1/epiddose-all-Dose-Uncertainty.mhd","run.Vz1L/output.local_1/epiddose-all-Dose-Uncertainty.mhd"]
 
-#mask90pc = image.image("run.Vz1L/output.local_1/epiddose-all-Dose.mhd",type='yield')
-#mask90pc.to90pcmask()
+# 10x10@isoc 1e8
 
-# cuts, thick
+imyields = ["run.012r/output.local_1/epiddose-all-Dose.mhd","run.kKw2/output.local_1/epiddose-all-Dose.mhd","run.GucV/output.local_1/epiddose-gamma-Dose.mhd","run.GucV/output.local_1/epiddose-electron-Dose.mhd","run.GucV/output.local_1/epiddose-all-Dose.mhd"]
+imuncs = ["run.012r/output.local_1/epiddose-all-Dose-Uncertainty.mhd","run.kKw2/output.local_1/epiddose-all-Dose-Uncertainty.mhd","run.GucV/output.local_1/epiddose-gamma-Dose-Uncertainty.mhd","run.GucV/output.local_1/epiddose-electron-Dose-Uncertainty.mhd","run.GucV/output.local_1/epiddose-all-Dose-Uncertainty.mhd"]
 
-imyields = ["run.HXmg/output.local_1/epiddose-all-Dose.mhd","run.EcGI/output.local_1/epiddose-all-Dose.mhd","run.XxPP/output.local_1/epiddose-all-Dose.mhd"]
-imuncs = ["run.HXmg/output.local_1/epiddose-all-Dose-Uncertainty.mhd","run.EcGI/output.local_1/epiddose-all-Dose-Uncertainty.mhd","run.XxPP/output.local_1/epiddose-all-Dose-Uncertainty.mhd"]
+# 10x10@panel square field 5e8
 
-#mask90pc = image.image("run.XxPP/output.local_1/epiddose-all-Dose.mhd",type='yield')
-#mask90pc.toNpcmask(90)
+#imyields = ["run.012r/output.local_1/epiddose-all-Dose.mhd","run.kKw2/output.local_1/epiddose-all-Dose.mhd","run.GucV/output.local_1/epiddose-gamma-Dose.mhd","run.GucV/output.local_1/epiddose-electron-Dose.mhd","run.GucV/output.local_1/epiddose-all-Dose.mhd"]
+#imuncs = ["run.012r/output.local_1/epiddose-all-Dose-Uncertainty.mhd","run.kKw2/output.local_1/epiddose-all-Dose-Uncertainty.mhd","run.GucV/output.local_1/epiddose-gamma-Dose-Uncertainty.mhd","run.GucV/output.local_1/epiddose-electron-Dose-Uncertainty.mhd","run.GucV/output.local_1/epiddose-all-Dose-Uncertainty.mhd"]
 
-labels = ['transmission','nontransmission','all']
+labels = ['transmission','nontransmission','total dose']
 
 fracties_totaal = []
 fracties_isocentrum = []
 
-f, axes = plot.subplots(nrows=len(imyields), ncols=3, sharex=False, sharey=False)#,figsize=(28,10))
+f, axes = plot.subplots(nrows=len(imyields), ncols=4, sharex=False, sharey=False)#,figsize=(28,10))
 
 for axrow,yim,uim,label in zip(axes,imyields,imuncs,labels):
     yim_ = image.image(yim,type='yield')
@@ -76,18 +73,40 @@ for axrow,yim,uim,label in zip(axes,imyields,imuncs,labels):
     uim_.imdata = uim_.imdata.squeeze()*100. #fractions to percentages
     fracties_isocentrum.append( yim_.getcenter().mean() )
     fracties_totaal.append( yim_.imdata.sum() )
-    axrow[0].imshow( yim_.imdata.squeeze() , cmap='gray')
+    axrow[0].imshow( yim_.imdata.squeeze() , extent = [0,41,0,41], cmap='gray')
     #axrow[0].pcolormesh(np.linspace(0,41,num=yim_.imdata.squeeze().shape[0]), np.linspace(0,41,num=yim_.imdata.squeeze().shape[1]), yim_.imdata.squeeze())#, norm = mpl.colors.LogNorm())
-    plot.texax(axrow[0])
     axrow[0].set_title(label + '\n$\sum$ Dose: '+ plot.sn(fracties_totaal[-1]))
-    axrow[1].set_title(label)
-    plot.plot1dhist( axrow[1], uim_.imdata.flatten(), bins=np.linspace(0,100,50), log=True)
+    axrow[1].set_title(label + ' Profile')
+    axrow[1].plot(*yim_.getprofile('y'), color = 'steelblue' , label='x')
+    axrow[1].plot(*yim_.getprofile('x'), color = 'indianred' , label='y')
+    axrow[1].legend(loc='upper right', bbox_to_anchor=(1., 1.),frameon=False)
+    axrow[1].axvline(41./2.-5., color='#999999', ls='--')
+    axrow[1].axvline(41./2.+5., color='#999999', ls='--')
+    axrow[1].set_xlim(0,41)
+    
+    
+    
+    axrow[2].set_title(label)
+    plot.plot1dhist( axrow[2], uim_.imdata.flatten(), bins=np.linspace(0,100,50), log=True)
     
 #axrow[0].text(0.95, 0.95, 'Counts: '+str(len(data)) , ha='left', va='center')#, transform=ax.transAxes)
-print fracties_totaal[0]/fracties_totaal[1]
-print fracties_isocentrum[0]/fracties_isocentrum[1]
-    
-f.subplots_adjust(hspace=.5)
-f.subplots_adjust(wspace=.5)
+staaf = OrderedDict()
+for label,ft,fi in zip(labels,fracties_totaal,fracties_isocentrum)[:-1]:
+    staaf[label+' whole']=float(ft)/fracties_totaal[-1]*100. #pc
+    staaf[label+' isoc']=float(fi)/fracties_isocentrum[-1]*100.
+#staaf = [labels[0], fracties_totaal[0]/fracties_totaal[2]
+#print fracties_isocentrum[0]/fracties_isocentrum[2]
+staaf
+
+plot.plotbar(axes[0][-1],staaf,bincount='%')#,rotation=30)
+
+staaf2 = OrderedDict()
+staaf2['sum/all whole']=(fracties_totaal[0]+fracties_totaal[1])/fracties_totaal[2]*100. #pc
+staaf2['sum/all isoc']=(fracties_isocentrum[0]+fracties_isocentrum[1])/fracties_isocentrum[2]*100.
+plot.plotbar(axes[1][-1],staaf2,bincount='%')
+
+
+
+f.subplots_adjust(hspace=.5,wspace=.5)
 f.savefig('imfreq.pdf', bbox_inches='tight')
 plot.close('all')

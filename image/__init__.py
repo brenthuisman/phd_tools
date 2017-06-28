@@ -248,6 +248,19 @@ class image:
         return out
 
 
+    def getprofile(self,axis):
+        imdata = self.imdata.squeeze()
+        assert len(imdata.shape) == 2
+        if axis == 'x':
+            spacing = float( self.header['ElementSpacing'][0] )
+            print 'Getting x profile at', int(imdata.shape[0]/2.)
+            return ( np.linspace(0,spacing*imdata.shape[0],imdata.shape[0])/10. , imdata[int(imdata.shape[0]/2.)] )
+        if axis == 'y':
+            spacing = float( self.header['ElementSpacing'][1] )
+            print 'Getting y profile at', int(imdata.shape[1]/2.)
+            return ( np.linspace(0,spacing*imdata.shape[1],imdata.shape[1])/10. , imdata.T[int(imdata.T.shape[1]/2.)] )
+
+
     def save1dlist(self,outpostfix,crush):
         # assert crush.count(0) is 1
 

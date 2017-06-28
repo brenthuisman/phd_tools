@@ -159,7 +159,7 @@ def plot2dhist(ax,X,Y,**kwargs):
     #a = ax.imshow(counts.T)
     a = ax.pcolormesh(xbins, ybins, counts.T, **kwargs)
     #cmap='coolwarm')#,norm=mpl.colors.LogNorm(),vmin=1e0,vmax=1e2)
-    texax(ax)
+    #texax(ax)
     ax.text(0.05, 0.95, 'Counts: '+str(len(X)) , ha='left', va='center', transform=ax.transAxes)
     if len(xbins) == len(ybins):
         ax.axis('equal')
@@ -181,7 +181,7 @@ def plot1dhist(ax,data,**kwargs):
         kwargs.pop('count')
     
     ax.hist(data,**kwargs)
-    texax(ax)
+    #texax(ax)
 
 
 def plotbar(ax,data,**kwargs):
@@ -189,8 +189,12 @@ def plotbar(ax,data,**kwargs):
     
     from collections import Counter
     
-    cntr = Counter(data)
-    labels = cntr.keys()
+    if type(data) is list:
+        cntr = Counter(data)
+        labels = cntr.keys()
+    if issubclass(type(data), dict):
+        cntr = data
+        labels = data.keys()
     
     if not 'facecolor' in kwargs:
         kwargs['facecolor'] = 'indianred'
@@ -201,6 +205,11 @@ def plotbar(ax,data,**kwargs):
     if 'relabel' in kwargs:
         relabel = kwargs.pop('relabel')
         labels = [relabel[lab] for lab in labels]
+        
+    if 'bincount' in kwargs:
+        postfix = kwargs.pop('bincount')
+        for i, v in enumerate(cntr.values()):
+            ax.text(i, v + 3, str(float(v)).split('.')[0]+postfix, color=kwargs['facecolor'], fontweight='bold')
         
     if 'rotation' in kwargs:
         rotation = kwargs.pop('rotation')
@@ -215,7 +224,7 @@ def plotbar(ax,data,**kwargs):
     ax.bar(xdata, cntr.values(), width, **kwargs)
     ax.xaxis.set_major_locator(mpl.ticker.FixedLocator(range(len(cntr))))
     ax.set_xticklabels(labels, rotation=rotation, ha='center')
-    texax(ax)
+    #texax(ax)
     return cntr
 
 
@@ -253,7 +262,21 @@ def sn_mag(num):
 ###################### Forwards to matplotlib.
 
 def subplots(*args,**kwargs):
-	return plt.subplots(*args,**kwargs)
+    #return plt.subplots(*args,**kwargs)
+    f, axes = plt.subplots(*args,**kwargs)
+    try:
+        for row in axes:
+            try:
+                for cell in row:
+                    #2D
+                    texax(cell)
+            except TypeError:
+                #twas 1D?
+                texax(row)
+    except TypeError:
+        #twas 0D
+        texax(axes)
+    return (f,axes)
 
 def legend(*args,**kwargs):
 	return plt.legend(*args,**kwargs)
