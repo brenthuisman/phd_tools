@@ -32,8 +32,9 @@ for rootfile in rootfiles:
     ax4.set_title("Secon Phot")
     ax5.set_title("Nonphot")
     
-    xbins = np.linspace(-150,150,50)
-    ybins = np.linspace(-150,150,50)
+    # BIN EDGES!
+    xbins = np.linspace(-410/2.,410/2.,256+1)
+    ybins = np.linspace(-410/2.,410/2.,256+1)
     
     a = plot.plot2dhist( ax1, all['X'], all['Y'], xbins=xbins,ybins=ybins, log=True)
     a = plot.plot2dhist( ax2, phot_trans['X'], phot_trans['Y'], xbins=xbins,ybins=ybins, log=True)
@@ -43,12 +44,12 @@ for rootfile in rootfiles:
     
     #,norm=matplotlib.colors.LogNorm(),vmin=1e0,vmax=1e2)
     
-    plot.plot1dhist(ax6,all_E,30,count=True)
-    plot.plot1dhist(ax7,phot_trans_E,30,count=True)
-    plot.plot1dhist(ax8,phot_scatter_E,30,count=True)
-    plot.plot1dhist(ax9,phot_other_E,30,count=True)
+    plot.plot1dhist(ax6,all_E,count=True)
+    plot.plot1dhist(ax7,phot_trans_E,count=True)
+    plot.plot1dhist(ax8,phot_scatter_E,count=True)
+    plot.plot1dhist(ax9,phot_other_E,count=True)
     ax9.set_xlim(0,2)
-    plot.plot1dhist(ax10,nonphot_E,30,count=True)
+    plot.plot1dhist(ax10,nonphot_E,count=True)
     
     d = {
         'e-':'Electron',

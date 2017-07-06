@@ -202,17 +202,17 @@ typ = 'ipnl-auger-tof-1.root'
 ctsetsets = []
 ctsetsets.append( auger.getctset(840964615,'run.CKCH','run.lrnj',typ) )#elay
 ctsetsets.append( auger.getctset(848710335,'run.3At2','run.Ydep',typ) )#geolay
-megaplot(ctsetsets,'layer29',emisfops=None,labels=['Energy Layer','Geometric Layer'],axlabel='Grouping Method')
+megaplot(ctsetsets,'layer29',emisfops=None,labels=['Iso-Energy Layer','Iso-Depth Layer'],axlabel='Grouping Method')
 
 ctsetsets = []
 ctsetsets.append( auger.getctset(1068263318,'run.7coj','run.ptEe',typ) )#elay, same as elay61
 ctsetsets.append( auger.getctset(1071596684,'run.KXRm','run.jTj9',typ) )#geolay
-megaplot(ctsetsets,'layer40',emisfops=None,labels=['Energy Layer','Geometric Layer'],axlabel='Grouping Method')
+megaplot(ctsetsets,'layer40',emisfops=None,labels=['Iso-Energy Layer','Iso-Depth Layer'],axlabel='Grouping Method')
 
 ctsetsets = []
 ctsetsets.append( auger.getctset(1068263318,'run.7coj','run.ptEe',typ,manualshift=15.37-19.00) )#elay
 ctsetsets.append( auger.getctset(979533764,'run.8aMd','run.wM5z',typ,manualshift=18.57-23.51) )#geolay
-megaplot(ctsetsets,'layer61',emisfops=None,labels=['Energy Layer','Geometric Layer'],axlabel='Grouping Method')
+megaplot(ctsetsets,'layer61',emisfops=None,labels=['Iso-Energy Layer','Iso-Depth Layer'],axlabel='Grouping Method')
 
 #############################################################################################
 

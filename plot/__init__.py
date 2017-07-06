@@ -100,6 +100,13 @@ def fill_between_steps(ax, x, y1, y2=0, step_where='pre', **kwargs):
     return ax.fill_between(xx, yy1, y2=yy2, **kwargs)
 
 
+def chopcentral(ndarr,nbins):
+    assert type(nbins) is int
+    retval = ndarr[int(len(ndarr)/2.-nbins/2.):int(len(ndarr)/2.+nbins/2.)]
+    assert len(retval) == nbins
+    return retval
+
+
 def bincenters_to_binedges(indata):
 	indata = np.array(indata)
 	outdata = (indata[1:] + indata[:-1]) / 2
@@ -135,18 +142,23 @@ def getloghist(data,nrbin=50):
 	return centers,hist
 
 
+###################### Histogram plotters
+
 def plot2dhist(ax,X,Y,**kwargs):
+    
+    if len(X) == 0:
+        return
     
     if 'log' in kwargs:
         if kwargs.pop('log'):
             kwargs['norm'] = mpl.colors.LogNorm()
     
-    if 'xbins' in kwargs:
+    if 'xbins' in kwargs: # SHOULD BE BIN EDGES!!!!!
         xbins = kwargs.pop('xbins')
     else:
         xbins = np.linspace(min(X),max(X),40)
         
-    if 'ybins' in kwargs:
+    if 'ybins' in kwargs: # SHOULD BE BIN EDGES!!!!!
         ybins = kwargs.pop('ybins')
     else:
         ybins = np.linspace(min(Y),max(Y),40)
@@ -163,9 +175,13 @@ def plot2dhist(ax,X,Y,**kwargs):
     ax.text(0.05, 0.95, 'Counts: '+str(len(X)) , ha='left', va='center', transform=ax.transAxes)
     if len(xbins) == len(ybins):
         ax.axis('equal')
-    return a
+    #return a
+    return counts
 
 def plot1dhist(ax,data,**kwargs):
+    
+    if len(data) == 0:
+        return
     
     if not 'facecolor' in kwargs:
         kwargs['facecolor'] = 'indianred'
@@ -173,15 +189,15 @@ def plot1dhist(ax,data,**kwargs):
     if not 'lw' in kwargs:
         kwargs['lw'] = 0
         
-    if not 'bins' in kwargs:
+    if not 'bins' in kwargs: # SHOULD BE BIN EDGES!!!!!
         kwargs['bins']=np.linspace(min(data),max(data),40)
         
     if 'count' in kwargs:
         ax.text(0.05, 0.95, 'Counts: '+str(len(data)) , ha='left', va='center', transform=ax.transAxes)
         kwargs.pop('count')
     
-    ax.hist(data,**kwargs)
-    #texax(ax)
+    n, _, _ = ax.hist(data,**kwargs)
+    return n
 
 
 def plotbar(ax,data,**kwargs):
@@ -209,7 +225,7 @@ def plotbar(ax,data,**kwargs):
     if 'bincount' in kwargs:
         postfix = kwargs.pop('bincount')
         for i, v in enumerate(cntr.values()):
-            ax.text(i, v + 3, str(float(v)).split('.')[0]+postfix, color=kwargs['facecolor'], fontweight='bold')
+            ax.text(i, v + 3, str(int(round(v)))+postfix, color=kwargs['facecolor'], fontweight='bold')
         
     if 'rotation' in kwargs:
         rotation = kwargs.pop('rotation')
@@ -228,7 +244,8 @@ def plotbar(ax,data,**kwargs):
     return cntr
 
 
-# Define function for string formatting of scientific notation
+###################### Scientific notation
+
 def sci_notation(num, decimal_digits=1, precision=None, exponent=None):
     """
     Returns a string representation of the scientific
@@ -258,6 +275,64 @@ def snS(num, decimal_digits=1):
 def sn_mag(num):
     exponent = str(int(floor(log10(abs(num)))))
     return r"$10^"+exponent+"$"
+
+###################### Metric prefixes
+
+def metric_prefix_formatter(x, pos):
+    'The two args are the value and tick position'
+    if x >= 1e16:
+        return '{:1.0f}P'.format(x*1e-16)
+    if x >= 1e15:
+        return '{:1.1f}P'.format(x*1e-16)
+    if x >= 1e13:
+        return '{:1.0f}T'.format(x*1e-13)
+    if x >= 1e12:
+        return '{:1.1f}T'.format(x*1e-12)
+    if x >= 1e10:
+        return '{:1.0f}G'.format(x*1e-9)
+    if x >= 1e9:
+        return '{:1.1f}G'.format(x*1e-9)
+    if x >= 1e7:
+        return '{:1.0f}M'.format(x*1e-6)
+    if x >= 1e6:
+        return '{:1.1f}M'.format(x*1e-6)
+    if x >= 1e4:
+        return '{:1.0f}k'.format(x*1e-3)
+    if x >= 1e3:
+        return '{:1.1f}k'.format(x*1e-3)
+    if x >= 1e1:
+        return '{:1.0f}'.format(x)
+    if x >= 1e0:
+        return '{:1.1f}'.format(x)
+    if x >= 1e-2:
+        return '{:1.0f}m'.format(x*1e3)
+    if x >= 1e-3:
+        return '{:1.1f}m'.format(x*1e3)
+    if x >= 1e-5:
+        return '{:1.0f}$\mu$'.format(x*1e6)
+    if x >= 1e-6:
+        return '{:1.1f}$\mu$'.format(x*1e6)
+    if x >= 1e-8:
+        return '{:1.0f}n'.format(x*1e9)
+    if x >= 1e-9:
+        return '{:1.1f}n'.format(x*1e9)
+    if x >= 1e-11:
+        return '{:1.0f}p'.format(x*1e12)
+    if x >= 1e-12:
+        return '{:1.1f}p'.format(x*1e12)
+    if x >= 1e-14:
+        return '{:1.0f}f'.format(x*1e15)
+    if x >= 1e-15:
+        return '{:1.1f}f'.format(x*1e15)
+    return '{:1.0f}'.format(x)
+
+def set_metric_prefix_x(ax):
+    from matplotlib.ticker import FuncFormatter
+    ax.xaxis.set_major_formatter(FuncFormatter(metric_prefix_formatter))
+
+def set_metric_prefix_y(ax):
+    from matplotlib.ticker import FuncFormatter
+    ax.yaxis.set_major_formatter(FuncFormatter(metric_prefix_formatter))
 
 ###################### Forwards to matplotlib.
 
