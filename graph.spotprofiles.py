@@ -109,7 +109,7 @@ ax1.step(pgsrc_ct_x,rppg29.imdata, color='indianred',lw=1., alpha=1, label='RPCT
 ax1.set_title('PG shift: '+str(rppg29_fo-pg29_fo)[:4]+' mm', fontsize=10)
 ax1.legend(frameon = False,loc='upper left')
 ax1.set_xlim(-80,60)
-ax1.set_ylim(0,0.003)
+ax1.set_ylim(0,0.004)
 ax1.set_ylabel('Cumulative PG emission per proton')
 plot.texax(ax1)
 
@@ -118,7 +118,7 @@ ax2.step(pgsrc_ct_x,rppg40.imdata, color='indianred',lw=1., alpha=1, label='RPCT
 ax2.set_title('PG shift: '+str(rppg40_fo-pg40_fo)[:4]+' mm', fontsize=10)
 ax2.legend(frameon = False,loc='upper left')
 #ax2.set_xlim(-80,70)
-ax2.set_ylim(0,0.003)
+ax2.set_ylim(0,0.004)
 ax2.set_xlabel('Position [mm]')
 plot.texax(ax2)
 
@@ -127,14 +127,14 @@ ax3.step(pgsrc_ct_x,rppg61.imdata, color='indianred',lw=1., alpha=1, label='RPCT
 ax3.set_title('PG shift: '+str(rppg61_fo-pg61_fo)[:4]+' mm', fontsize=10)
 ax3.legend(frameon = False,loc='upper left')
 #ax3.set_xlim(-80,70)
-ax3.set_ylim(0,0.003)
+ax3.set_ylim(0,0.004)
 plot.texax(ax3)
 
 ######## TopRow
 
 ax4.step(x,dose[29]/dose[29].max(), color='steelblue',lw=1., alpha=1, label='CT', where='mid')
 ax4.step(x,rpdose[29]/rpdose[29].max(), color='indianred',lw=1., alpha=1, label='RPCT', where='mid')
-ax4.set_title('Spot 29, Shift: '+str(rpct29_fo-ct29_fo)[:4]+' mm\n'+plot.sn(MSW[29][-1])+' protons', fontsize=10)
+ax4.set_title('Spot A, Shift: '+str(rpct29_fo-ct29_fo)[:4]+' mm\n'+plot.sn(MSW[29][-1])+' protons', fontsize=10)
 ax4.legend(frameon = False,loc='upper left')
 ax4.set_xlim(-80,60)
 ax4.set_ylabel('Scaled Dose [a.u.]')
@@ -150,7 +150,7 @@ plot.texax(ax5)
 
 ax6.step(x,dose[61]/dose[61].max(), color='steelblue',lw=1., alpha=1, label='CT', where='mid')
 ax6.step(x,rpdose[61]/rpdose[61].max(), color='indianred',lw=1., alpha=1, label='RPCT', where='mid')
-ax6.set_title('Spot 61, Shift: '+str(rpct61_fo-ct61_fo)[:4]+' mm\n'+plot.sn(MSW[61][-1])+' protons', fontsize=10)
+ax6.set_title('Spot C, Shift: '+str(rpct61_fo-ct61_fo)[:4]+' mm\n'+plot.sn(MSW[61][-1])+' protons', fontsize=10)
 ax6.legend(frameon = False,loc='upper left')
 #ax6.set_xlim(-80,70)
 plot.texax(ax6)

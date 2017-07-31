@@ -46,7 +46,7 @@ mpl.rcParams['axes.titlesize'] = fontsize
 mpl.rcParams['axes.labelsize'] = fontsize
 
 plotke = plot.subplots(nrows=2, ncols=nrfields, sharex='col', sharey='row')
-plotke[0].get_axes()[0].annotate('Total nr of primaries: '+plot.sn(rtplan.TotalMetersetWeight)+'. Mean spot weight: '+plot.sn(spot_weight_mean), (0.5, 0.975), xycoords='figure fraction', ha='center', fontsize=fontsize)
+plotke[0].get_axes()[0].annotate('Total nr. of primaries: '+plot.sn(rtplan.TotalMetersetWeight)+'. Mean spot weight: '+plot.sn(spot_weight_mean), (0.5, 0.975), xycoords='figure fraction', ha='center', fontsize=fontsize)
 
 if nrfields == 1:
     spotaxes = [plotke[-1][0]] #0 is eerste kolom

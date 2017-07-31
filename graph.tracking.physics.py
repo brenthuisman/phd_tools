@@ -32,7 +32,7 @@ d = {
 'eIoni':'Ionisation (e)',
 'annihil':'Annihilation (e)',
 'msc':'Coulomb Scatter (e, h)',
-'conv':'Pair creation ($\gamma$)'
+'conv':'Pair creation/Gamma Conversion ($\gamma$)'
 }
 
 pattern = re.compile(r'\b(' + '|'.join(d.keys()) + r')\b')
