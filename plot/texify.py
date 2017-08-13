@@ -48,8 +48,8 @@ clearsans = {
     #"figure.figsize": texfigsize(0.9),     # default fig size of 0.9 textwidth
     }
 
-#mpl.rcParams.update(pgf_with_latex)
-mpl.rcParams.update(clearsans)
+mpl.rcParams.update(pgf_with_latex)
+#mpl.rcParams.update(clearsans)
 
 def texax(ax,twinx=None):
     SPINE_COLOR = 'gray'

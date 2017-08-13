@@ -375,5 +375,8 @@ def plot(*args,**kwargs):
 def subplot_tool(*args,**kwargs):
 	return plt.subplot_tool(*args,**kwargs)
 
+def errorbar(*args,**kwargs):
+	return plt.errorbar(*args,**kwargs)
+
 def show(*args,**kwargs):
 	return plt.show(*args,**kwargs)
