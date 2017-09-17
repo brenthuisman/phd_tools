@@ -76,6 +76,29 @@ def plot_all_ranges(ax1,ct):
     plot.texax(ax1)
 
 
+def plot_all_ranges_2(ax1,ct,firstcolor='steelblue',secondcolor='indianred'):
+    yield_ct=0
+    for i in range(len(ct['ct']['data'])):
+        yield_ct+=sum(ct['ct']['data'][i])
+        x,y,fo=ct['ct']['x'],ct['ct']['data'][i],ct['ct']['falloff'][i]
+        ax1.step(x, y, label=ct['name']+'ct', color=firstcolor, lw=1, where='mid',clip_on=True, alpha=0.5)
+        ax1.axvline(fo, color=firstcolor, ls='-',lw=1, alpha=0.5)
+    yield_ct = yield_ct/len(ct['ct']['data']) #per realisatie
+    
+    if secondcolor is not None:
+        yield_rpct=0
+        for i in range(len(ct['rpct']['data'])):
+            yield_rpct+=sum(ct['rpct']['data'][i])
+            x,y,fo=ct['rpct']['x'],ct['rpct']['data'][i],ct['rpct']['falloff'][i]
+            ax1.step(x, y, label=ct['name']+'ct', color=secondcolor, lw=1, where='mid',alpha=0.5, clip_on=True)
+            ax1.axvline(fo, color=secondcolor, ls='-',lw=1, alpha=0.5)
+        yield_rpct = yield_rpct/len(ct['rpct']['data']) #per realisatie
+        
+        plot.texax(ax1)
+    
+        return (yield_ct+yield_rpct)/(2.*ct['nprim'])
+    return yield_ct/ct['nprim']
+
 def plot_single_range(ax1,ct):
     for i in range(len(ct['ct']['data'])):
         x,y,fo=ct['ct']['x'],ct['ct']['data'][i],ct['ct']['falloff'][i]

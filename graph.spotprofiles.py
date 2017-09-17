@@ -142,7 +142,7 @@ plot.texax(ax4)
 
 ax5.step(x,dose[40]/dose[40].max(), color='steelblue',lw=1., alpha=1, label='CT', where='mid')
 ax5.step(x,rpdose[40]/rpdose[40].max(), color='indianred',lw=1., alpha=1, label='RPCT', where='mid')
-ax5.set_title('Spot 40, Shift: '+str(rpct40_fo-ct40_fo)[:3]+' mm\n'+plot.sn(MSW[40][-1],1)+' protons', fontsize=10)
+ax5.set_title('Spot B, Shift: '+str(rpct40_fo-ct40_fo)[:3]+' mm\n'+plot.sn(MSW[40][-1],1)+' protons', fontsize=10)
 ax5.legend(frameon = False,loc='upper left')
 #ax5.set_xlim(-80,70)
 ax5.set_xlabel('Position [mm]')
