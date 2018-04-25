@@ -7,6 +7,9 @@ def getctset(nprim,ct1,ct2,name,**kwargs):
     else:
         manualshift = 0.
     
+    if 'addnoise' not in kwargs:
+        kwargs['addnoise'] = True
+    
     ctset6 = {'ct':{},'rpct':{},'name':name,'nprim':nprim}
     ctset6['ct']['label'] = 'CT'
     ctset6['rpct']['label'] = 'RPCT'
@@ -44,7 +47,7 @@ def getctset(nprim,ct1,ct2,name,**kwargs):
             for key,val in dump.thist2np_xy(ffilen).items():
                 if key == 'reconstructedProfileHisto':
                     ctset6['ct']['x'] = scale_bincenters(val[0],name,manualshift) #no need to append, is same for all. are bincenters
-                    ctset6['ct']['data'].append(addnoise(val[1],nprim,name)) #append 'onlynoise' to name for only noise
+                    ctset6['ct']['data'].append(addnoise(val[1],nprim,name,**kwargs)) #append 'onlynoise' to name for only noise
             #uncomment for plot of fit procedure
             #ctset6['ct']['falloff'].append(get_fop(ctset6['ct']['x'],ctset6['ct']['data'][-1],plot='fopfit.pdf'))
             ctset6['ct']['falloff'].append(get_fop(ctset6['ct']['x'],ctset6['ct']['data'][-1]))
@@ -58,7 +61,7 @@ def getctset(nprim,ct1,ct2,name,**kwargs):
             for key,val in dump.thist2np_xy(ffilen).items():
                 if key == 'reconstructedProfileHisto':
                     ctset6['rpct']['x'] = scale_bincenters(val[0],name,manualshift) #no need to append, is same for all. are bincenters
-                    ctset6['rpct']['data'].append(addnoise(val[1],nprim,name))
+                    ctset6['rpct']['data'].append(addnoise(val[1],nprim,name,**kwargs))
             ctset6['rpct']['falloff'].append(get_fop(ctset6['rpct']['x'],ctset6['rpct']['data'][-1]))
             #ctset6['rpct']['falloff'].append(get_fop(ctset6['rpct']['x'],ctset6['rpct']['data'][-1],globmax=True))
         except IndexError:
@@ -186,15 +189,18 @@ def sumctset(name,*cts):
     return ctset6
 
 
-def addnoise(data,nprim,typ):
-    #IPNL: \cite{Pinto2014a}: 1000+-100 per 4e9 prims per 8mm bin               #3-6MeV
+def addnoise(data,nprim,typ,**kwargs):
+    #IPNL: \cite{Pinto2014a}: 1000+-100 per 4e9 prims per 8mm bin               #>1MeV
     #per prot: 2.5e-7 +- 0.25e-7 (twice better than IBA, but twice bigger bin)
-    #IBA: \cite{Perali2014}: 5e-7 +- 0.5e-7 per prot per 4mm bin                #1-8mev
+    #IBA: \cite{Perali2014}: 5e-7 +- 0.5e-7 per prot per 4mm bin                #3-6mev
+    #IBA: \cite{Perali2014}: 2.651e-06 per prot per 4mm bin                     #1-8mev
     
     #the tof window is 4ns out of a 10ns period. So, to remove tof from IPNL multiple noise with 2.5, and divide IBA by 2.5 to fake a ToF measurement.
     if 'iba' in typ:
-        mu = 5e-7*nprim/2.5 #divided by 2.5 to simulate ToF measurement.
-        sigma = 0.5e-7*nprim/2.5
+        #mu = 5e-7*nprim/2.5 #divided by 2.5 to simulate ToF measurement.
+        #sigma = 0.5e-7*nprim/2.5
+        mu = 2.651e-06*nprim/2.5 #divided by 2.5 to simulate ToF measurement.
+        sigma = 2.651e-7*nprim/2.5
         data = data[::-1]
     elif 'ipnl' in typ:
         mu = 2.5e-7*nprim
@@ -204,15 +210,17 @@ def addnoise(data,nprim,typ):
         sigma *= 2.5
     retval = []
     for i in data:
-        if 'onlynoise' in typ:
+        if kwargs['addnoise'] == 'onlynoise':
             #retval.append(np.random.poisson(np.random.normal(mu,sigma))) # does this mean anything, poisson from gauss?
             retval.append(np.random.poisson(mu))
-        elif 'nonoise' in typ:
+        elif kwargs['addnoise'] == False:
             #retval.append(i + np.random.poisson(np.random.normal(mu,sigma)))
             retval.append(i)
-        else:
+        elif kwargs['addnoise'] == True: #normal situation
             #retval.append(i + np.random.poisson(np.random.normal(mu,sigma)))
             retval.append(i + np.random.poisson(mu))
+        else:
+            raise ValueError("addnoise setting does not match any known possiblity (True|False|'onlynoise')")
     return retval
 
 def scale_bincenters(xax,typ,shift):
@@ -290,8 +298,17 @@ def get_fop(x,y,**kwargs):
     
     falloff = y_intpol[maxind]-baseline
     falloff_index=len(x_intpol)-1
-    while y_intpol[falloff_index] < threshold*falloff+baseline: #default threshold is 0.5
-        falloff_index-=1
+    print falloff
+    try:
+        while y_intpol[falloff_index] < threshold*falloff+baseline: #default threshold is 0.5
+            falloff_index-=1
+    except ValueError:
+        print y_intpol[falloff_index] < threshold*falloff+baseline
+        print y_intpol[falloff_index]
+        print threshold
+        print falloff
+        print baseline
+        
     falloff_pos=x_intpol[falloff_index]
     
     if fitlines: ax1.axvline(falloff_pos,color='green')
