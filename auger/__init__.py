@@ -335,7 +335,7 @@ def get_fow(x,y,**kwargs): #WIDTH!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     label=''
     threshold = 0.5
     ax1 = ''
-    smooth=True
+    smooth=2
     fitlines=False
     globmax=False
     if 'plot' in kwargs:
@@ -379,7 +379,7 @@ def get_fow(x,y,**kwargs): #WIDTH!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     #smooth that shit out.
     #https://en.wikipedia.org/wiki/Smoothing_spline
-    y2 = scipy.signal.cspline1d(y,lamb=2)
+    y2 = scipy.signal.cspline1d(y,lamb=smooth)
     y_intpol_f = scipy.interpolate.interp1d(x,y2,kind='cubic') #interpolate function
     x_intpol = np.linspace(x[0],x[-1],2048,endpoint=False)
     y_intpol = y_intpol_f(x_intpol) #interpolate for x_intpol
@@ -476,6 +476,8 @@ def get_fow(x,y,**kwargs): #WIDTH!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     if fitlines: ax2.axvline(fwhm_ind_l,color='green')
     if fitlines: ax2.axvline(fwhm_ind_r,color='green')
     if fitlines: ax2.annotate('Falloff width: '+str(g_fwhm)[:4],xy=(fwhm_ind_l,min(y_fitted)/2.) )#,xycoords='axes points')
+
+    if plotten: print 'FOW is',g_fwhm
 
     return falloff_pos
 

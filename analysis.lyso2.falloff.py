@@ -60,7 +60,7 @@ def megaplot(ctsets,studyname,emisfops=None,labels=["$10^9$","$10^8$","$10^7$","
 
 	x=ctsets[0]['rpct']['x']
 	y=ctsets[0]['ct']['av']
-	auger.get_fow(x,y,plot='wut',ax=ax1,ax2=ax2,ax3=ax3)
+	auger.get_fow(x,y,plot='wut',ax=ax1,ax2=ax2,ax3=ax3,smooth=0.5) #since high statistics, no smoothing needed
     # ax1.set_title('FOP = '+str(falloff_pos), fontsize=8)
 	f.savefig(studyname+'-'+typ+'-FOW.pdf', bbox_inches='tight')
 	plot.close('all')
