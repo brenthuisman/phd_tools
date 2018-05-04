@@ -1,4 +1,4 @@
-import ROOT as r,pickle,numpy as np
+import ROOT as r,numpy as np,os
 
 def dump(rootfiles,field,bins,lowrange,highrange,statfile=None):
     #dump is fast because of TTree.Draw
@@ -14,7 +14,7 @@ def dump(rootfiles,field,bins,lowrange,highrange,statfile=None):
             if 'NumberOfEvents' in newline:
                 prims = float(newline.split()[-1])
         if prims is 0:
-            print "No valid number of primaries detected. Aborting..." 
+            print "No valid number of primaries detected. Aborting..."
             return
     outdata = [0]*bins
 
@@ -38,32 +38,32 @@ def dump(rootfiles,field,bins,lowrange,highrange,statfile=None):
 
 def scaletreefast(rootfile,fields,**kwargs):
     #DONT USE
-    
+
     dim = 2 #more not handled right now.
     if type(fields) != list:
         dim = 1
         fields = [fields,fields] #this way, we can avoid ROOT making a TH1 and we can get the unbinned data
-        
+
     #xlow,xhigh,nx = *kwargs.pop('xbins')
     #if 'ybins' in kwargs:
         #ylow,yhigh,yx = *kwargs.pop('ybins'):
         #assert len(fields) == 2
-    
+
     tfile=r.TFile(rootfile)
     tree=tfile.Get("PhaseSpace")
-    
+
     #if len(kwargs) > 0: #FIXME
     cuts=''
     for key in kwargs: #compile 'cut'-string
         cuts+='&&'
         cuts+=str(key)
-        
+
         if kwargs[key].startswith('not_'):
             cuts+='!='
             kwargs[key] = kwargs[key][4:]
         else:
             cuts+='=='
-        
+
         if kwargs[key] == True:
             cuts+='true'
         elif kwargs[key] == False:
@@ -74,9 +74,9 @@ def scaletreefast(rootfile,fields,**kwargs):
             cuts+=str(kwargs[key])
     if cuts.startswith('&&'):
         cuts = cuts[2:]
-        
-    field = ':'.join(fields)   
-    
+
+    field = ':'.join(fields)
+
     # if field is 1D, returns TH1F. If field is 2D (or more), returns TGraph (scatterplot) according to ROOT documentation
     # THIS IS NOT CORRECT. TH2F is returned for 2D.
     # Workaround for both, because we want the unbinned data: don't write to a specific canvas/figure. According to ROOT documentation, you can access the data like so:
@@ -86,51 +86,51 @@ def scaletreefast(rootfile,fields,**kwargs):
     # BUT WAIT!!!! NEVER RETURN MORE THAN MILLION EVENTS, SO USELESS FOR LARGE TTREES!!!!
     tree.Draw(field,cuts)
     hnew = r.gPad.GetPrimitive("Graph")
-    
+
     print 'This graph has',hnew.GetN(),'points.'
-    
+
     retval = {}
     for field in fields:
         retval[field] = []
         if dim == 1:
             break
-    
+
     if dim == 1:
         return [i for i in hnew.GetX()] # GetX() is an iter, not a list
-    
+
     if dim == 2:
         retval[retval.keys()[0]] = [i for i in hnew.GetX()]
         retval[retval.keys()[1]] = [i for i in hnew.GetY()]
         return retval
-    
-    
+
+
 def scaletree2hist(rootfile,fields,**kwargs):
-    
+
     dim = 2 #more not handled right now.
     if type(fields) != list:
         dim = 1
         fields = [fields,fields] #this way, we can avoid ROOT making a TH1 and we can get the unbinned data
-    
+
     xlow,xhigh,nx = kwargs.pop('xbins')
     if 'ybins' in kwargs:
         ylow,yhigh,ny = kwargs.pop('ybins')
         assert len(fields) == 2
-    
+
     tfile=r.TFile(rootfile)
     tree=tfile.Get("PhaseSpace")
-    
+
     #if len(kwargs) > 0: #FIXME
     cuts=''
     for key in kwargs: #compile 'cut'-string
         cuts+='&&'
         cuts+=str(key)
-        
+
         if kwargs[key].startswith('not_'):
             cuts+='!='
             kwargs[key] = kwargs[key][4:]
         else:
             cuts+='=='
-        
+
         if kwargs[key] == True:
             cuts+='true'
         elif kwargs[key] == False:
@@ -141,15 +141,15 @@ def scaletree2hist(rootfile,fields,**kwargs):
             cuts+=str(kwargs[key])
     if cuts.startswith('&&'):
         cuts = cuts[2:]
-        
-    field = ':'.join(fields)   
-    
+
+    field = ':'.join(fields)
+
     retval = {}
     for field in fields:
         retval[field] = []
         if dim == 1:
             break
-    
+
     if dim == 1:
         tree.Draw(field+'>>eendee('+str(nx)+','+str(xlow)+','+str(xhigh)+')',cuts)
         hnew = r.gPad.GetPrimitive("eendee") #TH1F
@@ -157,7 +157,7 @@ def scaletree2hist(rootfile,fields,**kwargs):
         print 'tweedee('+str(nx)+','+str(xlow)+','+str(xhigh)+','+str(ny)+','+str(ylow)+','+str(yhigh)+')'
         tree.Draw(field+'>>tweedee('+str(nx)+','+str(xlow)+','+str(xhigh)+','+str(ny)+','+str(ylow)+','+str(yhigh)+')',cuts)
         hnew = r.gPad.GetPrimitive("tweedee") #TH2F
-    
+
     if dim == 1:
         xedges = np.linspace(xlow,xhigh,nx+1)
         outdata = np.zeros(hnew.GetNbinsX())
@@ -165,7 +165,7 @@ def scaletree2hist(rootfile,fields,**kwargs):
         for i in range(1,hnew.GetNbinsX()+1):
             outdata[i-1] = float(hnew.GetBinContent(i))
         return [xedges,outdata] # GetX() is an iter, not a list
-    
+
     if dim == 2:
         xedges = np.linspace(xlow,xhigh,nx+1)
         yedges = np.linspace(ylow,yhigh,ny+1)
@@ -181,28 +181,28 @@ def scaletree2hist(rootfile,fields,**kwargs):
 def scaletree(rootfile,fields,**kwargs):
     #returns list-mode data, slow!
     # Does not use TTree->Draw because it seems it doesnt always work well.
-    
+
     if type(fields) != list:
         print "One field",fields,"encoutered, relisting..."
         fields = [fields]
-    
+
     tfile=r.TFile(rootfile)
     tree=tfile.Get("PhaseSpace")
     print tree.GetEntries(),"entries found in ttree."
-    
+
     retval = {}
     for field in fields:
         retval[field] = []
-    
+
     for event in tree:
         checks = True
         for key in kwargs: #check every condition
-            
+
             datapoint = getattr(event,key)
             if type(datapoint) == str:
                 datapoint = datapoint.split('\x00')[0]
                 #There is a nasty thing with ROOT outputting strings with an invisible character appended to any string it outputs. Sometimes even more than one...
-                
+
                 # first check for negation
                 if kwargs[key].startswith('not_'):
                     if datapoint == kwargs[key][4:]:
@@ -210,7 +210,7 @@ def scaletree(rootfile,fields,**kwargs):
                 else:
                     if not datapoint == kwargs[key]:
                         checks = False
-                        
+
             else:
                 if not datapoint == kwargs[key]:
                     checks = False
@@ -224,15 +224,15 @@ def scaletree(rootfile,fields,**kwargs):
                 else:
                     retval[field].append( getattr(event,field) )
     return retval
-    
+
 
 def get1D(rootfile,field,**kwargs):
     return scaletree(rootfile,[field],**kwargs)[field]
-    
+
 
 def get2D(rootfile,fields,**kwargs):
     return scaletree(rootfile,fields,**kwargs)
-    
+
 
 def getyield(rootfiles):
     #get nr primaries
@@ -245,7 +245,7 @@ def getyield(rootfiles):
         if 'NumberOfEvents' in newline:
             prims = float(newline.split()[-1])
     if prims is 0:
-        print "No valid number of primaries detected. Aborting..." 
+        print "No valid number of primaries detected. Aborting..."
         return
 
     totentries = 0
@@ -268,6 +268,7 @@ def getcount(rootfiles):
 def savedump(rootfiles,field,bins,lowrange,highrange,outname):
     dumpdata = dump(rootfiles,field,bins,lowrange,highrange)
     #print dumpdata
+    import pickle
     with open(outname,'w') as thefile:
         pickle.dump(dumpdata, thefile)
 
@@ -299,3 +300,23 @@ def thist2np_xy(infile):
             outdata_y.append(float(item.ReadObj().GetBinContent(i+1)))
         retval[outname]=[outdata_x,outdata_y]
     return retval
+
+
+def thist2np_xy_cache(infile,key):
+    assert(infile.endswith(".root"))
+    npzfile = infile+"."+str(key)+".npz"
+    if os.path.isfile(npzfile):
+        cached = np.load(npzfile)
+        return [cached['x'].tolist(),cached['y'].tolist()]
+    else:
+        tfile=r.TFile(infile,"READ")
+        for item in tfile.GetListOfKeys():
+            outname=item.ReadObj().GetName()
+            if outname == key:
+                outdata_x=[]
+                outdata_y=[]
+                for i in range(item.ReadObj().GetNbinsX()):
+                    outdata_x.append(float(item.ReadObj().GetXaxis().GetBinCenter(i+1)))
+                    outdata_y.append(float(item.ReadObj().GetBinContent(i+1)))
+                np.savez(npzfile, x=np.array(outdata_x), y=np.array(outdata_y))
+                return [outdata_x,outdata_y]

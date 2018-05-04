@@ -44,10 +44,9 @@ def getctset(nprim,ct1,ct2,name,**kwargs):
     for ffilen in ctset6['ct']['files']:
         print 'opening',ffilen
         try:
-            for key,val in dump.thist2np_xy(ffilen).items():
-                if key == 'reconstructedProfileHisto':
-                    ctset6['ct']['x'] = scale_bincenters(val[0],name,manualshift) #no need to append, is same for all. are bincenters
-                    ctset6['ct']['data'].append(addnoise(val[1],nprim,name,**kwargs)) #append 'onlynoise' to name for only noise
+            data = dump.thist2np_xy_cache(ffilen,'reconstructedProfileHisto')
+            ctset6['ct']['x'] = scale_bincenters(data[0],name,manualshift) #no need to append, is same for all. are bincenters
+            ctset6['ct']['data'].append(addnoise(data[1],nprim,name,**kwargs)) #append 'onlynoise' to name for only noise
             #uncomment for plot of fit procedure
             #ctset6['ct']['falloff'].append(get_fop(ctset6['ct']['x'],ctset6['ct']['data'][-1],plot='fopfit.pdf'))
             ctset6['ct']['falloff'].append(get_fop(ctset6['ct']['x'],ctset6['ct']['data'][-1]))
@@ -58,10 +57,9 @@ def getctset(nprim,ct1,ct2,name,**kwargs):
     for ffilen in ctset6['rpct']['files']:
         print 'opening',ffilen
         try:
-            for key,val in dump.thist2np_xy(ffilen).items():
-                if key == 'reconstructedProfileHisto':
-                    ctset6['rpct']['x'] = scale_bincenters(val[0],name,manualshift) #no need to append, is same for all. are bincenters
-                    ctset6['rpct']['data'].append(addnoise(val[1],nprim,name,**kwargs))
+            data = dump.thist2np_xy_cache(ffilen,'reconstructedProfileHisto')
+            ctset6['rpct']['x'] = scale_bincenters(data[0],name,manualshift) #no need to append, is same for all. are bincenters
+            ctset6['rpct']['data'].append(addnoise(data[1],nprim,name,**kwargs))
             ctset6['rpct']['falloff'].append(get_fop(ctset6['rpct']['x'],ctset6['rpct']['data'][-1]))
             #ctset6['rpct']['falloff'].append(get_fop(ctset6['rpct']['x'],ctset6['rpct']['data'][-1],globmax=True))
         except IndexError:
@@ -464,17 +462,17 @@ def get_fow(x,y,**kwargs): #WIDTH!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     offset = y_intpol_diff[diff2_zero_index]
     if plotten: ax2.plot(fit_interval,fit_points,color='steelblue')
     popt,y_fitted = fitgauss_tuned(fit_interval,fit_points,falloff_pos,offset)
-    print popt
+    # print popt
     if plotten: ax2.plot(fit_interval,y_fitted,color='black')
     g_fwhm = abs(popt[2]*2.35482) #can be neg?
     g_center = popt[1]#np.argmin(y_fitted)
-    print 'FWHM = ',g_fwhm
+    # print 'FWHM = ',g_fwhm
     # stride = np.diff(fit_interval)[0]
     # fwhm_ind_l = fit_interval[ g_center - int( (g_fwhm*0.5)/stride) ]
     # fwhm_ind_r = fit_interval[ g_center + int( (g_fwhm*0.5)/stride) ]
     fwhm_ind_l = g_center - (g_fwhm*0.5)
     fwhm_ind_r = g_center + (g_fwhm*0.5)
-    print g_center,g_fwhm,fwhm_ind_l, fwhm_ind_r
+    # print g_center,g_fwhm,fwhm_ind_l, fwhm_ind_r
     if fitlines: ax2.axvline(fwhm_ind_l,color='green')
     if fitlines: ax2.axvline(fwhm_ind_r,color='green')
     if fitlines: ax2.annotate('Falloff width: '+str(g_fwhm)[:4],xy=(fwhm_ind_l,min(y_fitted)/2.) )#,xycoords='axes points')
