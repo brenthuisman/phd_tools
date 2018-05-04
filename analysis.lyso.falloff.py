@@ -11,11 +11,11 @@ import numpy as np,plot,auger
 typs=['ipnl-auger-tof-1.root','iba-auger-tof-1.root']
 
 def megaplot(ctsets,studyname,emisfops=None,labels=["$10^9$","$10^8$","$10^7$","$10^6$"],axlabel='Primaries [nr]'):
-	if emisfops is not None:
-		for emisfop in emisfops:
-			emisfop[0]+=15.863
-			emisfop[1]+=15.863
-	print 'FOP shift all overlaid'
+	# if emisfops is not None:
+	# 	for emisfop in emisfops:
+	# 		emisfop[0]+=15.863
+	# 		emisfop[1]+=15.863
+	# print 'FOP shift all overlaid'
 
 	if len(ctsets) == 4:
 		f, ((ax1,ax2),(ax3,ax4)) = plot.subplots(nrows=2, ncols=2, sharex=False, sharey=False)
@@ -57,7 +57,7 @@ def megaplot(ctsets,studyname,emisfops=None,labels=["$10^9$","$10^8$","$10^7$","
 			ax1.set_xlim3d(np.mean(fopshifts)-20,np.mean(fopshifts)+20)
 	if emisfops is not None and len(emisfops) == 1:
 		ax1.set_title(studyname+', $Shift_{em}$ = '+str(emisfops[0][-1]-emisfops[0][0]), y=1.08)
-	
+
 	#plt.tight_layout(rect = [-0.1, 0.0, 1.0, 1.1])#L,B,R,T
 	fig.savefig(studyname+'-'+typ+'-FOP-shift.pdf')#, bbox_inches='tight')
 	plt.close('all')
@@ -80,14 +80,14 @@ def megaplot(ctsets,studyname,emisfops=None,labels=["$10^9$","$10^8$","$10^7$","
 	#plt.tight_layout(rect = [-0.1, 0.0, 1.0, 1.1])#L,B,R,T
 	plt.savefig(studyname+'-'+typ+'-FOP-dist.pdf')#, bbox_inches='tight')
 	plt.close('all')
-	
+
 	#############################################################################################
 	# TODO add pgemissions plots.
 
 
 for typ in typs:
 	ctsetsets = []
-	
+
 	ctsetsets.append( auger.getctset(1e9,'1e9','1e9',typ) )
 	ctsetsets.append( auger.getctset(1e8,'1e8','1e8',typ) )
 	ctsetsets.append( auger.getctset(1e7,'1e7','1e7',typ) )
@@ -96,6 +96,6 @@ for typ in typs:
 	#ctsetsets.append( auger.getctset(1e8,'run.1XRe','run.lTdI',typ) )
 	#ctsetsets.append( auger.getctset(1e7,'run.oPE7','run.RWkp',typ) )
 	#ctsetsets.append( auger.getctset(1e6,'run.7bG6','run.pijb',typ) )
-	megaplot(ctsetsets,'waterbox')
-	
+	megaplot(ctsetsets,'waterbox_redo')
+
 	print 'Mean detection yield in',typ,'study over',sum([ctset['totnprim'] for ctset in ctsetsets]),'primaries in',sum([ctset['nreal'] for ctset in ctsetsets]),'realisations:',sum([ctset['meandetyield'] for ctset in ctsetsets])
