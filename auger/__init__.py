@@ -338,6 +338,9 @@ def get_fow(x,y,**kwargs): #WIDTH!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     smooth=2
     fitlines=False
     globmax=False
+    filename = ''
+    if 'filename' in kwargs:
+        filename = kwargs['filename']
     if 'plot' in kwargs:
         plotten = True
         fitlines = True
@@ -448,8 +451,9 @@ def get_fow(x,y,**kwargs): #WIDTH!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     # print "len y_intpol_diff2:", len(y_intpol_diff2)
     if plotten: ax3.plot(x_intpol[:-2],y_intpol_diff2,color='darkseagreen')
     diff2_zero_index = falloff_index
-    while y_intpol_diff2[diff2_zero_index]*y_intpol_diff2[diff2_zero_index-1] >=0:
+    while y_intpol_diff2[diff2_zero_index]*y_intpol_diff2[diff2_zero_index-1] >=0 or y_intpol_diff2[diff2_zero_index] > y_intpol_diff2[diff2_zero_index-1]:
         #zolang product positief, dan geen kruising van x as
+        #zolang positieve kruising van xas ga dan verder
         diff2_zero_index+=1
     if fitlines: ax3.axvline(x_intpol[diff2_zero_index],color='green')
     if fitlines: ax3.annotate('Inflex: '+str(x_intpol[diff2_zero_index])[:4],xy=(x_intpol[diff2_zero_index],0 ) )
@@ -461,8 +465,15 @@ def get_fow(x,y,**kwargs): #WIDTH!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     fit_points = y_intpol_diff[maxind : diff2_zero_index]
     offset = y_intpol_diff[diff2_zero_index]
     if plotten: ax2.plot(fit_interval,fit_points,color='steelblue')
-    popt,y_fitted = fitgauss_tuned(fit_interval,fit_points,falloff_pos,offset)
-    # print popt
+    try:
+        popt,y_fitted = fitgauss_tuned(fit_interval,fit_points,falloff_pos,offset)
+    except RuntimeError as e:
+        raise RuntimeError("Error in scipy.optimize.curve_fit for filename: "+filename+'. '+e)
+    
+    def guassianfunc(xVar, a, b, c):
+        return a * np.exp(-(xVar - b) ** 2 / (2 * c ** 2)) + offset
+    
+    if plotten: ax2.plot(x_intpol[:-1], guassianfunc(x_intpol[:-1], *popt) ,color='grey',linestyle='--') #full function over full window
     if plotten: ax2.plot(fit_interval,y_fitted,color='black')
     g_fwhm = abs(popt[2]*2.35482) #can be neg?
     g_center = popt[1]#np.argmin(y_fitted)
@@ -506,8 +517,7 @@ def fitgauss(x, y, bounds=None,p0=None):
         return a * np.exp(-(xVar - b) ** 2 / (2 * c ** 2)) + d
 
     popt, _ = scipy.optimize.curve_fit(guassianfunc, x, y, p0=p0, bounds=bounds)
-    # return guassianfunc(x, *popt)
-    return (popt,guassianfunc(x, *popt))
+    return popt,guassianfunc(x, *popt)
 
 
 def fitgauss_tuned(x, y, mean, fixed_offset):
@@ -522,5 +532,5 @@ def fitgauss_tuned(x, y, mean, fixed_offset):
         return a * np.exp(-(xVar - b) ** 2 / (2 * c ** 2)) + fixed_offset
 
     popt, _ = scipy.optimize.curve_fit(guassianfunc, x, y, p0=p0, bounds=bounds)
-    # return guassianfunc(x, *popt)
+    #print "popt",popt
     return (popt,guassianfunc(x, *popt))

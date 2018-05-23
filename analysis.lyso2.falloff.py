@@ -60,7 +60,7 @@ def megaplot(ctsets,studyname,emisfops=None,labels=["$10^9$","$10^8$","$10^7$","
 
 	x=ctsets[0]['rpct']['x']
 	y=ctsets[0]['ct']['av']
-	auger.get_fow(x,y,plot='wut',ax=ax1,ax2=ax2,ax3=ax3,smooth=0.5) #since high statistics, no smoothing needed
+	auger.get_fow(x,y,plot='wut',ax=ax1,ax2=ax2,ax3=ax3,smooth=0.2,filename=ctsets[0]['ct']['path']) #since high statistics, no smoothing needed
     # ax1.set_title('FOP = '+str(falloff_pos), fontsize=8)
 	f.savefig(studyname+'-'+typ+'-FOW.pdf', bbox_inches='tight')
 	plot.close('all')
@@ -87,18 +87,35 @@ def megaplot(ctsets,studyname,emisfops=None,labels=["$10^9$","$10^8$","$10^7$","
 	plt.savefig(studyname+'-'+typ+'-FOP-dist.pdf')#, bbox_inches='tight')
 	plt.close('all')
 
-typs=['ipnl-auger-tof-1.root','iba-auger-tof-1.root','ipnl-auger-notof-1.root','iba-auger-notof-1.root','ipnl-auger-tof-3.root','iba-auger-tof-3.root','ipnl-auger-notof-3.root','iba-auger-notof-3.root']
+# typs=['ipnl-auger-tof-1.root','iba-auger-tof-1.root','ipnl-auger-notof-1.root','iba-auger-notof-1.root','ipnl-auger-tof-3.root','iba-auger-tof-3.root','ipnl-auger-notof-3.root','iba-auger-notof-3.root']
+typs=[
+	'ipnl-auger-tof-1.root',
+	'ipnl4mm-auger-tof-1.root',
+	'iba-auger-tof-1.root',
+	'ipnl-auger-notof-1.root',
+	'ipnl4mm-auger-notof-1.root',
+	'iba-auger-notof-1.root',
+	'ipnl-auger-tof-3.root',
+	'ipnl4mm-auger-tof-3.root',
+	'iba-auger-tof-3.root',
+	'ipnl-auger-notof-3.root',
+	'ipnl4mm-auger-notof-3.root',
+	'iba-auger-notof-3.root']
 
 # typs=['ipnl-auger-tof-1.root','iba-auger-tof-1.root','ipnl-auger-notof-3.root','iba-auger-notof-3.root']
-dirs = subprocess.check_output(['find . -iname *autogen* | sort -k1.13'],shell=True).split('\n')[:-1]
+dirs = subprocess.check_output(['find . -iname "*autogen*" | sort -k1.13'],shell=True).split('\n')[:-1]
 
 numprots = [1e9,1e8,1e7,1e6]
 
 for typ in typs:
     ctsetsets = []
-    for line,numprot in zip(dirs,[item for item in numprots for i in range(2)]):
-        for haha in ['iba','ipnl']:
-            if haha in line and haha in typ:
+    for line,numprot in zip(dirs,[item for item in numprots for i in range(len(typs)/4)]):
+        for haha in ['iba','ipnl','ipnl4mm']:
+            if haha+'lyso' in line and haha+'-' in typ:
+                print (haha,line,typ)
+                ctsetsets.append( auger.getctset(numprot,line[2:10],line[2:10],typ) )
+            if haha+'zinv' in line and haha+'-' in typ:
+                print (haha,line,typ)
                 ctsetsets.append( auger.getctset(numprot,line[2:10],line[2:10],typ) )
     assert(len(ctsetsets)==4)
     megaplot(ctsetsets,'PMMA_phantom')
