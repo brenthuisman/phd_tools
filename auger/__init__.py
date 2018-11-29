@@ -424,6 +424,7 @@ def get_fow(x,y,**kwargs): #WIDTH!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         print falloff
         print baseline
 
+    contrast = (y_intpol[maxind]-baseline)/(y_intpol[maxind]+baseline)
     falloff_pos=x_intpol[falloff_index]
 
     if fitlines: ax1.axvline(falloff_pos,color='green')
@@ -437,7 +438,10 @@ def get_fow(x,y,**kwargs): #WIDTH!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     if plotten: from matplotlib.ticker import MaxNLocator
     if plotten: ax1.yaxis.set_major_locator(MaxNLocator(integer=True))
     # if plotten: ax1.set_ylim(bottom=0)
+    if plotten: ax1.annotate('FOP: '+str(falloff_pos)[:4],xy=(falloff_pos,falloff/2.+baseline))
+    if plotten: ax1.annotate('Contrast: '+str(contrast)[:4],xy=(x_intpol[maxind],y_intpol[maxind]))
     if plotten: print 'FOP is',falloff_pos
+    if plotten: print 'Contrast is',contrast
 
     ################################################# FOW
 
@@ -463,7 +467,10 @@ def get_fow(x,y,**kwargs): #WIDTH!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     # fit_interval = x_intpol[maxind : falloff_index+(falloff_index-maxind)]
     fit_interval = x_intpol[maxind : diff2_zero_index]
     fit_points = y_intpol_diff[maxind : diff2_zero_index]
-    offset = y_intpol_diff[diff2_zero_index]
+    
+    #offset = y_intpol_diff[diff2_zero_index]
+    offset = 0 #actually, lets remove this param
+    
     if plotten: ax2.plot(fit_interval,fit_points,color='steelblue')
     try:
         popt,y_fitted = fitgauss_tuned(fit_interval,fit_points,falloff_pos,offset)
@@ -486,7 +493,7 @@ def get_fow(x,y,**kwargs): #WIDTH!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     # print g_center,g_fwhm,fwhm_ind_l, fwhm_ind_r
     if fitlines: ax2.axvline(fwhm_ind_l,color='green')
     if fitlines: ax2.axvline(fwhm_ind_r,color='green')
-    if fitlines: ax2.annotate('Falloff width: '+str(g_fwhm)[:4],xy=(fwhm_ind_l,min(y_fitted)/2.) )#,xycoords='axes points')
+    if fitlines: ax2.annotate('FOW: '+str(g_fwhm)[:4],xy=(fwhm_ind_r,min(y_fitted)/2.) )#,xycoords='axes points')
 
     if plotten: print 'FOW is',g_fwhm
 

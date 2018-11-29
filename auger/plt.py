@@ -68,8 +68,8 @@ def plot_all_ranges(ax1,ct):
     ct_labelextra = ''
     rpct_labelextra = ''
     if True:
-        ct_labelextra += 'CT yield: '+plot.sn(yield_ct/ct['nprim']) #yield per prot
-        rpct_labelextra += 'RPCT yield: '+plot.sn(yield_rpct/ct['nprim'])
+        ct_labelextra += 'CT DE: '+plot.sn(yield_ct/ct['nprim']) #yield per prot
+        rpct_labelextra += 'RPCT DE: '+plot.sn(yield_rpct/ct['nprim'])
 
     ax1.text(0.05, 0.95, ct_labelextra , ha='left', va='center', fontsize=Fontsize, transform=ax1.transAxes)
     ax1.text(0.05, 0.8, rpct_labelextra , ha='left', va='center', fontsize=Fontsize, transform=ax1.transAxes)
@@ -98,7 +98,7 @@ def plot_all_ranges_CTONLY(ax1,ct):
 
     ct_labelextra = ''
     if True:
-        ct_labelextra += 'CT yield: '+plot.sn(yield_ct/ct['nprim']) #yield per prot
+        ct_labelextra += 'DE: '+plot.sn(yield_ct/ct['nprim']) #yield per prot
 
     ax1.text(0.05, 0.95, ct_labelextra , ha='left', va='center', fontsize=Fontsize, transform=ax1.transAxes)
     plot.texax(ax1)
