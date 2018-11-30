@@ -1,5 +1,3 @@
-#import
-
 def read(filename,headersize=0):
     sourcefile = open(filename,'r')
     newarr=[]

@@ -38,26 +38,20 @@ def plotrange(ax1,ct):
 
 
 def plot_all_ranges(ax1,ct):
-    yield_ct=0
     for i in range(len(ct['ct']['data'])):
-        yield_ct+=sum(ct['ct']['data'][i])
         x,y,fo=ct['ct']['x'],ct['ct']['data'][i],ct['ct']['falloff'][i]
         ax1.step(x, y, label=ct['name']+'ct', color='steelblue', lw=1, where='mid',clip_on=False, alpha=0.5)
         ax1.axvline(fo, color='steelblue', ls='-',lw=1, alpha=0.5)
-    yield_ct = yield_ct/len(ct['ct']['data']) #per realisatie
 
     ax1.set_xlabel('Depth [mm]', fontsize=FONTSIZE)
     ax1.set_ylabel('PG detected [counts]', fontsize=FONTSIZE)
     ax1.set_title(plot.sn(ct['nprim'],0)+' primaries', fontsize=Fontsize)
     plot.texax(ax1)
 
-    yield_rpct=0
     for i in range(len(ct['rpct']['data'])):
-        yield_rpct+=sum(ct['rpct']['data'][i])
         x,y,fo=ct['rpct']['x'],ct['rpct']['data'][i],ct['rpct']['falloff'][i]
         ax1.step(x, y, label=ct['name']+'ct', color='indianred', lw=1, where='mid',clip_on=False, alpha=0.5)
         ax1.axvline(fo, color='indianred', ls='-',lw=1, alpha=0.5)
-    yield_rpct = yield_rpct/len(ct['rpct']['data']) #per realisatie
 
     if str(ct['nprim'])[1] == '0':
         ax1.set_title('PG detection for '+plot.sn_mag(ct['nprim'])+' primaries', fontsize=Fontsize)
@@ -68,8 +62,8 @@ def plot_all_ranges(ax1,ct):
     ct_labelextra = ''
     rpct_labelextra = ''
     if True:
-        ct_labelextra += 'CT DE: '+plot.sn(yield_ct/ct['nprim']) #yield per prot
-        rpct_labelextra += 'RPCT DE: '+plot.sn(yield_rpct/ct['nprim'])
+        ct_labelextra += 'CT DE: '+plot.sn(ct['ct']['detyieldmu']) #yield per prot
+        rpct_labelextra += 'RPCT DE: '+plot.sn(ct['rpct']['detyieldmu'])
 
     ax1.text(0.05, 0.95, ct_labelextra , ha='left', va='center', fontsize=Fontsize, transform=ax1.transAxes)
     ax1.text(0.05, 0.8, rpct_labelextra , ha='left', va='center', fontsize=Fontsize, transform=ax1.transAxes)
@@ -77,13 +71,10 @@ def plot_all_ranges(ax1,ct):
 
 
 def plot_all_ranges_CTONLY(ax1,ct):
-    yield_ct=0
     for i in range(len(ct['ct']['data'])):
-        yield_ct+=sum(ct['ct']['data'][i])
         x,y,fo=ct['ct']['x'],ct['ct']['data'][i],ct['ct']['falloff'][i]
         ax1.step(x, y, label=ct['name']+'ct', color='steelblue', lw=1, where='mid',clip_on=False, alpha=0.5)
         ax1.axvline(fo, color='steelblue', ls='-',lw=1, alpha=0.5)
-    yield_ct = yield_ct/len(ct['ct']['data']) #per realisatie
 
     ax1.set_xlabel('Depth [mm]', fontsize=FONTSIZE)
     ax1.set_ylabel('PG detected [counts]', fontsize=FONTSIZE)
@@ -98,7 +89,7 @@ def plot_all_ranges_CTONLY(ax1,ct):
 
     ct_labelextra = ''
     if True:
-        ct_labelextra += 'DE: '+plot.sn(yield_ct/ct['nprim']) #yield per prot
+        ct_labelextra += 'DE: '+plot.sn(ct['detyieldmu']) #yield per prot
 
     ax1.text(0.05, 0.95, ct_labelextra , ha='left', va='center', fontsize=Fontsize, transform=ax1.transAxes)
     plot.texax(ax1)

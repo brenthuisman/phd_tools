@@ -1,14 +1,16 @@
 #!/usr/bin/env python
-import numpy as np,plot,auger,subprocess
+import numpy as np,plot,auger,subprocess,tableio
 
 #OPT: quickly get sorted rundirs
 # zb autogen | sort -k1.13 -r
 
 #OPT: fix seed
-#np.random.seed(65983247)
+np.random.seed(65983247)
+addnoise=True
 
+resultstable=[["typ","fopmu","fopsigma","fow","contrast","detyieldmu","detyieldsigma"]]
 
-def megaplot(ctsets,studyname,emisfops=None,labels=["$10^9$","$10^8$","$10^7$","$10^6$"],axlabel='Primaries [nr]',addnoise=False):
+def megaplot(ctsets,studyname,emisfops=None,labels=["$10^9$","$10^8$","$10^7$","$10^6$"],axlabel='Primaries [nr]'):
 
 	if len(ctsets) == 4:
 		f, ((ax1,ax2),(ax3,ax4)) = plot.subplots(nrows=2, ncols=2, sharex=False, sharey=False)
@@ -56,15 +58,23 @@ def megaplot(ctsets,studyname,emisfops=None,labels=["$10^9$","$10^8$","$10^7$","
 	# plt.close('all')
 
 
-	f, (ax1,ax2,ax3) = plot.subplots(nrows=3, ncols=1, sharex=False, sharey=False)
+	#############################################################################################
 
-	x=ctsets[0]['rpct']['x']
+	# print 'FOP FOW Contrast DE averages over 10e9 ctset'
+	
+	f, (ax1,ax2,ax3) = plot.subplots(nrows=3, ncols=1, sharex=False, sharey=False)
+	x=ctsets[0]['ct']['x']
 	y=ctsets[0]['ct']['av']
-	auger.get_fow(x,y,plot='wut',ax=ax1,ax2=ax2,ax3=ax3,smooth=0.2,filename=ctsets[0]['ct']['path']) #since high statistics, no smoothing needed
-    # ax1.set_title('FOP = '+str(falloff_pos), fontsize=8)
+	falloff_pos,g_fwhm,contrast = auger.get_fop_fow_contrast(x,y,plot='wut',ax=ax1,ax2=ax2,ax3=ax3,smooth=0.2,filename=ctsets[0]['ct']['path'])
+	#gebruiken deze falloff_pos niet. we doen contrast en fow over de average van 50 batches wegens smoothe curve. daardoor geen sigma
+	
+	res=[typ,ctsets[0]['ct']['fopmu'],ctsets[0]['ct']['fopsigma'],g_fwhm,contrast,ctsets[0]['detyieldmu'],ctsets[0]['detyieldsigma']]
+	
+	resultstable.append(res)
+	
 	f.savefig(studyname+'-'+typ+'-FOW.pdf', bbox_inches='tight')
 	plot.close('all')
-
+	
 	#############################################################################################
 
 	from mpl_toolkits.mplot3d import Axes3D
@@ -109,10 +119,13 @@ for typ in typs:
         for haha in ['iba','ipnl']:
             if haha+'lyso' in line and haha+'-' in typ:
                 print (haha,line,typ)
-                ctsetsets.append( auger.getctset(numprot,line[2:10],line[2:10],typ) )
+                ctsetsets.append( auger.getctset(numprot,line[2:10],line[2:10],typ,addnoise=addnoise) )
             if haha+'zinv' in line and haha+'-' in typ:
                 print (haha,line,typ)
-                ctsetsets.append( auger.getctset(numprot,line[2:10],line[2:10],typ) )
+                ctsetsets.append( auger.getctset(numprot,line[2:10],line[2:10],typ,addnoise=addnoise) )
     assert(len(ctsetsets)==4)
     megaplot(ctsetsets,'PMMA_phantom')
-    print 'Mean detection yield in',typ,'study over',sum([ctset['totnprim'] for ctset in ctsetsets]),'primaries in',sum([ctset['nreal'] for ctset in ctsetsets]),'realisations:',sum([ctset['meandetyield'] for ctset in ctsetsets])
+    print 'Mean detection yield in',typ,'study over',sum([ctset['totnprim'] for ctset in ctsetsets]),'primaries in',sum([ctset['nreal'] for ctset in ctsetsets]),'realisations:',sum([ctset['detyieldmu'] for ctset in ctsetsets])
+
+tableio.print2d(resultstable)
+tableio.write(resultstable,'resultstable.tsv')

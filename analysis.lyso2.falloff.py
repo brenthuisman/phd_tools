@@ -119,4 +119,4 @@ for typ in typs:
                 ctsetsets.append( auger.getctset(numprot,line[2:10],line[2:10],typ) )
     assert(len(ctsetsets)==4)
     megaplot(ctsetsets,'PMMA_phantom')
-    print 'Mean detection yield in',typ,'study over',sum([ctset['totnprim'] for ctset in ctsetsets]),'primaries in',sum([ctset['nreal'] for ctset in ctsetsets]),'realisations:',sum([ctset['meandetyield'] for ctset in ctsetsets])
+    print 'Mean detection yield in',typ,'study over',sum([ctset['totnprim'] for ctset in ctsetsets]),'primaries in',sum([ctset['nreal'] for ctset in ctsetsets]),'realisations:',sum([ctset['detyieldmu'] for ctset in ctsetsets])

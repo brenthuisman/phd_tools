@@ -139,4 +139,4 @@ for typ in typs:
 	#ctsetsets.append( auger.getctset(537825202,'run.WfRk','run.F4bu',typ) )#geolay# 0,2 # , bvJG # +XJ8V 3x
 	#megaplot(ctsetsets,'laygroup',[[0,4.33],[0,6.35]],['Energy Layer','Geometric Layer'],'Grouping Method')
 	
-	print 'Mean detection yield in',typ,'study over',sum([ctset['totnprim'] for ctset in ctsetsets]),'primaries in',sum([ctset['nreal'] for ctset in ctsetsets]),'realisations:',sum([ctset['meandetyield'] for ctset in ctsetsets])
+	print 'Mean detection yield in',typ,'study over',sum([ctset['totnprim'] for ctset in ctsetsets]),'primaries in',sum([ctset['nreal'] for ctset in ctsetsets]),'realisations:',sum([ctset['detyieldmu'] for ctset in ctsetsets])

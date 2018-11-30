@@ -348,7 +348,7 @@ megaplot(ctsetsets,'layer61',emisfops=None,labels=['Energy Layer','Geometric Lay
     
     #########################################################
     
-    #print 'Mean detection yield in',typ,'study over',sum([ctset['totnprim'] for ctset in ctsetsets]),'primaries in',sum([ctset['nreal'] for ctset in ctsetsets]),'realisations:',np.mean([ctset['meandetyield'] for ctset in ctsetsets])
+    #print 'Mean detection yield in',typ,'study over',sum([ctset['totnprim'] for ctset in ctsetsets]),'primaries in',sum([ctset['nreal'] for ctset in ctsetsets]),'realisations:',np.mean([ctset['detyieldmu'] for ctset in ctsetsets])
     
 
 
@@ -379,5 +379,5 @@ megaplot(ctsetsets,'layer61',emisfops=None,labels=['Energy Layer','Geometric Lay
     #ctsetsets.append( auger.getctset(979533764,'run.c4UF','run.bj2R',typ) )#geolay
     #megaplot(ctsetsets,'laygroup3',emisfops=None,labels=['Energy Layer','Geometric Layer'],axlabel='Grouping Method')
     
-    #print 'Mean detection yield in',typ,'study over',sum([ctset['totnprim'] for ctset in ctsetsets]),'primaries in',sum([ctset['nreal'] for ctset in ctsetsets]),'realisations:',np.mean([ctset['meandetyield'] for ctset in ctsetsets])
+    #print 'Mean detection yield in',typ,'study over',sum([ctset['totnprim'] for ctset in ctsetsets]),'primaries in',sum([ctset['nreal'] for ctset in ctsetsets]),'realisations:',np.mean([ctset['detyieldmu'] for ctset in ctsetsets])
     
