@@ -50,7 +50,7 @@ def getctset(nprim,ct1,ct2,name,**kwargs):
 	for ffilen in ctset6['ct']['files']:
 		print 'opening',ffilen
 		try:
-			data = dump.thist2np_xy_cache(ffilen,'reconstructedProfileHisto')
+			data = dump.thist_to_np_xy(ffilen,'reconstructedProfileHisto')
 			ctset6['ct']['x'] = scale_bincenters(data[0],name,manualshift) #no need to append, is same for all. are bincenters
 			ctset6['ct']['data'].append(addnoise(data[1],nprim,name,**kwargs)) #append 'onlynoise' to name for only noise
 			ctset6['ct']['falloff'].append(get_fop(ctset6['ct']['x'],ctset6['ct']['data'][-1]))
@@ -60,7 +60,7 @@ def getctset(nprim,ct1,ct2,name,**kwargs):
 	for ffilen in ctset6['rpct']['files']:
 		print 'opening',ffilen
 		try:
-			data = dump.thist2np_xy_cache(ffilen,'reconstructedProfileHisto')
+			data = dump.thist_to_np_xy(ffilen,'reconstructedProfileHisto')
 			ctset6['rpct']['x'] = scale_bincenters(data[0],name,manualshift) #no need to append, is same for all. are bincenters
 			ctset6['rpct']['data'].append(addnoise(data[1],nprim,name,**kwargs))
 			ctset6['rpct']['falloff'].append(get_fop(ctset6['rpct']['x'],ctset6['rpct']['data'][-1]))
@@ -385,6 +385,10 @@ def get_fop_fow_contrast(x,y,**kwargs):
 		label = kwargs['label']
 	if 'fitlines' in kwargs:
 		fitlines = kwargs['fitlines']
+	if 'nprim' in kwargs:
+		nprim = kwargs['nprim']
+	if 'contrast_divisor' in kwargs:
+		contrast_divisor = kwargs['contrast_divisor']
 
 	y=np.array(y)
 
@@ -436,7 +440,8 @@ def get_fop_fow_contrast(x,y,**kwargs):
 		print falloff
 		print baseline
 
-	contrast = (y_intpol[maxind]-baseline)/(y_intpol[maxind]+baseline)
+	#contrast = (y_intpol[maxind]-baseline)/(y_intpol[maxind]+baseline)
+	contrast = y_intpol[maxind]-baseline/contrast_divisor
 	falloff_pos=x_intpol[falloff_index]
 
 	if fitlines: ax1.axvline(falloff_pos,color='green')
@@ -516,7 +521,7 @@ def get_fop_fow_contrast(x,y,**kwargs):
 
 def testfit(filen,nprim,ax1):
 	assert len(filen.split('/')) > 1
-	for key,val in dump.thist2np_xy(filen).items():
+	for key,val in dump.thist_to_np_xy(filen).items():
 		if key == 'reconstructedProfileHisto':
 			x = scale_bincenters(val[0],filen.split('/')[-1]) #no need to append, is same for all. are bincenters
 			y = addnoise(val[1],nprim,filen.split('/')[-1]) #append 'onlynoise' to name for only noise
