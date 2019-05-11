@@ -1,5 +1,11 @@
 import os,numpy as np,uproot
 
+def readtxtnumber(filee):
+    out=None
+    with open(filee, 'r') as f:
+        out=f.readlines()[0].strip('\n').strip()
+    return float(out)
+
 def binedges_to_centers(lst): # TODO move elsewhere? plot?
     retval = []
     for i,_ in enumerate(lst[:-1]):

@@ -8,8 +8,11 @@ import numpy as np,plot,auger,subprocess,tableio
 #np.random.seed(65983247)
 np.random.seed(983452324)
 addnoise=True
+precolli=True
 
 resultstable=[["typ","fopmu","fopsigma","fow","contrast","detyieldmu","detyieldsigma"]]
+if precolli:
+    resultstable[0].extend(["collieffmu","collieffsigma"])
 
 def megaplot(ctsets,studyname,emisfops=None,labels=["$10^9$","$10^8$","$10^7$","$10^6$"],axlabel='Primaries [nr]'):
 
@@ -77,6 +80,9 @@ def megaplot(ctsets,studyname,emisfops=None,labels=["$10^9$","$10^8$","$10^7$","
 	
 	res=[typ,ctsets[0]['ct']['fopmu'],ctsets[0]['ct']['fopsigma'],g_fwhm,contrast,ctsets[0]['detyieldmu'],ctsets[0]['detyieldsigma']]
 	
+	if precolli:
+		res.extend([ctsets[0]['precollidetyieldmu'],ctsets[0]['precollidetyieldsigma']])
+	
 	resultstable.append(res)
 	
 	f.savefig(studyname+'-'+typ+'-FOW.pdf', bbox_inches='tight')
@@ -118,18 +124,20 @@ typs=[
 # typs=['ipnl-auger-tof-1.root','iba-auger-tof-1.root','ipnl-auger-notof-3.root','iba-auger-notof-3.root']
 dirs = subprocess.check_output(['find . -iname "*autogen*" | sort -k1.13'],shell=True).split('\n')[:-1]
 
-numprots = [1e9,1e8,1e7,1e6]
+numprots = [1e9,1e8,1e7]#,1e6]
 
 for typ in typs:
     ctsetsets = []
-    for line,numprot in zip(dirs,[item for item in numprots for i in range(len(typs)/4)]):
+    for line,numprot in zip(dirs,[item for item in numprots for i in range(len(typs)/len(numprots))]):
+        
+        
         for haha in ['iba','ipnl']:
-            if haha+'lyso' in line and haha+'-' in typ:
+            if (haha+'lyso' in line or haha+'bgo' in line) and haha+'-' in typ:
                 print (haha,line,typ)
-                ctsetsets.append( auger.getctset(numprot,line[2:10],line[2:10],typ,addnoise=addnoise) )
+                ctsetsets.append( auger.getctset(numprot,line[2:10],line[2:10],typ,addnoise=addnoise,precolli=precolli) )
             if haha+'zinv' in line and haha+'-' in typ:
                 print (haha,line,typ)
-                ctsetsets.append( auger.getctset(numprot,line[2:10],line[2:10],typ,addnoise=addnoise) )
+                ctsetsets.append( auger.getctset(numprot,line[2:10],line[2:10],typ,addnoise=addnoise,precolli=precolli) )
     assert(len(ctsetsets)==3)
     megaplot(ctsetsets,'PMMA_phantom')
     print 'Mean detection yield in',typ,'study over',sum([ctset['totnprim'] for ctset in ctsetsets]),'primaries in',sum([ctset['nreal'] for ctset in ctsetsets]),'realisations:',sum([ctset['detyieldmu'] for ctset in ctsetsets])

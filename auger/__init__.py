@@ -45,6 +45,8 @@ def getctset(nprim,ct1,ct2,name,**kwargs):
 	print '==== Report ===='
 	print ct1, len(ctset6['ct']['files'])
 	print ct2, len(ctset6['rpct']['files'])
+	if len(ctset6['ct']['files']) == 0:
+		print ct1,name
 	print '==== ====== ===='
 
 	for ffilen in ctset6['ct']['files']:
@@ -103,6 +105,16 @@ def getctset(nprim,ct1,ct2,name,**kwargs):
 
 	ctset6['detyieldmu'] = np.mean([sum(real) for real in ctset6['ct']['data']+ctset6['rpct']['data']])/nprim
 	ctset6['detyieldsigma'] = np.std([sum(real) for real in ctset6['ct']['data']+ctset6['rpct']['data']])/nprim
+    
+	if 'precolli' in kwargs and kwargs['precolli']==True:
+		precs=[]
+		txtfiles = glob.glob(ct1+"/**/*pre.root.txt")
+		for txtfile in txtfiles:
+			precs.append(dump.readtxtnumber(txtfile))
+		prec=np.mean(precs)
+		ctset6['precollidetyieldmu'] = np.mean([sum(real) for real in ctset6['ct']['data']+ctset6['rpct']['data']])/prec
+		ctset6['precollidetyieldsigma'] = np.std([sum(real) for real in ctset6['ct']['data']+ctset6['rpct']['data']])/prec
+	
 	ctset6['nreal'] = len(ctset6['ct']['data']+ctset6['rpct']['data'])
 	ctset6['totnprim'] = len(ctset6['ct']['data']+ctset6['rpct']['data'])*nprim
 
