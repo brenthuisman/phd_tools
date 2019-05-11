@@ -19,17 +19,17 @@ def megaplot(ctsets,studyname,emisfops=None,labels=["$10^9$","$10^8$","$10^7$","
 		auger.plot_all_ranges_CTONLY(ax1,ctsets[0])
 		auger.plot_all_ranges_CTONLY(ax2,ctsets[1])
 		auger.plot_all_ranges_CTONLY(ax3,ctsets[2])
-		auger.plot_all_ranges_CTONLY(ax4,ctsets[3])
+		#auger.plot_all_ranges_CTONLY(ax4,ctsets[3])
 		if not 'Primaries' in axlabel:
 			ax1.set_title(labels[0])
 			ax2.set_title(labels[1])
 			ax3.set_title(labels[2])
-			ax4.set_title(labels[3])
+			#ax4.set_title(labels[3])
 		f.subplots_adjust(hspace=.5)
 		ax1.set_xlabel('')
 		ax2.set_xlabel('')
 		ax2.set_ylabel('')
-		ax4.set_ylabel('')
+		#ax4.set_ylabel('')
 		f.savefig(studyname+'-'+typ+'-FOP.pdf', bbox_inches='tight')
 		plot.close('all')
 
@@ -130,7 +130,7 @@ for typ in typs:
             if haha+'zinv' in line and haha+'-' in typ:
                 print (haha,line,typ)
                 ctsetsets.append( auger.getctset(numprot,line[2:10],line[2:10],typ,addnoise=addnoise) )
-    assert(len(ctsetsets)==4)
+    assert(len(ctsetsets)==3)
     megaplot(ctsetsets,'PMMA_phantom')
     print 'Mean detection yield in',typ,'study over',sum([ctset['totnprim'] for ctset in ctsetsets]),'primaries in',sum([ctset['nreal'] for ctset in ctsetsets]),'realisations:',sum([ctset['detyieldmu'] for ctset in ctsetsets])
 

@@ -441,7 +441,7 @@ def get_fop_fow_contrast(x,y,**kwargs):
 		print baseline
 
 	#contrast = (y_intpol[maxind]-baseline)/(y_intpol[maxind]+baseline)
-	contrast = y_intpol[maxind]-baseline/contrast_divisor
+	contrast = (y_intpol[maxind]-baseline)/contrast_divisor
 	falloff_pos=x_intpol[falloff_index]
 
 	if fitlines: ax1.axvline(falloff_pos,color='green')
