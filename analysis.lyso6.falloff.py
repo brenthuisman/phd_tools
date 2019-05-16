@@ -7,7 +7,7 @@ import numpy as np,plot,auger,subprocess,tableio,dump
 #OPT: fix seed
 #np.random.seed(65983247)
 np.random.seed(983452324)
-addnoise=False
+addnoise=True #True for BGO, false for LYSO
 precolli=False #gaan we niet meer doen
 pgexit = True #if so, then pgprod_ratio must be set.
 
@@ -75,15 +75,17 @@ def megaplot(ctsets,studyname,emisfops=None,labels=["$10^9$","$10^8$","$10^7$","
 	#############################################################################################
 
 	# print 'FOP FOW Contrast DE averages over 10e9 ctset'
+	# removed 2nd deriv from plot
 
-	f, (ax1,ax2,ax3) = plot.subplots(nrows=3, ncols=1, sharex=False, sharey=False)
+	f, (ax1,ax2) = plot.subplots(nrows=2, ncols=1, sharex=False, sharey=False)
 	x=ctsets[0]['ct']['x']
 	y=ctsets[0]['ct']['av']
 	if 'iba' in ctsets[0]['name']: # ctset['name'] == typ
 		mm=4/0.8
 	if 'ipnl' in ctsets[0]['name']:
 		mm=8
-	falloff_pos,g_fwhm,contrast = auger.get_fop_fow_contrast(x,y,plot='wut',ax=ax1,ax2=ax2,ax3=ax3,smooth=0.2,filename=ctsets[0]['ct']['path'],contrast_divisor=ctsets[0]['nprim']*len(ctsets[0]['ct']['files'])*mm,fitlines=False)
+	falloff_pos,g_fwhm,contrast = auger.get_fop_fow_contrast(x,y,plot='wut',ax=ax1,ax2=ax2,smooth=0.2,filename=ctsets[0]['ct']['path'],contrast_divisor=ctsets[0]['nprim']*len(ctsets[0]['ct']['files'])*mm,fitlines=False)
+
 	print "NPRIM", ctsets[0]['nprim'],"NJOBS",len(ctsets[0]['ct']['files']),"MM",mm
 
 	#gebruiken deze falloff_pos niet. we doen contrast en fow over de average van 50 batches wegens smoothe curve. daardoor geen sigma

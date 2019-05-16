@@ -105,7 +105,7 @@ def getctset(nprim,ct1,ct2,name,**kwargs):
 
 	ctset6['detyieldmu'] = np.mean([sum(real) for real in ctset6['ct']['data']+ctset6['rpct']['data']])/nprim
 	ctset6['detyieldsigma'] = np.std([sum(real) for real in ctset6['ct']['data']+ctset6['rpct']['data']])/nprim
-    
+
 	if 'precolli' in kwargs and kwargs['precolli']==True:
 		precs=[]
 		txtfiles = glob.glob(ct1+"/**/*pre.root.txt")
@@ -114,7 +114,7 @@ def getctset(nprim,ct1,ct2,name,**kwargs):
 		prec=np.mean(precs)
 		ctset6['precollidetyieldmu'] = np.mean([sum(real) for real in ctset6['ct']['data']+ctset6['rpct']['data']])/prec
 		ctset6['precollidetyieldsigma'] = np.std([sum(real) for real in ctset6['ct']['data']+ctset6['rpct']['data']])/prec
-	
+
 	ctset6['nreal'] = len(ctset6['ct']['data']+ctset6['rpct']['data'])
 	ctset6['totnprim'] = len(ctset6['ct']['data']+ctset6['rpct']['data'])*nprim
 
@@ -123,12 +123,12 @@ def getctset(nprim,ct1,ct2,name,**kwargs):
 	ctset6['rpct']['fopmu'] = np.mean(ctset6['rpct']['falloff'])
 	ctset6['rpct']['fopsigma'] = np.std(ctset6['rpct']['falloff'])
 	ctset6['fodiffmu'] = np.mean(ctset6['fodiff'])
-	
+
 	#ctset6['ct']['fowmu'] = np.mean(ctset6['ct']['fow'])
 	#ctset6['ct']['fowsigma'] = np.std(ctset6['ct']['fow'])
 	#ctset6['rpct']['fowmu'] = np.mean(ctset6['rpct']['fow'])
 	#ctset6['rpct']['fowsigma'] = np.std(ctset6['rpct']['fow'])
-	
+
 	#ctset6['ct']['contrastmu'] = np.mean(ctset6['ct']['contrast'])
 	#ctset6['ct']['contrastsigma'] = np.std(ctset6['ct']['contrast'])
 	#ctset6['rpct']['contrastmu'] = np.mean(ctset6['rpct']['contrast'])
@@ -363,6 +363,7 @@ def get_fop_fow_contrast(x,y,**kwargs):
 	fitlines=False
 	globmax=False
 	filename = ''
+	nokillax3=True
 	if 'filename' in kwargs:
 		filename = kwargs['filename']
 	if 'plot' in kwargs:
@@ -390,7 +391,9 @@ def get_fop_fow_contrast(x,y,**kwargs):
 		if plotten == True:
 			ax3 = kwargs['ax3']
 		else:
-			return
+			nokillax3 = False
+	else:
+		nokillax3 = False
 	if 'smooth' in kwargs:
 		smooth = kwargs['smooth']
 	if 'label' in kwargs:
@@ -462,13 +465,14 @@ def get_fop_fow_contrast(x,y,**kwargs):
 	if fitlines: ax1.axvline(x_intpol[maxind],color='green')
 
 	if plotten: plot.texax(ax1)
+	if plotten: ax1.set_ylim(bottom=0)
 	if plotten: ax1.set_xlabel('Position [mm]', fontsize=8)
 	if plotten: ax1.set_ylabel('PG yield [counts]', fontsize=8)
 	if plotten: from matplotlib.ticker import MaxNLocator
 	if plotten: ax1.yaxis.set_major_locator(MaxNLocator(integer=True))
 	# if plotten: ax1.set_ylim(bottom=0)
-	if plotten: ax1.annotate('FOP: '+str(falloff_pos)[:4],xy=(falloff_pos,falloff/2.+baseline))
-	if plotten: ax1.annotate('Contrast: '+str(contrast)[:4],xy=(x_intpol[maxind],y_intpol[maxind]))
+	if fitlines: ax1.annotate('FOP: '+str(falloff_pos)[:4],xy=(falloff_pos,falloff/2.+baseline))
+	if fitlines: ax1.annotate('Contrast: '+str(contrast)[:4],xy=(x_intpol[maxind],y_intpol[maxind]))
 	if plotten: print 'FOP is',falloff_pos
 	if plotten: print 'Contrast is',contrast
 
@@ -482,24 +486,24 @@ def get_fop_fow_contrast(x,y,**kwargs):
 
 	# find inflex in second diff and plot
 	# print "len y_intpol_diff2:", len(y_intpol_diff2)
-	if plotten: ax3.plot(x_intpol[:-2],y_intpol_diff2,color='darkseagreen')
+	if nokillax3: ax3.plot(x_intpol[:-2],y_intpol_diff2,color='darkseagreen')
 	diff2_zero_index = falloff_index
 	while y_intpol_diff2[diff2_zero_index]*y_intpol_diff2[diff2_zero_index-1] >=0 or y_intpol_diff2[diff2_zero_index] > y_intpol_diff2[diff2_zero_index-1]:
 		#zolang product positief, dan geen kruising van x as
 		#zolang positieve kruising van xas ga dan verder
 		diff2_zero_index+=1
-	if fitlines: ax3.axvline(x_intpol[diff2_zero_index],color='green')
-	if fitlines: ax3.annotate('Inflex: '+str(x_intpol[diff2_zero_index])[:4],xy=(x_intpol[diff2_zero_index],0 ) )
+	if nokillax3: ax3.axvline(x_intpol[diff2_zero_index],color='green')
+	if nokillax3: ax3.annotate('Inflex: '+str(x_intpol[diff2_zero_index])[:4],xy=(x_intpol[diff2_zero_index],0 ) )
 
 	# use inflex to set interval for gauss fit in first diff
 	if plotten: ax2.plot(x_intpol[:-1],y_intpol_diff,color='steelblue')
 	# fit_interval = x_intpol[maxind : falloff_index+(falloff_index-maxind)]
 	fit_interval = x_intpol[maxind : diff2_zero_index]
 	fit_points = y_intpol_diff[maxind : diff2_zero_index]
-	
+
 	#offset = y_intpol_diff[diff2_zero_index]
 	offset = 0 #actually, lets remove this param
-	
+
 	if plotten: ax2.plot(fit_interval,fit_points,color='steelblue')
 	try:
 		popt,y_fitted = fitgauss_tuned(fit_interval,fit_points,falloff_pos,offset)
@@ -507,12 +511,16 @@ def get_fop_fow_contrast(x,y,**kwargs):
 		raise RuntimeError("in scipy.optimize.curve_fit for filename: "+filename+'. '+e)
 	#except ValueError as e:
 		#raise ValueError("in scipy.optimize.curve_fit for filename: "+filename+'.')
-	
+
 	def guassianfunc(xVar, a, b, c):
 		return a * np.exp(-(xVar - b) ** 2 / (2 * c ** 2)) + offset
-	
+
 	if plotten: ax2.plot(x_intpol[:-1], guassianfunc(x_intpol[:-1], *popt) ,color='grey',linestyle='--') #full function over full window
 	if plotten: ax2.plot(fit_interval,y_fitted,color='black')
+
+	if plotten: ax2.set_xlabel('Position [mm]', fontsize=8)
+	if not nokillax3: ax2.set_ylabel('First Derivative', fontsize=8)
+
 	g_fwhm = abs(popt[2]*2.35482) #can be neg?
 	g_center = popt[1]#np.argmin(y_fitted)
 	# print 'FWHM = ',g_fwhm
