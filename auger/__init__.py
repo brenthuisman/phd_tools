@@ -106,6 +106,8 @@ def getctset(nprim,ct1,ct2,name,**kwargs):
 	ctset6['detyieldmu'] = np.mean([sum(real) for real in ctset6['ct']['data']+ctset6['rpct']['data']])/nprim
 	ctset6['detyieldsigma'] = np.std([sum(real) for real in ctset6['ct']['data']+ctset6['rpct']['data']])/nprim
 
+	ctset6['detcount'] = np.mean([sum(real) for real in ctset6['ct']['data']+ctset6['rpct']['data']])
+
 	if 'precolli' in kwargs and kwargs['precolli']==True:
 		precs=[]
 		txtfiles = glob.glob(ct1+"/**/*pre.root.txt")

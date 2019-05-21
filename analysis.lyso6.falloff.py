@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-import numpy as np,plot,auger,subprocess,tableio,dump
+import numpy as np,plot,auger,subprocess,tableio,dump,math
+from matplotlib.ticker import AutoMinorLocator
 
 #OPT: quickly get sorted rundirs
 # zb autogen | sort -k1.13 -r
@@ -15,12 +16,12 @@ pgexit = True #if so, then pgprod_ratio must be set.
 
 print 'Computing pgprod ratios...'
 
-pgprod_ratio_1mev = dump.count_ekine_in_phasespace("/home/brent/phd/art2_lyso_box/stage2_box15_docker/output/pgprod-worldframe.root",1.)
-pgprod_ratio_3mev = dump.count_ekine_in_phasespace("/home/brent/phd/art2_lyso_box/stage2_box15_docker/output/pgprod-worldframe.root",3.)
+pgprod_1mev = dump.count_ekine_in_phasespace("/home/brent/phd/art2_lyso_box/stage2_box15_docker/output/pgprod-worldframe.root",1.)
+pgprod_3mev = dump.count_ekine_in_phasespace("/home/brent/phd/art2_lyso_box/stage2_box15_docker/output/pgprod-worldframe.root",3.)
 
 print 'done.'
 
-resultstable=[["typ","nprim","fopmu","fopsigma","fow","contrast","detyieldmu","detyieldsigma"]]
+resultstable=[["typ","nprim","fopmu","fopsigma","fow","contrast","detyieldmu","detyieldsigma","detcount/prod"]]
 if precolli:
     resultstable[0].extend(["collieffmu","collieffsigma"])
 
@@ -86,6 +87,22 @@ def megaplot(ctsets,studyname,emisfops=None,labels=["$10^9$","$10^8$","$10^7$","
 		mm=8
 	falloff_pos,g_fwhm,contrast = auger.get_fop_fow_contrast(x,y,plot='wut',ax=ax1,ax2=ax2,smooth=0.2,filename=ctsets[0]['ct']['path'],contrast_divisor=ctsets[0]['nprim']*len(ctsets[0]['ct']['files'])*mm,fitlines=False)
 
+	# some cosmetics
+	maxyrounded = int(math.ceil(max(y) / 100.0)) * 100
+	ticks = np.arange(0, maxyrounded, 100)
+	if len(ticks)>10:
+		ticks = np.arange(0, maxyrounded+100, 200)
+	if len(ticks)>10:
+		ticks = np.arange(0, maxyrounded+200, 400)
+	ax1.set_yticks(ticks)
+
+	minor_locator = AutoMinorLocator(2)
+	minor_locator1 = AutoMinorLocator(2)
+	ax1.xaxis.set_minor_locator(minor_locator)
+	ax2.xaxis.set_minor_locator(minor_locator)
+	ax2.yaxis.set_minor_locator(minor_locator1)
+
+
 	print "NPRIM", ctsets[0]['nprim'],"NJOBS",len(ctsets[0]['ct']['files']),"MM",mm
 
 	#gebruiken deze falloff_pos niet. we doen contrast en fow over de average van 50 batches wegens smoothe curve. daardoor geen sigma
@@ -98,16 +115,20 @@ def megaplot(ctsets,studyname,emisfops=None,labels=["$10^9$","$10^8$","$10^7$","
 	# results table
 
 	for ctset in ctsets:
-		res=[typ,ctset['nprim'],ctset['ct']['fopmu'],ctset['ct']['fopsigma'],g_fwhm,contrast,ctset['detyieldmu'],ctset['detyieldsigma']]
+		res=[typ,ctset['nprim'],ctset['ct']['fopmu'],ctset['ct']['fopsigma'],g_fwhm,contrast,ctset['detyieldmu'],ctset['detyieldsigma'],ctset['detcount']]
+
+		if ctset['nprim'] == 10**9:
+			if pgexit and '3' in typ:
+				res[-1]=res[-1]/pgprod_3mev
+			elif pgexit and '1' in typ:
+				res[-1]=res[-1]/pgprod_1mev
+		else:
+			res[-1]=''
 
 		if precolli:
 			res.extend([ctset['precollidetyieldmu'],ctset['precollidetyieldsigma']])
 
 		resultstable.append(res)
-		if pgexit and '3' in typ:
-			res[-2]=res[-2]*pgprod_ratio_3mev
-		elif pgexit and '1' in typ:
-			res[-2]=res[-2]*pgprod_ratio_1mev
 
 	#############################################################################################
 
