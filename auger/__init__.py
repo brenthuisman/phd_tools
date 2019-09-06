@@ -54,7 +54,15 @@ def getctset(nprim,ct1,ct2,name,**kwargs):
 		try:
 			data = dump.thist_to_np_xy(ffilen,'reconstructedProfileHisto')
 			ctset6['ct']['x'] = scale_bincenters(data[0],name,manualshift) #no need to append, is same for all. are bincenters
-			ctset6['ct']['data'].append(addnoise(data[1],nprim,name,**kwargs)) #append 'onlynoise' to name for only noise
+			ctset6['ct']['data'].append(addnoise(data[1],nprim,name,**kwargs))
+			print 'lees dit',data[1][-3], ctset6['ct']['data'][-1][-3]
+			ctset6['ct']['falloff'].append(get_fop(ctset6['ct']['x'],ctset6['ct']['data'][-1]))
+		except KeyError:
+			#assume perdet PhaseSpace
+			data = dump.profile_ekine_in_phasespace(ffilen)
+			ctset6['ct']['x'] = scale_bincenters(data[0],name,manualshift) #no need to append, is same for all. are bincenters
+			ctset6['ct']['data'].append(addnoise(data[1],nprim,name,**kwargs))
+			print 'lees dit',data[1][-3], ctset6['ct']['data'][-1][-3]
 			ctset6['ct']['falloff'].append(get_fop(ctset6['ct']['x'],ctset6['ct']['data'][-1]))
 		except IndexError:
 			print "Empty file detected, skipping"
@@ -62,6 +70,12 @@ def getctset(nprim,ct1,ct2,name,**kwargs):
 	for ffilen in ctset6['rpct']['files']:
 		print 'opening',ffilen
 		try:
+			data = dump.profile_ekine_in_phasespace(ffilen)
+			ctset6['rpct']['x'] = scale_bincenters(data[0],name,manualshift) #no need to append, is same for all. are bincenters
+			ctset6['rpct']['data'].append(addnoise(data[1],nprim,name,**kwargs))
+			ctset6['rpct']['falloff'].append(get_fop(ctset6['rpct']['x'],ctset6['rpct']['data'][-1]))
+		except KeyError:
+			#assume perdet PhaseSpace
 			data = dump.thist_to_np_xy(ffilen,'reconstructedProfileHisto')
 			ctset6['rpct']['x'] = scale_bincenters(data[0],name,manualshift) #no need to append, is same for all. are bincenters
 			ctset6['rpct']['data'].append(addnoise(data[1],nprim,name,**kwargs))
@@ -72,6 +86,7 @@ def getctset(nprim,ct1,ct2,name,**kwargs):
 
 	if len(ctset6['ct']['data']) > 1:
 		#we can average
+		print 'calcing averages for ctset: ct'
 		ndata = np.array(ctset6['ct']['data'])
 		ndata = np.rollaxis(ndata,1)
 		for binn in ndata:
@@ -82,7 +97,11 @@ def getctset(nprim,ct1,ct2,name,**kwargs):
 			ctset6['ct']['uncp'].append(mu+sigma)
 	else:
 		ctset6['ct']['av'] = ctset6['ct']['data'][0]
+
+	print '[av]',ctset6['ct']['av'][-3]
+
 	if len(ctset6['rpct']['data']) > 1:
+		print 'calcing averages for ctset: rpct'
 		#we can average
 		ndata = np.array(ctset6['rpct']['data'])
 		ndata = np.rollaxis(ndata,1)
@@ -220,32 +239,31 @@ def addnoise(data,nprim,typ,**kwargs):
 	#IBA: \cite{Perali2014}: 2.651e-06 per prot per 4mm bin                     #1-8mev
 
 	#the tof window is 4ns out of a 10ns period. So, to remove tof from IPNL multiple noise with 2.5, and divide IBA by 2.5 to fake a ToF measurement.
-	if 'iba' in typ:
-		#mu = 5e-7*nprim/2.5 #divided by 2.5 to simulate ToF measurement.
-		#sigma = 0.5e-7*nprim/2.5
+	if 'iba' in typ and '3' in typ:
+		mu = 5e-7*nprim/2.5 #divided by 2.5 to simulate ToF measurement.
+	elif 'iba' in typ and '1' in typ:
 		mu = 2.651e-06*nprim/2.5 #divided by 2.5 to simulate ToF measurement.
-		sigma = 2.651e-7*nprim/2.5
-		data = data[::-1]
-	elif 'ipnl' in typ:
+	elif 'ipnl' in typ and '3' in typ:
 		mu = 2.5e-7*nprim
-		sigma = 0.25e-7*nprim
+	elif 'ipnl' in typ and '1' in typ:
+		mu = 2.5e-7*nprim
+
+	if 'iba' in typ:
+		data = data[::-1]
+
 	if 'notof' in typ: #tof is always in typ...
 		mu *= 2.5
-		sigma *= 2.5
-	retval = []
-	for i in data:
-		if kwargs['addnoise'] == 'onlynoise':
-			#retval.append(np.random.poisson(np.random.normal(mu,sigma))) # does this mean anything, poisson from gauss?
-			retval.append(np.random.poisson(mu))
-		elif kwargs['addnoise'] == False:
-			#retval.append(i + np.random.poisson(np.random.normal(mu,sigma)))
-			retval.append(i)
-		elif kwargs['addnoise'] == True: #normal situation
-			#retval.append(i + np.random.poisson(np.random.normal(mu,sigma)))
-			retval.append(i + np.random.poisson(mu))
-		else:
-			raise ValueError("addnoise setting does not match any known possiblity (True|False|'onlynoise')")
-	return retval
+
+	if kwargs['addnoise'] == 'onlynoise':
+		return [np.random.poisson(mu) for i in data]
+	elif kwargs['addnoise'] == False:
+		return data
+	elif kwargs['addnoise'] == True: #normal situation
+		#print 'lees dit'
+		#print data[-3],mu,np.random.poisson(mu)
+		return [i+np.random.poisson(mu) for i in data]
+	else:
+		raise ValueError("addnoise setting does not match any known possiblity (True|False|'onlynoise')")
 
 def scale_bincenters(xax,typ,shift):
 	xax = np.array(xax)+shift
@@ -366,6 +384,9 @@ def get_fop_fow_contrast(x,y,**kwargs):
 	globmax=False
 	filename = ''
 	nokillax3=True
+	killfirst=False
+	if 'killfirst' in kwargs:
+		killfirst=True
 	if 'filename' in kwargs:
 		filename = kwargs['filename']
 	if 'plot' in kwargs:
@@ -411,7 +432,11 @@ def get_fop_fow_contrast(x,y,**kwargs):
 
 	# if plotten: import plot
 	# if plotten: f, ax1 = plot.subplots(nrows=1, ncols=1, sharex=False, sharey=False)
-	if plotten: ax1.scatter( x,y, color='black',marker="x",clip_on=False) #bindata
+	if plotten:
+		if killfirst:
+			ax1.scatter( x[1:],y[1:], color='black',marker="x",clip_on=False) #bindata
+		else:
+			ax1.scatter( x,y, color='black',marker="x",clip_on=False) #bindata
 
 	#smooth that shit out.
 	#https://en.wikipedia.org/wiki/Smoothing_spline
@@ -490,10 +515,13 @@ def get_fop_fow_contrast(x,y,**kwargs):
 	# print "len y_intpol_diff2:", len(y_intpol_diff2)
 	if nokillax3: ax3.plot(x_intpol[:-2],y_intpol_diff2,color='darkseagreen')
 	diff2_zero_index = falloff_index
-	while y_intpol_diff2[diff2_zero_index]*y_intpol_diff2[diff2_zero_index-1] >=0 or y_intpol_diff2[diff2_zero_index] > y_intpol_diff2[diff2_zero_index-1]:
-		#zolang product positief, dan geen kruising van x as
-		#zolang positieve kruising van xas ga dan verder
-		diff2_zero_index+=1
+	try:
+		while y_intpol_diff2[diff2_zero_index]*y_intpol_diff2[diff2_zero_index-1] >=0 or y_intpol_diff2[diff2_zero_index] > y_intpol_diff2[diff2_zero_index-1]:
+			#zolang product positief, dan geen kruising van x as
+			#zolang positieve kruising van xas ga dan verder
+			diff2_zero_index+=1
+	except IndexError:
+		diff2_zero_index-=1 #reached end
 	if nokillax3: ax3.axvline(x_intpol[diff2_zero_index],color='green')
 	if nokillax3: ax3.annotate('Inflex: '+str(x_intpol[diff2_zero_index])[:4],xy=(x_intpol[diff2_zero_index],0 ) )
 

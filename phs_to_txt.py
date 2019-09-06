@@ -1,6 +1,6 @@
 import uproot, glob, os
 
-fname= "ipnl-pre.root"
+fname= "*perdet.root"
 
 print("We're in",os.getcwd())
 print("Looking for",fname)

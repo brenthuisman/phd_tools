@@ -11,6 +11,7 @@ np.random.seed(983452324)
 addnoise=True #True for BGO, false for LYSO
 precolli=False #gaan we niet meer doen
 pgexit = True #if so, then pgprod_ratio must be set.
+fopdistcenter = 50 #50 since we moved the mps, for iiiba set back to zero
 
 
 
@@ -139,7 +140,7 @@ def megaplot(ctsets,studyname,emisfops=None,labels=["$10^9$","$10^8$","$10^7$","
 	ax1.view_init(30, -50)
 
 	for i,ctset in enumerate(ctsets):
-		auger.plotfodist_CTONLY(ax1,ctset,i,emisfops,labels,axlabel)
+		auger.plotfodist_CTONLY(ax1,ctset,i,emisfops,labels,axlabel,fopdistcenter)
 	if emisfops is not None and len(emisfops) == 1:
 		ax1.set_title(studyname+', $CT_{FOP_{em}}$ = '+str(emisfops[0][0])[:5]+', $RPCT_{FOP_{em}}$ = '+str(emisfops[0][1])[:5], y=1.08)
 
