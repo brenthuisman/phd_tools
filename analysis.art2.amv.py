@@ -12,7 +12,7 @@ from matplotlib.ticker import AutoMinorLocator
 
 #OPT: fix seed
 #np.random.seed(65983247)
-np.random.seed(9832324)
+#np.random.seed(9832324)
 addnoise=False #false for all AMV
 precolli=False #gaan we niet meer doen
 pgexit = False #idem
@@ -26,7 +26,7 @@ pgprod_1mev_iba = 0.029948339 #idem, but iba_source image where up to -5cm from 
 
 print 'done.'
 
-resultstable=[["typ","nprim","fopmu","fopsigma","fow","contrast","detyieldmu","detyieldsigma","detcount/prod"]]
+resultstable=[["typ","nprim","fopmu","fopsigma","fow","contrast","detyieldmu","detyieldsigma","detcount","detcount/prod"]]
 if precolli:
 	resultstable[0].extend(["collieffmu","collieffsigma"])
 
@@ -72,7 +72,7 @@ def megaplot(ctsets,studyname,emisfops=None,labels=["$10^9$","$10^8$","$10^7$","
 	# results table
 
 	for ctset in ctsets:
-		res=[typ,ctset['nprim'],ctset['ct']['fopmu'],ctset['ct']['fopsigma'],g_fwhm,contrast,ctset['detyieldmu'],ctset['detyieldsigma'],ctset['detcount']]
+		res=[typ,ctset['nprim'],ctset['ct']['fopmu'],ctset['ct']['fopsigma'],g_fwhm,contrast,ctset['detyieldmu'],ctset['detyieldsigma'],ctset['detcount'],ctset['detcount']]
 
 		if ctset['nprim'] == 10**9:
 			if 'iba' in typ:
@@ -91,25 +91,23 @@ def megaplot(ctsets,studyname,emisfops=None,labels=["$10^9$","$10^8$","$10^7$","
 
 	#############################################################################################
 
-	#from mpl_toolkits.mplot3d import Axes3D
-	#import matplotlib.pyplot as plt
+	from mpl_toolkits.mplot3d import Axes3D
+	import matplotlib.pyplot as plt
 
-	#print 'FOP distributions'
+	print 'FOP distributions'
 
-	#fig = plt.figure()
-	#ax1 = plt.axes(projection='3d')
-	#ax1.view_init(30, -50)
+	fig = plt.figure()
+	ax1 = plt.axes(projection='3d')
+	ax1.view_init(30, -50)
 
-	#for i,ctset in enumerate(ctsets):
-		#auger.plotfodist_CTONLY(ax1,ctset,i,emisfops,labels,axlabel)
-	#if emisfops is not None and len(emisfops) == 1:
-		#ax1.set_title(studyname+', $CT_{FOP_{em}}$ = '+str(emisfops[0][0])[:5]+', $RPCT_{FOP_{em}}$ = '+str(emisfops[0][1])[:5], y=1.08)
+	for i,ctset in enumerate(ctsets):
+		auger.plotfodist_CTONLY(ax1,ctset,i,emisfops,labels,axlabel)
 
-	# # plt.legend()#shadow = True,frameon = True,fancybox = True,ncol = 1,fontsize = 'x-small',loc = 'lower right')
+	# plt.legend()#shadow = True,frameon = True,fancybox = True,ncol = 1,fontsize = 'x-small',loc = 'lower right')
 
-	# # plt.tight_layout(rect = [-0.1, 0.0, 1.0, 1.1])#L,B,R,T
-	#plt.savefig(studyname+'-'+typ+'-FOP-dist.pdf')#, bbox_inches='tight')
-	#plt.close('all')
+	# plt.tight_layout(rect = [-0.1, 0.0, 1.0, 1.1])#L,B,R,T
+	plt.savefig(studyname+'-'+typ+'-FOP-dist.pdf')#, bbox_inches='tight')
+	plt.close('all')
 
 # nu gaan we drie studies doen!
 # 1: perabsorber en perfect colli. typ=*-perdet, dirs: kill
@@ -121,6 +119,7 @@ print("######################### 11111111111111111111111111111111111111111111111
 resultstable.append(["perabs-percolli"]*len(resultstable[-1]))
 
 dirs = subprocess.check_output(['find . -iname "*autogen*kill*" | sort -k1.13'],shell=True).split('\n')[:-1]
+dirs = dirs[0:2] #only 10e9
 
 print(dirs)
 numprots = [1e9,1e9,1e8,1e8,1e7,1e7]
@@ -132,11 +131,11 @@ for dirr,numprot in zip(dirs,numprots):
 	ctsetsets = []
 	if 'iba' in dirr:
 		typ='iba-perdet.root'
-		ctsetsets.append( auger.getctset(numprot,dirr[2:10],dirr[2:10],typ,addnoise=addnoise) )
+		ctsetsets.append( auger.getctset(numprot,dirr[2:10],None,typ,addnoise=addnoise) )
 
 	if 'ipnl' in dirr:
 		typ='ipnl-perdet.root'
-		ctsetsets.append( auger.getctset(numprot,dirr[2:10],dirr[2:10],typ,addnoise=addnoise) )
+		ctsetsets.append( auger.getctset(numprot,dirr[2:10],None,typ,addnoise=addnoise) )
 
 	megaplot(ctsetsets,'perdet-percolli')
 	print 'Mean detection yield in',typ,'study over',sum([ctset['totnprim'] for ctset in ctsetsets]),'primaries in',sum([ctset['nreal'] for ctset in ctsetsets]),'realisations:',sum([ctset['detyieldmu'] for ctset in ctsetsets])
@@ -161,11 +160,11 @@ for dirr,numprot in zip(dirs,numprots):
 	ctsetsets = []
 	if 'iba' in dirr:
 		typ='iba-perdet.root'
-		ctsetsets.append( auger.getctset(numprot,dirr[2:10],dirr[2:10],typ,addnoise=addnoise) )
+		ctsetsets.append( auger.getctset(numprot,dirr[2:10],None,typ,addnoise=addnoise) )
 
 	if 'ipnl' in dirr:
 		typ='ipnl-perdet.root'
-		ctsetsets.append( auger.getctset(numprot,dirr[2:10],dirr[2:10],typ,addnoise=addnoise) )
+		ctsetsets.append( auger.getctset(numprot,dirr[2:10],None,typ,addnoise=addnoise) )
 
 	megaplot(ctsetsets,'perdet-physcolli')
 	print 'Mean detection yield in',typ,'study over',sum([ctset['totnprim'] for ctset in ctsetsets]),'primaries in',sum([ctset['nreal'] for ctset in ctsetsets]),'realisations:',sum([ctset['detyieldmu'] for ctset in ctsetsets])
@@ -191,10 +190,10 @@ for typ in typs:
         for haha in ['iba','ipnl']:
             if (haha+'lyso' in line or haha+'bgo' in line) and haha+'-' in typ:
                 print (haha,line,typ,numprot)
-                ctsetsets.append( auger.getctset(numprot,line[2:10],line[2:10],typ,addnoise=addnoise,precolli=precolli) )
+                ctsetsets.append( auger.getctset(numprot,line[2:10],None,typ,addnoise=addnoise,precolli=precolli) )
             if haha+'zinv' in line and haha+'-' in typ:
                 print (haha,line,typ,numprot)
-                ctsetsets.append( auger.getctset(numprot,line[2:10],line[2:10],typ,addnoise=addnoise,precolli=precolli) )
+                ctsetsets.append( auger.getctset(numprot,line[2:10],None,typ,addnoise=addnoise,precolli=precolli) )
     #assert(len(ctsetsets)==3)
     megaplot(ctsetsets,'physabs-percolli')
     print 'Mean detection yield in',typ,'study over',sum([ctset['totnprim'] for ctset in ctsetsets]),'primaries in',sum([ctset['nreal'] for ctset in ctsetsets]),'realisations:',sum([ctset['detyieldmu'] for ctset in ctsetsets])
@@ -216,10 +215,10 @@ for typ in typs:
         for haha in ['iba','ipnl']:
             if (haha+'lyso' in line or haha+'bgo' in line) and haha+'-' in typ:
                 print (haha,line,typ,numprot)
-                ctsetsets.append( auger.getctset(numprot,line[2:10],line[2:10],typ,addnoise=addnoise,precolli=precolli) )
+                ctsetsets.append( auger.getctset(numprot,line[2:10],None,typ,addnoise=addnoise,precolli=precolli) )
             if haha+'zinv' in line and haha+'-' in typ:
                 print (haha,line,typ,numprot)
-                ctsetsets.append( auger.getctset(numprot,line[2:10],line[2:10],typ,addnoise=addnoise,precolli=precolli) )
+                ctsetsets.append( auger.getctset(numprot,line[2:10],None,typ,addnoise=addnoise,precolli=precolli) )
     #assert(len(ctsetsets)==3)
     megaplot(ctsetsets,'physabs-physcolli')
     print 'Mean detection yield in',typ,'study over',sum([ctset['totnprim'] for ctset in ctsetsets]),'primaries in',sum([ctset['nreal'] for ctset in ctsetsets]),'realisations:',sum([ctset['detyieldmu'] for ctset in ctsetsets])

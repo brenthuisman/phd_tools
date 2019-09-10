@@ -40,11 +40,15 @@ def getctset(nprim,ct1,ct2,name,**kwargs):
 	ctset6['rpct']['uncp'] = []
 
 	ctset6['ct']['files'] = glob.glob(ct1+"/**/"+name)
-	ctset6['rpct']['files'] = glob.glob(ct2+"/**/"+name)
+	if ct2!=None:
+		ctset6['rpct']['files'] = glob.glob(ct2+"/**/"+name)
 
 	print '==== Report ===='
 	print ct1, len(ctset6['ct']['files'])
-	print ct2, len(ctset6['rpct']['files'])
+	if ct2!=None:
+		print ct2, len(ctset6['rpct']['files'])
+	else:
+		print 'No RPCT.'
 	if len(ctset6['ct']['files']) == 0:
 		print ct1,name
 	print '==== ====== ===='
@@ -55,34 +59,34 @@ def getctset(nprim,ct1,ct2,name,**kwargs):
 			data = dump.thist_to_np_xy(ffilen,'reconstructedProfileHisto')
 			ctset6['ct']['x'] = scale_bincenters(data[0],name,manualshift) #no need to append, is same for all. are bincenters
 			ctset6['ct']['data'].append(addnoise(data[1],nprim,name,**kwargs))
-			print 'lees dit',data[1][-3], ctset6['ct']['data'][-1][-3]
 			ctset6['ct']['falloff'].append(get_fop(ctset6['ct']['x'],ctset6['ct']['data'][-1]))
 		except KeyError:
 			#assume perdet PhaseSpace
 			data = dump.profile_ekine_in_phasespace(ffilen)
 			ctset6['ct']['x'] = scale_bincenters(data[0],name,manualshift) #no need to append, is same for all. are bincenters
 			ctset6['ct']['data'].append(addnoise(data[1],nprim,name,**kwargs))
-			print 'lees dit',data[1][-3], ctset6['ct']['data'][-1][-3]
 			ctset6['ct']['falloff'].append(get_fop(ctset6['ct']['x'],ctset6['ct']['data'][-1]))
 		except IndexError:
 			print "Empty file detected, skipping"
 		#break
-	for ffilen in ctset6['rpct']['files']:
-		print 'opening',ffilen
-		try:
-			data = dump.profile_ekine_in_phasespace(ffilen)
-			ctset6['rpct']['x'] = scale_bincenters(data[0],name,manualshift) #no need to append, is same for all. are bincenters
-			ctset6['rpct']['data'].append(addnoise(data[1],nprim,name,**kwargs))
-			ctset6['rpct']['falloff'].append(get_fop(ctset6['rpct']['x'],ctset6['rpct']['data'][-1]))
-		except KeyError:
-			#assume perdet PhaseSpace
-			data = dump.thist_to_np_xy(ffilen,'reconstructedProfileHisto')
-			ctset6['rpct']['x'] = scale_bincenters(data[0],name,manualshift) #no need to append, is same for all. are bincenters
-			ctset6['rpct']['data'].append(addnoise(data[1],nprim,name,**kwargs))
-			ctset6['rpct']['falloff'].append(get_fop(ctset6['rpct']['x'],ctset6['rpct']['data'][-1]))
-		except IndexError:
-			print "Empty file detected, skipping"
-		#break
+		print 'Detection count:',sum(ctset6['ct']['data'][-1])
+	if ct2!=None:
+		for ffilen in ctset6['rpct']['files']:
+			print 'opening',ffilen
+			try:
+				data = dump.profile_ekine_in_phasespace(ffilen)
+				ctset6['rpct']['x'] = scale_bincenters(data[0],name,manualshift) #no need to append, is same for all. are bincenters
+				ctset6['rpct']['data'].append(addnoise(data[1],nprim,name,**kwargs))
+				ctset6['rpct']['falloff'].append(get_fop(ctset6['rpct']['x'],ctset6['rpct']['data'][-1]))
+			except KeyError:
+				#assume perdet PhaseSpace
+				data = dump.thist_to_np_xy(ffilen,'reconstructedProfileHisto')
+				ctset6['rpct']['x'] = scale_bincenters(data[0],name,manualshift) #no need to append, is same for all. are bincenters
+				ctset6['rpct']['data'].append(addnoise(data[1],nprim,name,**kwargs))
+				ctset6['rpct']['falloff'].append(get_fop(ctset6['rpct']['x'],ctset6['rpct']['data'][-1]))
+			except IndexError:
+				print "Empty file detected, skipping"
+			#break
 
 	if len(ctset6['ct']['data']) > 1:
 		#we can average
@@ -100,32 +104,40 @@ def getctset(nprim,ct1,ct2,name,**kwargs):
 
 	print '[av]',ctset6['ct']['av'][-3]
 
-	if len(ctset6['rpct']['data']) > 1:
-		print 'calcing averages for ctset: rpct'
-		#we can average
-		ndata = np.array(ctset6['rpct']['data'])
-		ndata = np.rollaxis(ndata,1)
-		for binn in ndata:
-			(mu, sigma) = scipy.stats.norm.fit(binn) #returns actually sigma, not var.
-			ctset6['rpct']['av'].append(mu)
-			ctset6['rpct']['unc'].append(sigma)
-			ctset6['rpct']['uncm'].append(mu-sigma)
-			ctset6['rpct']['uncp'].append(mu+sigma)
-			#print (mu, sigma)
-	else:
-		ctset6['rpct']['av'] = ctset6['rpct']['data'][0]
+	if ct2!=None:
+		if len(ctset6['rpct']['data']) > 1:
+			print 'calcing averages for ctset: rpct'
+			#we can average
+			ndata = np.array(ctset6['rpct']['data'])
+			ndata = np.rollaxis(ndata,1)
+			for binn in ndata:
+				(mu, sigma) = scipy.stats.norm.fit(binn) #returns actually sigma, not var.
+				ctset6['rpct']['av'].append(mu)
+				ctset6['rpct']['unc'].append(sigma)
+				ctset6['rpct']['uncm'].append(mu-sigma)
+				ctset6['rpct']['uncp'].append(mu+sigma)
+				#print (mu, sigma)
+		else:
+			ctset6['rpct']['av'] = ctset6['rpct']['data'][0]
 
 	ctset6['fodiff']=[]
 	for i in range(len(ctset6['ct']['data'])):
 		foct=ctset6['ct']['falloff'][i]
-		for i in range(len(ctset6['rpct']['data'])):
-			forpct=ctset6['rpct']['falloff'][i]
-			ctset6['fodiff'].append(forpct-foct)
+		if ct2!=None:
+			for j in range(len(ctset6['rpct']['data'])):
+				forpct=ctset6['rpct']['falloff'][j]
+				ctset6['fodiff'].append(forpct-foct)
 
-	ctset6['detyieldmu'] = np.mean([sum(real) for real in ctset6['ct']['data']+ctset6['rpct']['data']])/nprim
-	ctset6['detyieldsigma'] = np.std([sum(real) for real in ctset6['ct']['data']+ctset6['rpct']['data']])/nprim
+	if ct2!=None:
+		alldata = ctset6['ct']['data']+ctset6['rpct']['data']
+	else:
+		alldata = ctset6['ct']['data']
 
-	ctset6['detcount'] = np.mean([sum(real) for real in ctset6['ct']['data']+ctset6['rpct']['data']])
+	ctset6['detyieldmu'] = np.mean([sum(real) for real in alldata])/nprim
+	ctset6['detyieldsigma'] = np.std([sum(real) for real in alldata])/nprim
+
+	ctset6['detcount'] = np.mean([sum(real) for real in alldata])
+	print "Detection count mean",ctset6['detcount']
 
 	if 'precolli' in kwargs and kwargs['precolli']==True:
 		precs=[]
@@ -133,17 +145,18 @@ def getctset(nprim,ct1,ct2,name,**kwargs):
 		for txtfile in txtfiles:
 			precs.append(dump.readtxtnumber(txtfile))
 		prec=np.mean(precs)
-		ctset6['precollidetyieldmu'] = np.mean([sum(real) for real in ctset6['ct']['data']+ctset6['rpct']['data']])/prec
-		ctset6['precollidetyieldsigma'] = np.std([sum(real) for real in ctset6['ct']['data']+ctset6['rpct']['data']])/prec
+		ctset6['precollidetyieldmu'] = np.mean([sum(real) for real in alldata])/prec
+		ctset6['precollidetyieldsigma'] = np.std([sum(real) for real in alldata])/prec
 
-	ctset6['nreal'] = len(ctset6['ct']['data']+ctset6['rpct']['data'])
-	ctset6['totnprim'] = len(ctset6['ct']['data']+ctset6['rpct']['data'])*nprim
+	ctset6['nreal'] = len(alldata)
+	ctset6['totnprim'] = len(alldata)*nprim
 
 	ctset6['ct']['fopmu'] = np.mean(ctset6['ct']['falloff'])
 	ctset6['ct']['fopsigma'] = np.std(ctset6['ct']['falloff'])
-	ctset6['rpct']['fopmu'] = np.mean(ctset6['rpct']['falloff'])
-	ctset6['rpct']['fopsigma'] = np.std(ctset6['rpct']['falloff'])
-	ctset6['fodiffmu'] = np.mean(ctset6['fodiff'])
+	if ct2!=None:
+		ctset6['rpct']['fopmu'] = np.mean(ctset6['rpct']['falloff'])
+		ctset6['rpct']['fopsigma'] = np.std(ctset6['rpct']['falloff'])
+		ctset6['fodiffmu'] = np.mean(ctset6['fodiff'])
 
 	#ctset6['ct']['fowmu'] = np.mean(ctset6['ct']['fow'])
 	#ctset6['ct']['fowsigma'] = np.std(ctset6['ct']['fow'])
@@ -340,7 +353,7 @@ def get_fop(x,y,**kwargs):
 
 	falloff = y_intpol[maxind]-baseline
 	falloff_index=len(x_intpol)-1
-	print falloff
+	#print falloff
 	try:
 		while y_intpol[falloff_index] < threshold*falloff+baseline: #default threshold is 0.5
 			falloff_index-=1
