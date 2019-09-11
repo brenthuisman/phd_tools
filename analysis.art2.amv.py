@@ -19,6 +19,9 @@ pgexit = False #idem
 
 
 
+PHYSDET_PROFILE_IBA=None
+PHYSDET_PROFILE_IPNL=None
+
 print 'Computing pgprod ratios...'
 
 pgprod_1mev_ipnl = 0.07547789 #obatined with image.sum on source image with first mev taken out
@@ -31,9 +34,6 @@ if precolli:
 	resultstable[0].extend(["collieffmu","collieffsigma"])
 
 def megaplot(ctsets,studyname,emisfops=None,labels=["$10^9$","$10^8$","$10^7$","$10^6$"],axlabel='Primaries [nr]'):
-
-	# print 'FOP FOW Contrast DE averages over 10e9 ctset'
-	# removed 2nd deriv from plot
 
 	f, (ax1,ax2) = plot.subplots(nrows=2, ncols=1, sharex=False, sharey=False)
 	x=ctsets[0]['ct']['x']
@@ -58,6 +58,11 @@ def megaplot(ctsets,studyname,emisfops=None,labels=["$10^9$","$10^8$","$10^7$","
 	ax1.xaxis.set_minor_locator(minor_locator)
 	ax2.xaxis.set_minor_locator(minor_locator)
 	ax2.yaxis.set_minor_locator(minor_locator1)
+
+	if PHYSDET_PROFILE_IBA!=None and 'iba' in ctsets[0]['name']:
+		ax1.scatter( x,PHYSDET_PROFILE_IBA, color='lightgrey',marker="x",clip_on=False)
+	if PHYSDET_PROFILE_IPNL!=None and 'ipnl' in ctsets[0]['name']:
+		ax1.scatter( x,PHYSDET_PROFILE_IPNL, color='lightgrey',marker="x",clip_on=False)
 
 
 	print "NPRIM", ctsets[0]['nprim'],"NJOBS",len(ctsets[0]['ct']['files']),"MM",mm
@@ -116,6 +121,88 @@ def megaplot(ctsets,studyname,emisfops=None,labels=["$10^9$","$10^8$","$10^7$","
 
 print("######################### 111111111111111111111111111111111111111111111111111")
 
+resultstable.append(["physabs-physcolli"]*len(resultstable[-1]))
+
+typs=['ipnl-auger-notof-1.root','iba-auger-notof-1.root']
+
+dirs = [x for x in subprocess.check_output(['find . -iname "*autogen*NPRIM-1000000000*" | sort -k1.13'],shell=True).split('\n')[:-1] if '.kill.' not in x]
+
+print(dirs)
+numprots = [1e9,1e9]
+
+for typ in typs:
+	ctsetsets = []
+	for line,numprot in zip(dirs,[item for item in numprots for i in range(len(typs)/len(numprots))]):
+		for haha in ['iba','ipnl']:
+			if (haha+'lyso' in line or haha+'bgo' in line) and haha+'-' in typ:
+				print (haha,line,typ,numprot)
+				ctsetsets.append( auger.getctset(numprot,line[2:10],None,typ,addnoise=addnoise,precolli=precolli) )
+				PHYSDET_PROFILE_IPNL = ctsetsets[-1]['ct']['av']
+			if haha+'zinv' in line and haha+'-' in typ:
+				print (haha,line,typ,numprot)
+				ctsetsets.append( auger.getctset(numprot,line[2:10],None,typ,addnoise=addnoise,precolli=precolli) )
+				PHYSDET_PROFILE_IBA = ctsetsets[-1]['ct']['av']
+
+	megaplot(ctsetsets,'physabs-physcolli')
+	print 'Mean detection yield in',typ,'study over',sum([ctset['totnprim'] for ctset in ctsetsets]),'primaries in',sum([ctset['nreal'] for ctset in ctsetsets]),'realisations:',sum([ctset['detyieldmu'] for ctset in ctsetsets])
+
+#print("######################### 2222222222222222222222222222222222222222222222222222222222")
+
+#resultstable.append(["perabs-physcolli"]*len(resultstable[-1]))
+
+#dirs = subprocess.check_output(['find . -iname "*autogen*ibazinv.mac" | sort -k1.13'],shell=True).split('\n')[:-1]
+#dirs += subprocess.check_output(['find . -iname "*autogen*ipnllyso.mac" | sort -k1.13'],shell=True).split('\n')[:-1]
+
+#print(dirs)
+#numprots = [1e9,1e9]
+
+#typ=None
+#for dirr,numprot in zip(dirs,numprots):
+	#if numprot != 1e9:
+		#continue
+	#ctsetsets = []
+	#if 'iba' in dirr:
+		#typ='iba-perdet.root'
+		#ctsetsets.append( auger.getctset(numprot,dirr[2:10],None,typ,addnoise=addnoise) )
+
+	#if 'ipnl' in dirr:
+		#typ='ipnl-perdet.root'
+		#ctsetsets.append( auger.getctset(numprot,dirr[2:10],None,typ,addnoise=addnoise) )
+
+	#megaplot(ctsetsets,'perdet-physcolli')
+	#print 'Mean detection yield in',typ,'study over',sum([ctset['totnprim'] for ctset in ctsetsets]),'primaries in',sum([ctset['nreal'] for ctset in ctsetsets]),'realisations:',sum([ctset['detyieldmu'] for ctset in ctsetsets])
+
+#tableio.print2d(resultstable)
+#tableio.write(resultstable,'perabs-physcolli.tsv')
+
+
+#print("############################ 333333333333333333333333333333333333333333333")
+
+#resultstable.append(["physabs-percolli"]*len(resultstable[-1]))
+
+#typs=['ipnl-auger-notof-1.root','iba-auger-notof-1.root']
+
+#dirs = subprocess.check_output(['find . -iname "*autogen*NPRIM-1000000000*kill*" | sort -k1.13'],shell=True).split('\n')[:-1]
+
+#print(dirs)
+#numprots = [1e9,1e9]
+
+#for typ in typs:
+    #ctsetsets = []
+    #for line,numprot in zip(dirs,[item for item in numprots for i in range(len(typs)/len(numprots))]):
+        #for haha in ['iba','ipnl']:
+            #if (haha+'lyso' in line or haha+'bgo' in line) and haha+'-' in typ:
+                #print (haha,line,typ,numprot)
+                #ctsetsets.append( auger.getctset(numprot,line[2:10],None,typ,addnoise=addnoise,precolli=precolli) )
+            #if haha+'zinv' in line and haha+'-' in typ:
+                #print (haha,line,typ,numprot)
+                #ctsetsets.append( auger.getctset(numprot,line[2:10],None,typ,addnoise=addnoise,precolli=precolli) )
+
+    #megaplot(ctsetsets,'physabs-percolli')
+    #print 'Mean detection yield in',typ,'study over',sum([ctset['totnprim'] for ctset in ctsetsets]),'primaries in',sum([ctset['nreal'] for ctset in ctsetsets]),'realisations:',sum([ctset['detyieldmu'] for ctset in ctsetsets])
+
+print("############################ 44444444444444444444444444444444")
+
 resultstable.append(["perabs-percolli"]*len(resultstable[-1]))
 
 dirs = subprocess.check_output(['find . -iname "*autogen*kill*" | sort -k1.13'],shell=True).split('\n')[:-1]
@@ -123,35 +210,6 @@ dirs = dirs[0:2] #only 10e9
 
 print(dirs)
 numprots = [1e9,1e9,1e8,1e8,1e7,1e7]
-
-typ=None
-for dirr,numprot in zip(dirs,numprots):
-	#if numprot != 1e9:
-		#continue
-	ctsetsets = []
-	if 'iba' in dirr:
-		typ='iba-perdet.root'
-		ctsetsets.append( auger.getctset(numprot,dirr[2:10],None,typ,addnoise=addnoise) )
-
-	if 'ipnl' in dirr:
-		typ='ipnl-perdet.root'
-		ctsetsets.append( auger.getctset(numprot,dirr[2:10],None,typ,addnoise=addnoise) )
-
-	megaplot(ctsetsets,'perdet-percolli')
-	print 'Mean detection yield in',typ,'study over',sum([ctset['totnprim'] for ctset in ctsetsets]),'primaries in',sum([ctset['nreal'] for ctset in ctsetsets]),'realisations:',sum([ctset['detyieldmu'] for ctset in ctsetsets])
-
-#tableio.print2d(resultstable)
-#tableio.write(resultstable,'perabs-percolli.tsv')
-
-print("######################### 2222222222222222222222222222222222222222222222222222222222")
-
-resultstable.append(["perabs-physcolli"]*len(resultstable[-1]))
-
-dirs = subprocess.check_output(['find . -iname "*autogen*ibazinv.mac" | sort -k1.13'],shell=True).split('\n')[:-1]
-dirs += subprocess.check_output(['find . -iname "*autogen*ipnllyso.mac" | sort -k1.13'],shell=True).split('\n')[:-1]
-
-print(dirs)
-numprots = [1e9,1e9]
 
 typ=None
 for dirr,numprot in zip(dirs,numprots):
@@ -166,63 +224,10 @@ for dirr,numprot in zip(dirs,numprots):
 		typ='ipnl-perdet.root'
 		ctsetsets.append( auger.getctset(numprot,dirr[2:10],None,typ,addnoise=addnoise) )
 
-	megaplot(ctsetsets,'perdet-physcolli')
+	megaplot(ctsetsets,'perdet-percolli')
 	print 'Mean detection yield in',typ,'study over',sum([ctset['totnprim'] for ctset in ctsetsets]),'primaries in',sum([ctset['nreal'] for ctset in ctsetsets]),'realisations:',sum([ctset['detyieldmu'] for ctset in ctsetsets])
 
-#tableio.print2d(resultstable)
-#tableio.write(resultstable,'perabs-physcolli.tsv')
-
-
-print("############################ 333333333333333333333333333333333333333333333")
-
-resultstable.append(["physabs-percolli"]*len(resultstable[-1]))
-
-typs=['ipnl-auger-notof-1.root','iba-auger-notof-1.root']
-
-dirs = subprocess.check_output(['find . -iname "*autogen*NPRIM-1000000000*kill*" | sort -k1.13'],shell=True).split('\n')[:-1]
-
-print(dirs)
-numprots = [1e9,1e9]
-
-for typ in typs:
-    ctsetsets = []
-    for line,numprot in zip(dirs,[item for item in numprots for i in range(len(typs)/len(numprots))]):
-        for haha in ['iba','ipnl']:
-            if (haha+'lyso' in line or haha+'bgo' in line) and haha+'-' in typ:
-                print (haha,line,typ,numprot)
-                ctsetsets.append( auger.getctset(numprot,line[2:10],None,typ,addnoise=addnoise,precolli=precolli) )
-            if haha+'zinv' in line and haha+'-' in typ:
-                print (haha,line,typ,numprot)
-                ctsetsets.append( auger.getctset(numprot,line[2:10],None,typ,addnoise=addnoise,precolli=precolli) )
-    #assert(len(ctsetsets)==3)
-    megaplot(ctsetsets,'physabs-percolli')
-    print 'Mean detection yield in',typ,'study over',sum([ctset['totnprim'] for ctset in ctsetsets]),'primaries in',sum([ctset['nreal'] for ctset in ctsetsets]),'realisations:',sum([ctset['detyieldmu'] for ctset in ctsetsets])
-
-print("############################ 44444444444444444444444444444444")
-
-resultstable.append(["physabs-physcolli"]*len(resultstable[-1]))
-
-typs=['ipnl-auger-notof-1.root','iba-auger-notof-1.root']
-
-dirs = [x for x in subprocess.check_output(['find . -iname "*autogen*NPRIM-1000000000*" | sort -k1.13'],shell=True).split('\n')[:-1] if '.kill.' not in x]
-
-print(dirs)
-numprots = [1e9,1e9]
-
-for typ in typs:
-    ctsetsets = []
-    for line,numprot in zip(dirs,[item for item in numprots for i in range(len(typs)/len(numprots))]):
-        for haha in ['iba','ipnl']:
-            if (haha+'lyso' in line or haha+'bgo' in line) and haha+'-' in typ:
-                print (haha,line,typ,numprot)
-                ctsetsets.append( auger.getctset(numprot,line[2:10],None,typ,addnoise=addnoise,precolli=precolli) )
-            if haha+'zinv' in line and haha+'-' in typ:
-                print (haha,line,typ,numprot)
-                ctsetsets.append( auger.getctset(numprot,line[2:10],None,typ,addnoise=addnoise,precolli=precolli) )
-    #assert(len(ctsetsets)==3)
-    megaplot(ctsetsets,'physabs-physcolli')
-    print 'Mean detection yield in',typ,'study over',sum([ctset['totnprim'] for ctset in ctsetsets]),'primaries in',sum([ctset['nreal'] for ctset in ctsetsets]),'realisations:',sum([ctset['detyieldmu'] for ctset in ctsetsets])
-
+print "######################################################### FINIS"
 
 tableio.print2d(resultstable)
 tableio.write(resultstable,'results.tsv')
