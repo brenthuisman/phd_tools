@@ -17,7 +17,7 @@ addnoise=False #false for all AMV
 precolli=False #gaan we niet meer doen
 pgexit = False #idem
 
-
+#np.seterr(all='raise') #use to catch Numpy RuntimeWarnings
 
 PHYSDET_PROFILE_IBA=None
 PHYSDET_PROFILE_IPNL=None
@@ -136,11 +136,11 @@ for typ in typs:
 		for haha in ['iba','ipnl']:
 			if (haha+'lyso' in line or haha+'bgo' in line) and haha+'-' in typ:
 				print (haha,line,typ,numprot)
-				ctsetsets.append( auger.getctset(numprot,line[2:10],None,typ,addnoise=addnoise,precolli=precolli) )
+				ctsetsets.append( auger.getctset(numprot,line[2:14],None,typ,addnoise=addnoise,precolli=precolli) )
 				PHYSDET_PROFILE_IPNL = ctsetsets[-1]['ct']['av']
 			if haha+'zinv' in line and haha+'-' in typ:
 				print (haha,line,typ,numprot)
-				ctsetsets.append( auger.getctset(numprot,line[2:10],None,typ,addnoise=addnoise,precolli=precolli) )
+				ctsetsets.append( auger.getctset(numprot,line[2:14],None,typ,addnoise=addnoise,precolli=precolli) )
 				PHYSDET_PROFILE_IBA = ctsetsets[-1]['ct']['av']
 
 	megaplot(ctsetsets,'physabs-physcolli')

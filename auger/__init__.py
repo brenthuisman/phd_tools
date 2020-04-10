@@ -1,4 +1,4 @@
-import dump, numpy as np,glob2 as glob,copy,scipy
+import dump, numpy as np,glob2 as glob,copy,scipy,kleur
 from .plt import *
 
 def getctset(nprim,ct1,ct2,name,**kwargs):
@@ -551,9 +551,11 @@ def get_fop_fow_contrast(x,y,**kwargs):
 	try:
 		popt,y_fitted = fitgauss_tuned(fit_interval,fit_points,falloff_pos,offset)
 	except RuntimeError as e:
-		raise RuntimeError("in scipy.optimize.curve_fit for filename: "+filename+'. '+e)
-	#except ValueError as e:
-		#raise ValueError("in scipy.optimize.curve_fit for filename: "+filename+'.')
+		print(kleur.fail("[auger/__init__.py]")+" RuntimeError in scipy.optimize.curve_fit for filename: "+filename+'. '+str(e))
+		raise e
+	except ValueError as e:
+		print(kleur.fail("[auger/__init__.py]")+" ValueError in scipy.optimize.curve_fit for filename: "+filename+'. '+str(e))
+		raise e
 
 	def guassianfunc(xVar, a, b, c):
 		return a * np.exp(-(xVar - b) ** 2 / (2 * c ** 2)) + offset
@@ -614,7 +616,11 @@ def fitgauss_tuned(x, y, mean, fixed_offset):
 		(-np.inf,-np.inf,-np.inf),
 		(np.inf,mean+10,np.inf)
 	)
-	sigma = np.sqrt(sum(y * (x - mean) ** 2) / sum(y))
+	try:
+		sigma = np.sqrt(sum(y * (x - mean) ** 2) / sum(y))
+	except:
+		print y,x,mean
+		quit()
 	p0 = [max(y), mean, sigma]
 
 	def guassianfunc(xVar, a, b, c):
