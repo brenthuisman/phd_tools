@@ -50,6 +50,7 @@ def getctset(nprim,ct1,ct2,name,**kwargs):
 	else:
 		print 'No RPCT.'
 	if len(ctset6['ct']['files']) == 0:
+		print 'Nothing found for:'
 		print ct1,name
 	print '==== ====== ===='
 
@@ -74,13 +75,13 @@ def getctset(nprim,ct1,ct2,name,**kwargs):
 		for ffilen in ctset6['rpct']['files']:
 			print 'opening',ffilen
 			try:
-				data = dump.profile_ekine_in_phasespace(ffilen)
+				data = dump.thist_to_np_xy(ffilen,'reconstructedProfileHisto')
 				ctset6['rpct']['x'] = scale_bincenters(data[0],name,manualshift) #no need to append, is same for all. are bincenters
 				ctset6['rpct']['data'].append(addnoise(data[1],nprim,name,**kwargs))
 				ctset6['rpct']['falloff'].append(get_fop(ctset6['rpct']['x'],ctset6['rpct']['data'][-1]))
 			except KeyError:
 				#assume perdet PhaseSpace
-				data = dump.thist_to_np_xy(ffilen,'reconstructedProfileHisto')
+				data = dump.profile_ekine_in_phasespace(ffilen)
 				ctset6['rpct']['x'] = scale_bincenters(data[0],name,manualshift) #no need to append, is same for all. are bincenters
 				ctset6['rpct']['data'].append(addnoise(data[1],nprim,name,**kwargs))
 				ctset6['rpct']['falloff'].append(get_fop(ctset6['rpct']['x'],ctset6['rpct']['data'][-1]))
@@ -548,6 +549,7 @@ def get_fop_fow_contrast(x,y,**kwargs):
 	offset = 0 #actually, lets remove this param
 
 	if plotten: ax2.plot(fit_interval,fit_points,color='steelblue')
+	
 	try:
 		popt,y_fitted = fitgauss_tuned(fit_interval,fit_points,falloff_pos,offset)
 	except RuntimeError as e:
@@ -612,6 +614,7 @@ def fitgauss(x, y, bounds=None,p0=None):
 
 
 def fitgauss_tuned(x, y, mean, fixed_offset):
+	print(kleur.blue("fitgauss_tuned")+kleur.strs(x, y, mean, fixed_offset))
 	bounds = (
 		(-np.inf,-np.inf,-np.inf),
 		(np.inf,mean+10,np.inf)

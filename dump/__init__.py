@@ -31,14 +31,21 @@ def profile_ekine_in_phasespace(treefilename,thres=1):
 	selx=x[e>1]
 	#MPS: 37 bins of 8mm
 	#KES: 20 bins of 4mm, divide values by 0.8 to obtain FOV of 10cm, but is done later
-	mid=selx.max()-selx.min()
+	#mid=selx.max()-selx.min()
 	x,y=None,None
 	if 'iba' in treefilename:
-		half_fov=(20*4)/2.
-		y,x = np.histogram(selx,bins=20)#,range=(mid-half_fov,mid+half_fov))
+		#half_fov=(20*4)/2.
+		selx = selx[-40.<selx]
+		selx = selx[selx<40.]
+		y,x = np.histogram(selx,bins=20,range=(-40,40))#,range=(mid-half_fov,mid+half_fov))
 	elif 'ipnl' in treefilename:
-		half_fov=(37*8)/2.
-		y,x = np.histogram(selx,bins=37)#,range=(mid-half_fov,mid+half_fov))
+		#half_fov=(37*8)/2.
+		selx = selx[-148.<selx] #37*8/2=148
+		selx = selx[selx<148.]
+		y,x = np.histogram(selx,bins=37,range=(-148,148))#,range=(mid-half_fov,mid+half_fov))
+		#print selx.max(),selx.min()
+		#print len(selx)
+		#print y
 	#print len(x),len(y)
 	#print x,y
 	return [binedges_to_centers(x),y.tolist()]
